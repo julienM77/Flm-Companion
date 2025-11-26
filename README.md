@@ -26,7 +26,7 @@ FlmCompagnon is a modern GUI designed to accompany and manage the **FLM** projec
 
 This project is a frontend/GUI and strongly depends on the **FLM** project to function. Ensure FLM is installed and configured.
 
-🔗 **[View FLM project on GitHub](https://github.com/YOUR_LINK_HERE)**
+🔗 **[View FLM project on GitHub](https://github.com/FastFlowLM/FastFlowLM)**
 
 ## Contribution
 
