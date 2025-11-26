@@ -1,70 +1,42 @@
-name: Release Flm Companion Portable
+name: Release Flm Companion
 
 on:
   push:
-    branches:
-      - main
+    tags:
+      - 'v*'
 
 jobs:
-  build-and-release:
+  release:
     runs-on: windows-latest
     permissions:
       contents: write
 
     steps:
-    - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Setup Node
-      uses: actions/setup-node@v4
-      with:
-        node-version: lts/*
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
 
-    - name: Install Rust stable
-      uses: dtolnay/rust-toolchain@stable
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
 
-    - name: Install dependencies
-      working-directory: src
-      run: npm install
+      - name: Install dependencies
+        working-directory: src
+        run: npm install
 
-    - name: Get version from package.json
-      id: get_version
-      working-directory: src
-      shell: pwsh
-      run: |
-        $json = Get-Content package.json | ConvertFrom-Json
-        echo "VERSION=$($json.version)" >> $env:GITHUB_ENV
+      - name: Build Tauri app
+        working-directory: src
+        run: npm run tauri build
 
-    - name: Create Tag and Push
-      env:
-        VERSION: ${{ env.VERSION }}
-      run: |
-        git config --global user.name "github-actions"
-        git config --global user.email "github-actions@github.com"
-        git tag -a "v$VERSION" -m "Release version $VERSION"
-        git push origin "v$VERSION"
-
-    - name: Build Tauri app
-      working-directory: src
-      run: npm run tauri build
-
-    - name: Create GitHub release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: "v${{ env.VERSION }}"
-        release_name: "Version ${{ env.VERSION }}"
-        release_body: "Release de la version ${{ env.VERSION }} de l'application, version portable incluse."
-        draft: false
-        prerelease: false
-
-    - name: Upload exe to release
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./src/src-tauri/target/release/flm-manager.exe  # ou chemin vers l'exe portable
-        asset_name: flm-manager.exe # nom visible dans l'onglet release
-        asset_content_type: application/vnd.microsoft.portable-executable
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            src/src-tauri/target/release/flm-manager.exe
+          #  src/src-tauri/target/release/bundle/nsis/*.exe
+          draft: false
+          prerelease: false
+          generate_release_notes: true
