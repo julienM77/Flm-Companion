@@ -1,0 +1,232 @@
+import { useState, useEffect } from "react";
+import "./App.css";
+import { Sidebar } from "./components/Sidebar";
+import { ChatView } from "./components/ChatView";
+import { Models } from "./components/Models";
+import { ServerView } from "./components/ServerView";
+import { SettingsView } from "./components/SettingsView";
+import { AboutView } from "./components/AboutView";
+import { StatusBar } from "./components/StatusBar";
+import { FlmService, FlmModel, ServerOptions } from "./services/flm";
+import { ConfigService, AppConfig } from "./services/config";
+import { sendNotification, isPermissionGranted, requestPermission } from '@tauri-apps/plugin-notification';
+
+function App() {
+  const [activeTab, setActiveTab] = useState("models");
+  const [serverStatus, setServerStatus] = useState<"stopped" | "running" | "starting">("stopped");
+  const [logs, setLogs] = useState<string[]>([]);
+  const [installedModels, setInstalledModels] = useState<FlmModel[]>([]);
+  const [selectedModel, setSelectedModel] = useState<string>("");
+  const [theme, setTheme] = useState<"dark" | "light" | "system">("dark");
+  const [serverOptions, setServerOptions] = useState<ServerOptions>({
+    pmode: 'performance',
+    port: 52625,
+    ctxLen: 0,
+    asr: false,
+    embed: false,
+    socket: 10,
+    qLen: 10,
+    cors: true,
+    preemption: false
+  });
+  const [flmPath, setFlmPath] = useState("flm");
+  const APP_VERSION = "0.1.0";
+
+  // Load config on startup
+  useEffect(() => {
+    ConfigService.loadConfig().then(config => {
+      setTheme(config.theme);
+      setFlmPath(config.flmPath);
+      if (config.lastSelectedModel) {
+        setSelectedModel(config.lastSelectedModel);
+      }
+      if (config.serverOptions) {
+        setServerOptions(config.serverOptions);
+      }
+    });
+  }, []);
+
+  // Save config when settings change
+  useEffect(() => {
+    const saveSettings = async () => {
+      const config: AppConfig = {
+        theme,
+        flmPath,
+        lastSelectedModel: selectedModel,
+        serverOptions
+      };
+      await ConfigService.saveConfig(config);
+    };
+
+    // Debounce saving slightly to avoid too many writes
+    const timeoutId = setTimeout(saveSettings, 500);
+    return () => clearTimeout(timeoutId);
+  }, [theme, flmPath, selectedModel, serverOptions]);
+
+  useEffect(() => {
+    const root = window.document.documentElement;
+
+    root.classList.remove("light", "dark");
+
+    if (theme === "system") {
+      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
+        ? "dark"
+        : "light";
+      root.classList.add(systemTheme);
+      return;
+    }
+
+    root.classList.add(theme);
+  }, [theme]);
+
+  const loadInstalledModels = () => {
+    FlmService.listModels('installed').then(models => {
+      setInstalledModels(models);
+      // If no model is selected (or the selected one is gone), select the first available
+      // BUT only if we don't have a selected model from config (which is handled by the initial load effect)
+      // We need to be careful not to overwrite the loaded config selection if the model list loads later
+      setSelectedModel(prev => {
+        if (prev && models.some(m => m.name === prev)) return prev;
+        // If the previous selection (from config) is not in the list, fallback to first available
+        return models.length > 0 ? models[0].name : "";
+      });
+    });
+  };
+
+  useEffect(() => {
+    // Request notification permission
+    (async () => {
+      let permissionGranted = await isPermissionGranted();
+      if (!permissionGranted) {
+        const permission = await requestPermission();
+        permissionGranted = permission === 'granted';
+      }
+    })();
+
+    // Load models on startup
+    loadInstalledModels();
+  }, []);
+
+  const addLog = (log: string) => {
+    setLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${log}`]);
+  };
+
+  const handleToggleServer = async (options?: ServerOptions) => {
+    if (serverStatus === "running") {
+      try {
+        await FlmService.stopServer(addLog);
+        // Note: We don't set status to stopped here immediately, we wait for the process close event
+        // But for UI responsiveness we might want to show "Stopping..."
+        // However, the existing logic sets it to stopped. Let's keep it but maybe the close event will handle it too.
+        // For now, let's leave it as is, but the logs will show what's happening.
+      } catch (error) {
+        addLog(`[ERROR] Failed to stop server: ${error}`);
+      }
+    } else {
+      if (!selectedModel) {
+        alert("Veuillez sélectionner un modèle.");
+        return;
+      }
+
+      setServerStatus("starting");
+      addLog(`[SYSTEM] Starting server with model: ${selectedModel}...`);
+
+      try {
+        // Use provided options or defaults if called from dashboard (which passes no args)
+        const optionsToUse = options || serverOptions;
+
+        await FlmService.startServer(selectedModel, optionsToUse, (log) => {
+          addLog(log);
+          // Check for the specific line indicating the server is ready
+          if (log.includes("Enter 'exit' to stop the server:")) {
+            setServerStatus("running");
+            sendNotification({
+              title: 'FLM Server Started',
+              body: `Server is running with model ${selectedModel}`,
+            });
+          }
+          // Check if server stopped (crashed or exited)
+          if (log.includes("[SYSTEM] Server stopped with code")) {
+            setServerStatus("stopped");
+            if (!log.includes("code 0")) {
+              sendNotification({
+                title: 'FLM Server Error',
+                body: `The server stopped unexpectedly. Check logs for details.`,
+              });
+            } else {
+              sendNotification({
+                title: 'FLM Server Stopped',
+                body: `The server has stopped gracefully.`,
+              });
+            }
+          }
+        });
+      } catch (error) {
+        setServerStatus("stopped");
+        addLog(`[ERROR] Failed to start server: ${error}`);
+      }
+    }
+  };
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case "chat":
+        return (
+          <ChatView
+            models={installedModels}
+            selectedModel={selectedModel}
+            onSelectModel={setSelectedModel}
+            options={serverOptions}
+            setOptions={setServerOptions}
+          />
+        );
+      case "server":
+        return (
+          <ServerView
+            serverStatus={serverStatus}
+            onToggleServer={handleToggleServer}
+            models={installedModels}
+            selectedModel={selectedModel}
+            onSelectModel={setSelectedModel}
+            logs={logs}
+            options={serverOptions}
+            setOptions={setServerOptions}
+          />
+        );
+      case "models":
+        return <Models />;
+      case "settings":
+        return <SettingsView theme={theme} setTheme={setTheme} flmPath={flmPath} setFlmPath={setFlmPath} />;
+      case "about":
+        return <AboutView />;
+      default:
+        return (
+          <ChatView
+            models={installedModels}
+            selectedModel={selectedModel}
+            onSelectModel={setSelectedModel}
+            options={serverOptions}
+            setOptions={setServerOptions}
+          />
+        );
+    }
+  };
+
+  return (
+    <div className="flex flex-col h-screen bg-background text-foreground font-sans overflow-hidden selection:bg-blue-500/30">
+      <div className="flex flex-1 overflow-hidden">
+        <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+        <div className="flex-1 flex flex-col min-w-0 bg-background/50">
+          <main className="flex-1 overflow-hidden p-6">
+            <div className="max-w-5xl mx-auto w-full h-full">
+              {renderContent()}
+            </div>
+          </main>
+        </div>
+      </div>
+      <StatusBar serverStatus={serverStatus} version={APP_VERSION} />
+    </div>
+  );
+}
+
+export default App;
