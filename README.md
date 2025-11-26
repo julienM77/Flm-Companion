@@ -13,6 +13,7 @@ FlmCompagnon is a modern GUI designed to accompany and manage the **FLM** projec
 
 ## To do
 
+* [ ] Clean code and optimisation
 * [ ] Fix the server management design for consistency
 * [ ] Add a version check for the companion application (+ changelog)
 * [ ] Add caching for the list of models, CPU version, and RAM
