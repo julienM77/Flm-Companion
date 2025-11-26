@@ -1,0 +1,114 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Capability for the main window",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    {
+      "identifier": "http:default",
+      "allow": [
+        {
+          "url": "https://api.github.com/*"
+        },
+        {
+          "url": "https://github.com/*"
+        },
+        {
+          "url": "https://objects.githubusercontent.com/*"
+        }
+      ]
+    },
+    "opener:default",
+    {
+      "identifier": "opener:allow-open-path",
+      "allow": [
+        {
+          "path": "$TEMP/*"
+        }
+      ]
+    },
+    "fs:allow-temp-write",
+    "notification:default",
+    "shell:allow-open",
+    {
+      "identifier": "shell:allow-execute",
+      "allow": [
+        {
+          "name": "flm",
+          "cmd": "flm",
+          "args": true
+        },
+        {
+          "name": "powershell",
+          "cmd": "powershell.exe",
+          "args": true
+        }
+      ]
+    },
+    {
+      "identifier": "shell:allow-spawn",
+      "allow": [
+        {
+          "name": "flm",
+          "cmd": "flm",
+          "args": true
+        },
+        {
+          "name": "powershell",
+          "cmd": "powershell.exe",
+          "args": true
+        }
+      ]
+    },
+    "shell:allow-kill",
+    {
+      "identifier": "shell:allow-stdin-write",
+      "allow": [
+        {
+          "name": "flm",
+          "cmd": "flm",
+          "args": true
+        }
+      ]
+    },
+    {
+      "identifier": "fs:allow-read-text-file",
+      "allow": [
+        {
+          "path": "C:\\Program Files\\flm\\model_list.json"
+        },
+        {
+          "path": "$APPCONFIG/*"
+        }
+      ]
+    },
+    {
+      "identifier": "fs:allow-write-text-file",
+      "allow": [
+        {
+          "path": "$APPCONFIG/*"
+        }
+      ]
+    },
+    {
+      "identifier": "fs:allow-exists",
+      "allow": [
+        {
+          "path": "$APPCONFIG/*"
+        },
+        {
+          "path": "$APPCONFIG"
+        }
+      ]
+    },
+    {
+      "identifier": "fs:allow-mkdir",
+      "allow": [
+        {
+          "path": "$APPCONFIG"
+        }
+      ]
+    }
+  ]
+}
