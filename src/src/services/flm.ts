@@ -100,7 +100,7 @@ export const FlmService = {
             }
 
             // flmPath is the directory containing model_list.json
-            let modelListPath = "model_list.json";
+            let modelListPath;
             if (flmPath && flmPath !== "flm") {
                 const cleanPath = flmPath.replace(/[\\/]+$/, '');
                 const separator = cleanPath.includes('\\') ? '\\' : '/';
@@ -185,7 +185,7 @@ export const FlmService = {
                 $shared = [math]::Round($ram / 2, 1)
                 $sharedBytes = [math]::Round($mem / 2, 0)
                 
-                $npuName = "Non détecté"
+                $npuName = ""
                 $npuDriver = "N/A"
 
                 # Search for NPU driver directly using CIM/WMI which contains the version
