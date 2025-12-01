@@ -30,7 +30,6 @@ function App() {
     preemption: false
   });
   const [flmPath, setFlmPath] = useState("flm");
-  const APP_VERSION = "0.1.0";
 
   // Load config on startup
   useEffect(() => {
@@ -227,7 +226,7 @@ function App() {
           </main>
         </div>
       </div>
-      <StatusBar serverStatus={serverStatus} version={APP_VERSION} />
+      <StatusBar serverStatus={serverStatus} version={ConfigService.getAppVersion()} />
     </div>
   );
 }
