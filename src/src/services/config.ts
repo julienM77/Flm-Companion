@@ -11,7 +11,7 @@ export interface AppConfig {
 
 const DEFAULT_CONFIG: AppConfig = {
     theme: "dark",
-    flmPath: "",
+    flmPath: "flm",
     lastSelectedModel: "",
     serverOptions: {
         pmode: 'performance',

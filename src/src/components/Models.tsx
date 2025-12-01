@@ -20,11 +20,13 @@ import { useTranslation, Trans } from "react-i18next";
 import { GenericAlertDialog } from "./GenericAlertDialog";
 
 interface ModelsProps {
+    installedModels: FlmModel[];
+    onRefresh: () => void;
 }
 
-export const Models = ({ }: ModelsProps) => {
+export const Models = ({ installedModels, onRefresh }: ModelsProps) => {
     const { t } = useTranslation();
-    const [installedModels, setInstalledModels] = useState<FlmModel[]>([]);
+    // const [installedModels, setInstalledModels] = useState<FlmModel[]>([]); // Removed in favor of props
     const [availableModels, setAvailableModels] = useState<FlmModel[]>([]);
     const [loading, setLoading] = useState(false);
     const [downloadingModel, setDownloadingModel] = useState<string | null>(null);
@@ -34,36 +36,39 @@ export const Models = ({ }: ModelsProps) => {
     const [alertOpen, setAlertOpen] = useState(false);
     const [alertMessage, setAlertMessage] = useState("");
 
-    const loadModels = async () => {
+    const loadModels = async (force = false) => {
         setLoading(true);
+
+        // Load models first to show them quickly
         try {
-            const [installed, available, stats] = await Promise.all([
-                FlmService.listModels('installed'),
-                FlmService.listModels('not-installed'),
-                SystemService.getSystemStats()
-            ]);
-            setInstalledModels(installed);
+            const available = await FlmService.listModels('not-installed', force);
             setAvailableModels(available);
-            setTotalMemory(stats.memory.total * 1024 * 1024); // Convert MB to Bytes
-            console.log("Installed models:", installed);
             console.log("Available models:", available);
         } catch (error) {
             console.error("Failed to load models:", error);
         }
+
         setLoading(false);
+
+        // Load system stats in background for memory warnings
+        try {
+            const stats = await SystemService.getSystemStats();
+            setTotalMemory(stats.memory.total * 1024 * 1024); // Convert MB to Bytes
+        } catch (error) {
+            console.error("Failed to load system stats:", error);
+        }
     };
 
     useEffect(() => {
         loadModels();
-        setAlertMessage(t('models.error_delete'));
-        setAlertOpen(true);
     }, []);
 
     const handleDelete = async (name: string) => {
         try {
             setLoading(true);
             await FlmService.removeModel(name);
-            await loadModels();
+            onRefresh();
+            await loadModels(true);
         } catch (e) {
             setAlertMessage(t('models.error_delete') + e);
             setAlertOpen(true);
@@ -129,7 +134,8 @@ export const Models = ({ }: ModelsProps) => {
                 setDownloadingModel(null);
                 setDownloadProgress(0);
                 setDownloadStatus("");
-                loadModels();
+                onRefresh();
+                loadModels(true);
             }, 1000);
         } catch (error) {
             setDownloadStatus(`Error: ${error}`);
@@ -154,7 +160,7 @@ export const Models = ({ }: ModelsProps) => {
                 </div>
                 <Button
                     variant="secondary"
-                    onClick={loadModels}
+                    onClick={() => { onRefresh(); loadModels(true); }}
                     disabled={loading || !!downloadingModel}
                     className="gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-border"
                 >

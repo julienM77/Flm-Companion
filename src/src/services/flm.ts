@@ -65,6 +65,9 @@ export interface ServerOptions {
 }
 
 let serverProcess: Child | null = null;
+let metadataCache: Record<string, FlmModel> | null = null;
+let installedModelsCache: FlmModel[] | null = null;
+let availableModelsCache: FlmModel[] | null = null;
 
 function getDirectory(path: string): string {
     const lastSlash = Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\'));
@@ -76,7 +79,11 @@ export const FlmService = {
     /**
      * Get rich metadata from local JSON file
      */
-    async getModelsMetadata(): Promise<Record<string, FlmModel>> {
+    async getModelsMetadata(forceRefresh = false): Promise<Record<string, FlmModel>> {
+        if (metadataCache && !forceRefresh) {
+            return metadataCache;
+        }
+
         try {
             const config = await ConfigService.loadConfig();
             let flmPath = config.flmPath;
@@ -132,6 +139,7 @@ export const FlmService = {
                     };
                 }
             }
+            metadataCache = metadata;
             return metadata;
         } catch (error) {
             console.warn("Could not read model_list.json:", error);
@@ -210,8 +218,16 @@ export const FlmService = {
      * List models with optional filter
      * Parses output of `flm list`
      * @param filter 'all' | 'installed' | 'not-installed'
+     * @param forceRefresh Force refresh of the cache
      */
-    async listModels(filter: 'all' | 'installed' | 'not-installed' = 'installed'): Promise<FlmModel[]> {
+    async listModels(filter: 'all' | 'installed' | 'not-installed' = 'installed', forceRefresh = false): Promise<FlmModel[]> {
+        if (filter === 'installed' && installedModelsCache && !forceRefresh) {
+            return installedModelsCache;
+        }
+        if (filter === 'not-installed' && availableModelsCache && !forceRefresh) {
+            return availableModelsCache;
+        }
+
         try {
             // 1. Get Metadata from JSON
             const metadata = await this.getModelsMetadata();
@@ -267,6 +283,12 @@ export const FlmService = {
                         modified: "-"
                     });
                 }
+            }
+
+            if (filter === 'installed') {
+                installedModelsCache = results;
+            } else if (filter === 'not-installed') {
+                availableModelsCache = results;
             }
 
             return results;
@@ -385,6 +407,8 @@ export const FlmService = {
      * Pull a new model
      */
     async pullModel(modelName: string, onProgress: (data: string) => void): Promise<void> {
+        installedModelsCache = null; // Invalidate cache
+        availableModelsCache = null; // Invalidate cache
         return new Promise((resolve, reject) => {
             let errorOutput = "";
 
@@ -424,6 +448,8 @@ export const FlmService = {
      * Remove a model
      */
     async removeModel(modelName: string): Promise<void> {
+        installedModelsCache = null; // Invalidate cache
+        availableModelsCache = null; // Invalidate cache
         const command = Command.create("flm", ["remove", modelName]);
         const output = await command.execute();
         if (output.code !== 0) {

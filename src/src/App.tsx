@@ -92,8 +92,8 @@ function App() {
     root.classList.add(theme);
   }, [theme]);
 
-  const loadInstalledModels = () => {
-    FlmService.listModels('installed').then(models => {
+  const loadInstalledModels = (force = false) => {
+    FlmService.listModels('installed', force).then(models => {
       setInstalledModels(models);
       setSelectedModel(prev => {
         if (prev && models.some(m => m.name === prev)) return prev;
@@ -200,7 +200,7 @@ function App() {
           />
         );
       case "models":
-        return <Models />;
+        return <Models installedModels={installedModels} onRefresh={() => loadInstalledModels(true)} />;
       case "settings":
         return <SettingsView theme={theme} setTheme={setTheme} />;
       case "about":
