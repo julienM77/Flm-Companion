@@ -13,7 +13,7 @@ import { ScrollArea } from "./ui/scroll-area";
 import { useTranslation } from "react-i18next";
 import { ConfigService } from "../services/config";
 
-const APP_REPO_NAME = import.meta.env.VITE_GIT_PROJECT_COMPANION || "FastFlowLM/Flm-Companion";
+const APP_REPO_NAME = import.meta.env.VITE_GIT_PROJECT_COMPANION || "julienM77/flm-companion";
 const FLM_REPO_NAME = import.meta.env.VITE_GIT_PROJECT_FLM || "FastFlowLM/FastFlowLM";
 const APP_REPO_URL = `https://github.com/${APP_REPO_NAME}`;
 const FLM_REPO_URL = `https://github.com/${FLM_REPO_NAME}`;
