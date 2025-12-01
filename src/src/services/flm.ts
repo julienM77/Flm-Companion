@@ -102,8 +102,9 @@ export const FlmService = {
             // flmPath is the directory containing model_list.json
             let modelListPath = "model_list.json";
             if (flmPath && flmPath !== "flm") {
-                const separator = flmPath.includes('\\') ? '\\' : '/';
-                modelListPath = `${flmPath}${separator}model_list.json`;
+                const cleanPath = flmPath.replace(/[\\/]+$/, '');
+                const separator = cleanPath.includes('\\') ? '\\' : '/';
+                modelListPath = `${cleanPath}${separator}model_list.json`;
             } else {
                 // Fallback to default install location if just "flm" is configured
                 modelListPath = "C:\\Program Files\\flm\\model_list.json";
@@ -424,7 +425,7 @@ export const FlmService = {
     /**
      * Pull a new model
      */
-    async pullModel(modelName: string, onProgress: (data: string) => void): Promise<void> {
+    pullModel(modelName: string, onProgress: (data: string) => void): Promise<void> {
         installedModelsCache = null; // Invalidate cache
         availableModelsCache = null; // Invalidate cache
         return new Promise((resolve, reject) => {
