@@ -12,9 +12,9 @@ import { ScrollArea } from "./ui/scroll-area";
 import { useTranslation } from "react-i18next";
 
 const APP_VERSION = "0.1.0";
-const APP_REPO_URL = "https://github.com/julienM77/flm-companion";
-
-const FLM_REPO_URL = "https://github.com/FastFlowLM/FastFlowLM";
+const APP_REPO_URL = `https://github.com/${import.meta.env.VITE_GIT_PROJECT_COMPANION}`;
+const FLM_REPO_URL = `https://github.com/${import.meta.env.VITE_GIT_PROJECT_FLM}`;
+const AMD_URL = import.meta.env.VITE_AMD_URL ?? 'https://ryzenai.docs.amd.com/en/latest/inst.html#install-npu-drivers';
 
 interface Asset {
     name: string;
@@ -249,7 +249,7 @@ export const AboutView = () => {
                         <Button
                             variant="secondary"
                             size="sm"
-                            onClick={() => openUrl("https://ryzenai.docs.amd.com/en/latest/inst.html#install-npu-drivers")}
+                            onClick={() => openUrl(AMD_URL)}
                         >
                             {t('about.amd_site')}
                         </Button>
