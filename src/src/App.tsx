@@ -142,6 +142,7 @@ function App() {
       }
 
       setServerStatus("starting");
+      setLogs([]);
       addLog(`[SYSTEM] Starting server with model: ${selectedModel}...`);
 
       try {
