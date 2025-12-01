@@ -68,6 +68,17 @@ export const GithubService = {
         const cleanLocal = local.replace(/^v/, '');
         const cleanRemote = remote.replace(/^v/, '');
 
-        return cleanLocal !== cleanRemote;
+        const localParts = cleanLocal.split('.').map(Number);
+        const remoteParts = cleanRemote.split('.').map(Number);
+
+        for (let i = 0; i < Math.max(localParts.length, remoteParts.length); i++) {
+            const l = localParts[i] || 0;
+            const r = remoteParts[i] || 0;
+
+            if (r > l) return true;
+            if (r < l) return false;
+        }
+
+        return false;
     }
 };
