@@ -1,7 +1,6 @@
 import { RefreshCw, Trash2, Download, HardDrive, Info } from "lucide-react";
 import { useEffect, useState } from "react";
-import { FlmService, FlmModel } from "../services/flm";
-import { SystemService } from "../services/system";
+import { FlmService, FlmModel, HardwareInfo } from "../services/flm";
 import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
@@ -22,9 +21,10 @@ import { GenericAlertDialog } from "./GenericAlertDialog";
 interface ModelsProps {
     installedModels: FlmModel[];
     onRefresh: () => void;
+    hardwareInfo: HardwareInfo | null;
 }
 
-export const Models = ({ installedModels, onRefresh }: ModelsProps) => {
+export const Models = ({ installedModels, onRefresh, hardwareInfo }: ModelsProps) => {
     const { t } = useTranslation();
     // const [installedModels, setInstalledModels] = useState<FlmModel[]>([]); // Removed in favor of props
     const [availableModels, setAvailableModels] = useState<FlmModel[]>([]);
@@ -32,7 +32,6 @@ export const Models = ({ installedModels, onRefresh }: ModelsProps) => {
     const [downloadingModel, setDownloadingModel] = useState<string | null>(null);
     const [downloadProgress, setDownloadProgress] = useState<number>(0);
     const [downloadStatus, setDownloadStatus] = useState<string>("");
-    const [totalMemory, setTotalMemory] = useState<number>(0);
     const [alertOpen, setAlertOpen] = useState(false);
     const [alertMessage, setAlertMessage] = useState("");
 
@@ -49,14 +48,6 @@ export const Models = ({ installedModels, onRefresh }: ModelsProps) => {
         }
 
         setLoading(false);
-
-        // Load system stats in background for memory warnings
-        try {
-            const stats = await SystemService.getSystemStats();
-            setTotalMemory(stats.memory.total * 1024 * 1024); // Convert MB to Bytes
-        } catch (error) {
-            console.error("Failed to load system stats:", error);
-        }
     };
 
     useEffect(() => {
@@ -145,6 +136,7 @@ export const Models = ({ installedModels, onRefresh }: ModelsProps) => {
 
     const isInstalled = (name: string) => installedModels.some(m => m.name === name);
     const isTooLarge = (model: FlmModel) => {
+        const totalMemory = hardwareInfo?.ramTotalBytes || 0;
         if (!totalMemory || !model.realSize) return false;
         // Warning if model size > 90% of total RAM
         return model.realSize > (totalMemory * 0.9);

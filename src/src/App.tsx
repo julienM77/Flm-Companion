@@ -7,7 +7,7 @@ import { ServerView } from "./components/ServerView";
 import { SettingsView } from "./components/SettingsView";
 import { AboutView } from "./components/AboutView";
 import { StatusBar } from "./components/StatusBar";
-import { FlmService, FlmModel, ServerOptions } from "./services/flm";
+import { FlmService, FlmModel, ServerOptions, HardwareInfo } from "./services/flm";
 import { ConfigService, AppConfig } from "./services/config";
 import { sendNotification, isPermissionGranted, requestPermission } from '@tauri-apps/plugin-notification';
 import { GenericAlertDialog } from "./components/GenericAlertDialog";
@@ -17,6 +17,7 @@ function App() {
   const [serverStatus, setServerStatus] = useState<"stopped" | "running" | "starting">("stopped");
   const [logs, setLogs] = useState<string[]>([]);
   const [installedModels, setInstalledModels] = useState<FlmModel[]>([]);
+  const [hardwareInfo, setHardwareInfo] = useState<HardwareInfo | null>(null);
   const [selectedModel, setSelectedModel] = useState<string>("");
   const [theme, setTheme] = useState<"dark" | "light" | "system">("dark");
   const [serverOptions, setServerOptions] = useState<ServerOptions>({
@@ -102,6 +103,12 @@ function App() {
     });
   };
 
+  const loadHardwareInfo = async (force = false) => {
+    const info = await FlmService.getHardwareInfo(force);
+    setHardwareInfo(info);
+  };
+
+  // Load initial data
   useEffect(() => {
     // Request notification permission
     (async () => {
@@ -112,8 +119,8 @@ function App() {
       }
     })();
 
-    // Load models on startup
     loadInstalledModels();
+    loadHardwareInfo();
   }, [flmPath]); // Reload models when path changes
 
   const addLog = (log: string) => {
@@ -200,11 +207,11 @@ function App() {
           />
         );
       case "models":
-        return <Models installedModels={installedModels} onRefresh={() => loadInstalledModels(true)} />;
+        return <Models installedModels={installedModels} onRefresh={() => loadInstalledModels(true)} hardwareInfo={hardwareInfo} />;
       case "settings":
         return <SettingsView theme={theme} setTheme={setTheme} />;
       case "about":
-        return <AboutView />;
+        return <AboutView hardwareInfo={hardwareInfo} onRefreshHardware={() => loadHardwareInfo(true)} />;
       default:
         return (
           <ChatView

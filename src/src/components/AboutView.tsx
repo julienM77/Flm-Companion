@@ -20,9 +20,11 @@ const FLM_REPO_URL = `https://github.com/${FLM_REPO_NAME}`;
 const AMD_URL = import.meta.env.VITE_AMD_URL ?? 'https://ryzenai.docs.amd.com/en/latest/inst.html#install-npu-drivers';
 
 interface AboutViewProps {
+    hardwareInfo: HardwareInfo | null;
+    onRefreshHardware: () => Promise<void>;
 }
 
-export const AboutView = ({ }: AboutViewProps) => {
+export const AboutView = ({ hardwareInfo, onRefreshHardware }: AboutViewProps) => {
     // FLM State
     const [flmVersion, setFlmVersion] = useState<string>("Loading...");
     const [latestFlmRelease, setLatestFlmRelease] = useState<ReleaseInfo | null>(null);
@@ -32,6 +34,7 @@ export const AboutView = ({ }: AboutViewProps) => {
     const [downloadProgress, setDownloadProgress] = useState<number | null>(null);
     const [isDownloading, setIsDownloading] = useState(false);
     const [isInstalling, setIsInstalling] = useState(false);
+    const [isRefreshingHardware, setIsRefreshingHardware] = useState(false);
 
     // Companion State
     const [companionVersion] = useState<string>(ConfigService.getAppVersion());
@@ -40,12 +43,10 @@ export const AboutView = ({ }: AboutViewProps) => {
     const [loadingCompanionUpdate, setLoadingCompanionUpdate] = useState(false);
     const [companionUpdateError, setCompanionUpdateError] = useState<string | null>(null);
 
-    const [hardwareInfo, setHardwareInfo] = useState<HardwareInfo | null>(null);
     const { t } = useTranslation();
 
     useEffect(() => {
         loadFlmVersion();
-        loadHardwareInfo();
         // Load changelog for current companion version
         fetchCompanionChangelog(companionVersion);
     }, []);
@@ -63,11 +64,6 @@ export const AboutView = ({ }: AboutViewProps) => {
         } catch (e) {
             setFlmVersion("Unknown");
         }
-    };
-
-    const loadHardwareInfo = async () => {
-        const info = await FlmService.getHardwareInfo();
-        setHardwareInfo(info);
     };
 
     // --- Companion Logic ---
@@ -212,6 +208,15 @@ export const AboutView = ({ }: AboutViewProps) => {
         }
     };
 
+    const handleRefreshHardware = async () => {
+        setIsRefreshingHardware(true);
+        try {
+            await onRefreshHardware();
+        } finally {
+            setIsRefreshingHardware(false);
+        }
+    };
+
     const isFlmUpdateAvailable = latestFlmRelease && GithubService.isNewerVersion(flmVersion, latestFlmRelease.tag_name);
     const isCompanionUpdateAvailable = latestCompanionRelease && GithubService.isNewerVersion(companionVersion, latestCompanionRelease.tag_name);
 
@@ -281,7 +286,12 @@ export const AboutView = ({ }: AboutViewProps) => {
                     )}
                 </div>
 
-                <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-4">{t('about.hardware')}</h2>
+                <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{t('about.hardware')}</h2>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleRefreshHardware} disabled={isRefreshingHardware}>
+                        <RefreshCw className={`h-3 w-3 ${isRefreshingHardware ? "animate-spin" : ""}`} />
+                    </Button>
+                </div>
                 <div className="bg-card rounded-xl border shadow-sm overflow-hidden mb-8">
                     <div className="flex items-center justify-between p-4 border-b last:border-0">
                         <span className="text-sm font-medium text-foreground">{t('about.cpu')}</span>

@@ -47,9 +47,11 @@ export interface FlmStatus {
 export interface HardwareInfo {
     cpu: string;
     ram: string;
+    ramTotalBytes: number;
     npuDriver: string;
     npuName: string;
     sharedMemory: string;
+    sharedMemoryBytes: number;
 }
 
 export interface ServerOptions {
@@ -68,6 +70,7 @@ let serverProcess: Child | null = null;
 let metadataCache: Record<string, FlmModel> | null = null;
 let installedModelsCache: FlmModel[] | null = null;
 let availableModelsCache: FlmModel[] | null = null;
+let hardwareInfoCache: HardwareInfo | null = null;
 
 function getDirectory(path: string): string {
     const lastSlash = Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\'));
@@ -168,12 +171,18 @@ export const FlmService = {
     /**
      * Get Hardware Information (CPU, RAM, NPU)
      */
-    async getHardwareInfo(): Promise<HardwareInfo> {
+    async getHardwareInfo(forceRefresh = false): Promise<HardwareInfo> {
+        if (hardwareInfoCache && !forceRefresh) {
+            return hardwareInfoCache;
+        }
+
         try {
             const script = `
                 $cpu = (Get-CimInstance Win32_Processor).Name
-                $ram = [math]::Round((Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory / 1GB, 1)
+                $mem = (Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory
+                $ram = [math]::Round($mem / 1GB, 1)
                 $shared = [math]::Round($ram / 2, 1)
+                $sharedBytes = [math]::Round($mem / 2, 0)
                 
                 $npuName = "Non détecté"
                 $npuDriver = "N/A"
@@ -189,7 +198,9 @@ export const FlmService = {
                 @{
                     cpu = $cpu
                     ram = "$ram GB"
+                    ramTotalBytes = $mem
                     sharedMemory = "$shared GB (Max)"
+                    sharedMemoryBytes = $sharedBytes
                     npuName = $npuName
                     npuDriver = $npuDriver
                 } | ConvertTo-Json -Compress
@@ -199,7 +210,9 @@ export const FlmService = {
             const output = await command.execute();
 
             if (output.code === 0) {
-                return JSON.parse(output.stdout);
+                const info = JSON.parse(output.stdout);
+                hardwareInfoCache = info;
+                return info;
             }
             throw new Error(output.stderr);
         } catch (e) {
@@ -207,7 +220,9 @@ export const FlmService = {
             return {
                 cpu: "Unknown",
                 ram: "Unknown",
+                ramTotalBytes: 0,
                 sharedMemory: "Unknown",
+                sharedMemoryBytes: 0,
                 npuName: "Unknown",
                 npuDriver: "Unknown"
             };
