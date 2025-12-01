@@ -32,7 +32,8 @@
     "stop_server": "Stop Server",
     "logs_title": "Server Logs",
     "lines": "lines",
-    "waiting_logs": "Waiting for server start..."
+    "waiting_logs": "Waiting for server start...",
+    "no_model_selected": "No Model (Audio Only)"
   },
   "models": {
     "title": "Model Management",

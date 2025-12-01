@@ -135,15 +135,9 @@ function App() {
         addLog(`[ERROR] Failed to stop server: ${error}`);
       }
     } else {
-      if (!selectedModel) {
-        setAlertMessage("Veuillez sélectionner un modèle.");
-        setAlertOpen(true);
-        return;
-      }
-
       setServerStatus("starting");
       setLogs([]);
-      addLog(`[SYSTEM] Starting server with model: ${selectedModel}...`);
+      addLog(`[SYSTEM] Starting server with model: ${selectedModel || "None"}...`);
 
       try {
         // Use provided options or defaults if called from dashboard (which passes no args)
@@ -156,7 +150,7 @@ function App() {
             setServerStatus("running");
             sendNotification({
               title: 'FLM Server Started',
-              body: `Server is running with model ${selectedModel}`,
+              body: `Server is running with model ${selectedModel || "None"}`,
             });
           }
           // Check if server stopped (crashed or exited)

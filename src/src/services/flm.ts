@@ -322,7 +322,10 @@ export const FlmService = {
         }
 
         try {
-            const args = ["serve", modelName];
+            const args = ["serve"];
+            if (modelName) {
+                args.push(modelName);
+            }
 
             if (options.pmode) args.push("--pmode", options.pmode);
             if (options.ctxLen && options.ctxLen > 0) args.push("--ctx-len", options.ctxLen.toString());

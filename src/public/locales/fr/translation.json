@@ -32,7 +32,8 @@
     "stop_server": "Arrêter le Serveur",
     "logs_title": "Logs du Serveur",
     "lines": "lignes",
-    "waiting_logs": "En attente de démarrage du serveur..."
+    "waiting_logs": "En attente de démarrage du serveur...",
+    "no_model_selected": "Aucun Modèle (Audio Seulement)"
   },
   "models": {
     "title": "Gestion des Modèles",

@@ -81,12 +81,17 @@ export const ServerView = ({
                             <div>
                                 <label className="block text-xs font-medium text-muted-foreground mb-1.5">{t('server.model_to_load')}</label>
                                 <Select
-                                    value={selectedModel}
+                                    value={selectedModel || "no-model-selected"}
                                     onValueChange={(val) => {
-                                        onSelectModel(val);
-                                        const model = models.find(m => m.name === val);
-                                        if (model && model.contextLength) {
-                                            setOptions(prev => ({ ...prev, ctxLen: model.contextLength }));
+                                        if (val === "no-model-selected") {
+                                            onSelectModel("");
+                                            setOptions(prev => ({ ...prev, ctxLen: 0 }));
+                                        } else {
+                                            onSelectModel(val);
+                                            const model = models.find(m => m.name === val);
+                                            if (model && model.contextLength) {
+                                                setOptions(prev => ({ ...prev, ctxLen: model.contextLength }));
+                                            }
                                         }
                                     }}
                                     disabled={serverStatus !== "stopped"}
@@ -95,6 +100,7 @@ export const ServerView = ({
                                         <SelectValue placeholder={t('server.select_model_placeholder')} />
                                     </SelectTrigger>
                                     <SelectContent>
+                                        <SelectItem value="no-model-selected">{t('server.no_model_selected') || "No Model (Audio Only)"}</SelectItem>
                                         {models.length === 0 ? (
                                             <SelectItem value="none" disabled>{t('server.no_model_installed')}</SelectItem>
                                         ) : (
@@ -184,8 +190,8 @@ export const ServerView = ({
                                                 <label className="block text-xs font-medium text-muted-foreground mb-1.5">{t('server.context_tokens')}</label>
                                                 <Input
                                                     type="number"
-                                                    value={options.ctxLen}
-                                                    onChange={(e) => handleOptionChange('ctxLen', parseInt(e.target.value))}
+                                                    value={options.ctxLen || ""}
+                                                    onChange={(e) => handleOptionChange('ctxLen', parseInt(e.target.value) || 0)}
                                                     disabled={serverStatus !== "stopped"}
                                                     className="bg-input border-input text-foreground h-9"
                                                 />
@@ -244,7 +250,6 @@ export const ServerView = ({
                         {serverStatus === "stopped" ? (
                             <Button
                                 onClick={() => onToggleServer(options)}
-                                disabled={!selectedModel}
                                 className="w-full bg-green-600 hover:bg-green-700 text-white py-6 rounded-xl flex items-center justify-center gap-2 font-bold text-lg shadow-lg hover:shadow-green-900/20"
                             >
                                 <Play size={20} /> {t('server.start_server')}
