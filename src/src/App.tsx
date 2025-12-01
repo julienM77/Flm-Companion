@@ -10,6 +10,7 @@ import { StatusBar } from "./components/StatusBar";
 import { FlmService, FlmModel, ServerOptions } from "./services/flm";
 import { ConfigService, AppConfig } from "./services/config";
 import { sendNotification, isPermissionGranted, requestPermission } from '@tauri-apps/plugin-notification';
+import { GenericAlertDialog } from "./components/GenericAlertDialog";
 
 function App() {
   const [activeTab, setActiveTab] = useState("models");
@@ -30,6 +31,8 @@ function App() {
     preemption: false
   });
   const [flmPath, setFlmPath] = useState("flm");
+  const [alertOpen, setAlertOpen] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
 
   // Load config on startup
   useEffect(() => {
@@ -126,7 +129,8 @@ function App() {
       }
     } else {
       if (!selectedModel) {
-        alert("Veuillez sélectionner un modèle.");
+        setAlertMessage("Veuillez sélectionner un modèle.");
+        setAlertOpen(true);
         return;
       }
 
@@ -227,6 +231,11 @@ function App() {
         </div>
       </div>
       <StatusBar serverStatus={serverStatus} version={ConfigService.getAppVersion()} />
+      <GenericAlertDialog
+        open={alertOpen}
+        onOpenChange={setAlertOpen}
+        description={alertMessage}
+      />
     </div>
   );
 }

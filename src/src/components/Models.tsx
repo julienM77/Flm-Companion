@@ -17,6 +17,7 @@ import {
 } from "./ui/dialog";
 import { ScrollArea } from "./ui/scroll-area";
 import { useTranslation, Trans } from "react-i18next";
+import { GenericAlertDialog } from "./GenericAlertDialog";
 
 interface ModelsProps {
 }
@@ -30,6 +31,8 @@ export const Models = ({ }: ModelsProps) => {
     const [downloadProgress, setDownloadProgress] = useState<number>(0);
     const [downloadStatus, setDownloadStatus] = useState<string>("");
     const [totalMemory, setTotalMemory] = useState<number>(0);
+    const [alertOpen, setAlertOpen] = useState(false);
+    const [alertMessage, setAlertMessage] = useState("");
 
     const loadModels = async () => {
         setLoading(true);
@@ -52,6 +55,8 @@ export const Models = ({ }: ModelsProps) => {
 
     useEffect(() => {
         loadModels();
+        setAlertMessage(t('models.error_delete'));
+        setAlertOpen(true);
     }, []);
 
     const handleDelete = async (name: string) => {
@@ -60,7 +65,8 @@ export const Models = ({ }: ModelsProps) => {
             await FlmService.removeModel(name);
             await loadModels();
         } catch (e) {
-            alert(t('models.error_delete') + e);
+            setAlertMessage(t('models.error_delete') + e);
+            setAlertOpen(true);
             setLoading(false);
         }
     };
@@ -410,6 +416,11 @@ export const Models = ({ }: ModelsProps) => {
                     </Card>
                 </div>
             </div>
+            <GenericAlertDialog
+                open={alertOpen}
+                onOpenChange={setAlertOpen}
+                description={alertMessage}
+            />
         </div>
     );
 };
