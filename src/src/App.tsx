@@ -33,6 +33,7 @@ function App() {
     preemption: false
   });
   const [flmPath, setFlmPath] = useState("flm");
+  const [isConfigLoaded, setIsConfigLoaded] = useState(false);
 
   // Load config on startup
   useEffect(() => {
@@ -56,6 +57,7 @@ function App() {
       if (config.serverOptions) {
         setServerOptions(config.serverOptions);
       }
+      setIsConfigLoaded(true);
     });
   }, []);
 
@@ -109,6 +111,8 @@ function App() {
 
   // Load initial data
   useEffect(() => {
+    if (!isConfigLoaded) return;
+
     // Request notification permission
     (async () => {
       let permissionGranted = await isPermissionGranted();
@@ -120,7 +124,7 @@ function App() {
 
     loadInstalledModels();
     loadHardwareInfo();
-  }, [flmPath]); // Reload models when path changes
+  }, [flmPath, isConfigLoaded]); // Reload models when path changes
 
   const addLog = (log: string) => {
     setLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${log}`]);
