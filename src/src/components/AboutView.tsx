@@ -3,6 +3,7 @@ import { Github, RefreshCw, Download } from 'lucide-react';
 import { Button } from './ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
 import { FlmService, HardwareInfo } from '../services/flm';
+import { GithubService, ReleaseInfo } from '../services/github';
 import { openUrl, openPath } from '@tauri-apps/plugin-opener';
 import { fetch } from '@tauri-apps/plugin-http';
 import { writeFile, BaseDirectory } from '@tauri-apps/plugin-fs';
@@ -10,46 +11,49 @@ import { tempDir } from '@tauri-apps/api/path';
 import ReactMarkdown from 'react-markdown';
 import { ScrollArea } from "./ui/scroll-area";
 import { useTranslation } from "react-i18next";
+import { ConfigService } from "../services/config";
 
-const APP_VERSION = "0.1.0";
-const APP_REPO_URL = "https://github.com/julienM77/flm-companion";
+const APP_REPO_NAME = import.meta.env.VITE_GIT_PROJECT_COMPANION || "julienM77/flm-companion";
+const FLM_REPO_NAME = import.meta.env.VITE_GIT_PROJECT_FLM || "FastFlowLM/FastFlowLM";
+const APP_REPO_URL = `https://github.com/${APP_REPO_NAME}`;
+const FLM_REPO_URL = `https://github.com/${FLM_REPO_NAME}`;
+const AMD_URL = import.meta.env.VITE_AMD_URL ?? 'https://ryzenai.docs.amd.com/en/latest/inst.html#install-npu-drivers';
 
-const FLM_REPO_URL = "https://github.com/FastFlowLM/FastFlowLM";
-
-interface Asset {
-    name: string;
-    browser_download_url: string;
-    size: number;
+interface AboutViewProps {
+    hardwareInfo: HardwareInfo | null;
+    onRefreshHardware: () => Promise<void>;
 }
 
-interface ReleaseInfo {
-    tag_name: string;
-    body: string;
-    html_url: string;
-    assets: Asset[];
-}
-
-export const AboutView = () => {
+export const AboutView = ({ hardwareInfo, onRefreshHardware }: AboutViewProps) => {
+    // FLM State
     const [flmVersion, setFlmVersion] = useState<string>("Loading...");
-    const [latestFlmVersion, setLatestFlmVersion] = useState<string | null>(null);
-    const [latestRelease, setLatestRelease] = useState<ReleaseInfo | null>(null);
-    const [changelog, setChangelog] = useState<string | null>(null);
-    const [loadingUpdate, setLoadingUpdate] = useState(false);
-    const [updateError, setUpdateError] = useState<string | null>(null);
+    const [latestFlmRelease, setLatestFlmRelease] = useState<ReleaseInfo | null>(null);
+    const [flmChangelog, setFlmChangelog] = useState<string | null>(null);
+    const [loadingFlmUpdate, setLoadingFlmUpdate] = useState(false);
+    const [flmUpdateError, setFlmUpdateError] = useState<string | null>(null);
     const [downloadProgress, setDownloadProgress] = useState<number | null>(null);
     const [isDownloading, setIsDownloading] = useState(false);
     const [isInstalling, setIsInstalling] = useState(false);
-    const [hardwareInfo, setHardwareInfo] = useState<HardwareInfo | null>(null);
+    const [isRefreshingHardware, setIsRefreshingHardware] = useState(false);
+
+    // Companion State
+    const [companionVersion] = useState<string>(ConfigService.getAppVersion());
+    const [latestCompanionRelease, setLatestCompanionRelease] = useState<ReleaseInfo | null>(null);
+    const [companionChangelog, setCompanionChangelog] = useState<string | null>(null);
+    const [loadingCompanionUpdate, setLoadingCompanionUpdate] = useState(false);
+    const [companionUpdateError, setCompanionUpdateError] = useState<string | null>(null);
+
     const { t } = useTranslation();
 
     useEffect(() => {
         loadFlmVersion();
-        loadHardwareInfo();
+        // Load changelog for current companion version
+        fetchCompanionChangelog(companionVersion);
     }, []);
 
     useEffect(() => {
         if (flmVersion && flmVersion !== "Loading..." && flmVersion !== "Unknown") {
-            fetchChangelog(flmVersion);
+            fetchFlmChangelog(flmVersion);
         }
     }, [flmVersion]);
 
@@ -62,40 +66,68 @@ export const AboutView = () => {
         }
     };
 
-    const loadHardwareInfo = async () => {
-        const info = await FlmService.getHardwareInfo();
-        setHardwareInfo(info);
-    };
+    // --- Companion Logic ---
 
-    const checkForUpdates = async () => {
-        setLoadingUpdate(true);
-        setUpdateError(null);
+    const checkCompanionUpdates = async () => {
+        setLoadingCompanionUpdate(true);
+        setCompanionUpdateError(null);
         try {
-            const response = await fetch("https://api.github.com/repos/FastFlowLM/FastFlowLM/releases/latest");
-            if (!response.ok) throw new Error("Failed to fetch latest release");
-            const data: ReleaseInfo = await response.json();
-            setLatestRelease(data);
-            setLatestFlmVersion(data.tag_name);
+            const release = await GithubService.getLatestRelease(APP_REPO_NAME);
+            setLatestCompanionRelease(release);
         } catch (e) {
-            setUpdateError("Impossible de vérifier les mises à jour");
+            setCompanionUpdateError(t('about.error_check_updates'));
             console.error(e);
         } finally {
-            setLoadingUpdate(false);
+            setLoadingCompanionUpdate(false);
         }
     };
 
-    const handleUpdate = async () => {
-        if (!latestRelease) return;
+    const fetchCompanionChangelog = async (version: string) => {
+        try {
+            const release = await GithubService.getReleaseByTag(APP_REPO_NAME, version);
+            setCompanionChangelog(release.body);
+        } catch (e) {
+            console.log("Companion release note not found for this version");
+        }
+    };
 
-        const asset = latestRelease.assets.find(a => a.name === "flm-setup.exe" || a.name.endsWith(".exe"));
+    // --- FLM Logic ---
+
+    const checkFlmUpdates = async () => {
+        setLoadingFlmUpdate(true);
+        setFlmUpdateError(null);
+        try {
+            const release = await GithubService.getLatestRelease(FLM_REPO_NAME);
+            setLatestFlmRelease(release);
+        } catch (e) {
+            setFlmUpdateError(t('about.error_check_updates'));
+            console.error(e);
+        } finally {
+            setLoadingFlmUpdate(false);
+        }
+    };
+
+    const fetchFlmChangelog = async (version: string) => {
+        try {
+            const release = await GithubService.getReleaseByTag(FLM_REPO_NAME, version);
+            setFlmChangelog(release.body);
+        } catch (e) {
+            console.log("FLM release note not found for this version");
+        }
+    };
+
+    const handleFlmUpdate = async () => {
+        if (!latestFlmRelease) return;
+
+        const asset = latestFlmRelease.assets.find(a => a.name === "flm-setup.exe" || a.name.endsWith(".exe"));
         if (!asset) {
-            setUpdateError("Installeur non trouvé dans la release");
+            setFlmUpdateError(t('about.error_installer_not_found'));
             return;
         }
 
         setIsDownloading(true);
         setDownloadProgress(0);
-        setUpdateError(null);
+        setFlmUpdateError(null);
 
         try {
             const response = await fetch(asset.browser_download_url);
@@ -138,7 +170,7 @@ export const AboutView = () => {
 
             // Start monitoring installation
             setIsInstalling(true);
-            setUpdateError("Installation en cours...");
+            setFlmUpdateError(t('about.status_installing_full'));
 
             const startVersion = flmVersion;
             const maxAttempts = 60; // 2 minutes
@@ -152,23 +184,23 @@ export const AboutView = () => {
                     if (currentVer !== startVersion && currentVer !== "Unknown" && currentVer !== "Loading...") {
                         setFlmVersion(currentVer);
                         setIsInstalling(false);
-                        setUpdateError(null);
+                        setFlmUpdateError(null);
                         clearInterval(interval);
                         // Refresh update status
-                        checkForUpdates();
+                        checkFlmUpdates();
                     }
                 } catch (e) { console.error(e); }
 
                 if (attempts >= maxAttempts) {
                     setIsInstalling(false);
-                    setUpdateError(null);
+                    setFlmUpdateError(null);
                     clearInterval(interval);
                 }
             }, 2000);
 
         } catch (e) {
             console.error(e);
-            setUpdateError("Erreur lors du téléchargement ou de l'installation");
+            setFlmUpdateError(t('about.error_download_install'));
             setIsInstalling(false);
         } finally {
             setIsDownloading(false);
@@ -176,24 +208,17 @@ export const AboutView = () => {
         }
     };
 
-    const fetchChangelog = async (version: string) => {
+    const handleRefreshHardware = async () => {
+        setIsRefreshingHardware(true);
         try {
-            // Handle version format (e.g. 0.9.20 vs v0.9.20)
-            const tag = version.startsWith('v') ? version : `v${version}`;
-            const response = await fetch(`https://api.github.com/repos/FastFlowLM/FastFlowLM/releases/tags/${tag}`);
-            if (response.ok) {
-                const data: ReleaseInfo = await response.json();
-                setChangelog(data.body);
-            } else {
-                // Fallback or just ignore if tag not found
-                console.log("Release note not found for this version");
-            }
-        } catch (e) {
-            console.error("Failed to fetch changelog", e);
+            await onRefreshHardware();
+        } finally {
+            setIsRefreshingHardware(false);
         }
     };
 
-    const isUpdateAvailable = latestFlmVersion && flmVersion && latestFlmVersion !== flmVersion && latestFlmVersion !== `v${flmVersion}`;
+    const isFlmUpdateAvailable = latestFlmRelease && GithubService.isNewerVersion(flmVersion, latestFlmRelease.tag_name);
+    const isCompanionUpdateAvailable = latestCompanionRelease && GithubService.isNewerVersion(companionVersion, latestCompanionRelease.tag_name);
 
     return (
         <ScrollArea className="h-full pr-4">
@@ -204,7 +229,7 @@ export const AboutView = () => {
                     {/* App Version Row */}
                     <div className="flex items-center justify-between p-4 border-b last:border-0">
                         <span className="text-sm font-medium text-foreground">{t('about.version')}</span>
-                        <div className="font-mono text-sm text-muted-foreground">{APP_VERSION}</div>
+                        <div className="font-mono text-sm text-muted-foreground">{companionVersion}</div>
                     </div>
 
                     {/* Source Code Row */}
@@ -219,9 +244,54 @@ export const AboutView = () => {
                             {t('about.view_on_github')}
                         </Button>
                     </div>
+
+                    {/* Companion Update Check Row */}
+                    <div className="flex items-center justify-between p-4 border-b last:border-0">
+                        <div className="flex flex-col">
+                            <span className="text-sm font-medium text-foreground">{t('about.updates')}</span>
+                            {latestCompanionRelease && (
+                                <span className={`text-xs ${isCompanionUpdateAvailable ? 'text-yellow-500' : 'text-green-500'}`}>
+                                    {isCompanionUpdateAvailable ? `${t('about.new_version')}${latestCompanionRelease.tag_name}` : t('about.up_to_date')}
+                                </span>
+                            )}
+                            {companionUpdateError && <span className="text-xs text-destructive">{companionUpdateError}</span>}
+                        </div>
+
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={checkCompanionUpdates}
+                            disabled={loadingCompanionUpdate}
+                        >
+                            {loadingCompanionUpdate ? <RefreshCw className="w-4 h-4 animate-spin" /> : t('about.check')}
+                        </Button>
+                    </div>
+
+                    {/* Companion Changelog Row */}
+                    {companionChangelog && (
+                        <div >
+                            <Accordion type="single" collapsible>
+                                <AccordionItem value="changelog" className="border-b-0">
+                                    <AccordionTrigger className="px-4 py-4 hover:no-underline">
+                                        <span className="text-sm font-medium text-foreground">{t('about.release_notes')} <span className="text-muted-foreground font-normal ml-2">({companionVersion})</span></span>
+                                    </AccordionTrigger>
+                                    <AccordionContent>
+                                        <div className="px-4 pb-4 text-sm bg-muted/30 pt-2 prose prose-sm dark:prose-invert max-w-none max-h-[400px] overflow-y-auto prose-headings:text-foreground prose-p:text-foreground prose-strong:text-foreground prose-li:text-foreground prose-code:text-foreground">
+                                            <ReactMarkdown>{companionChangelog}</ReactMarkdown>
+                                        </div>
+                                    </AccordionContent>
+                                </AccordionItem>
+                            </Accordion>
+                        </div>
+                    )}
                 </div>
 
-                <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-4">{t('about.hardware')}</h2>
+                <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{t('about.hardware')}</h2>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleRefreshHardware} disabled={isRefreshingHardware}>
+                        <RefreshCw className={`h-3 w-3 ${isRefreshingHardware ? "animate-spin" : ""}`} />
+                    </Button>
+                </div>
                 <div className="bg-card rounded-xl border shadow-sm overflow-hidden mb-8">
                     <div className="flex items-center justify-between p-4 border-b last:border-0">
                         <span className="text-sm font-medium text-foreground">{t('about.cpu')}</span>
@@ -249,7 +319,7 @@ export const AboutView = () => {
                         <Button
                             variant="secondary"
                             size="sm"
-                            onClick={() => openUrl("https://ryzenai.docs.amd.com/en/latest/inst.html#install-npu-drivers")}
+                            onClick={() => openUrl(AMD_URL)}
                         >
                             {t('about.amd_site')}
                         </Button>
@@ -277,16 +347,16 @@ export const AboutView = () => {
                         </Button>
                     </div>
 
-                    {/* Update Check Row */}
+                    {/* FLM Update Check Row */}
                     <div className="flex items-center justify-between p-4 border-b last:border-0">
                         <div className="flex flex-col">
                             <span className="text-sm font-medium text-foreground">{t('about.updates')}</span>
-                            {latestFlmVersion && (
-                                <span className={`text-xs ${isUpdateAvailable ? 'text-yellow-500' : 'text-green-500'}`}>
-                                    {isUpdateAvailable ? `${t('about.new_version')}${latestFlmVersion}` : t('about.up_to_date')}
+                            {latestFlmRelease && (
+                                <span className={`text-xs ${isFlmUpdateAvailable ? 'text-yellow-500' : 'text-green-500'}`}>
+                                    {isFlmUpdateAvailable ? `${t('about.new_version')}${latestFlmRelease.tag_name}` : t('about.up_to_date')}
                                 </span>
                             )}
-                            {updateError && <span className="text-xs text-destructive">{updateError}</span>}
+                            {flmUpdateError && <span className="text-xs text-destructive">{flmUpdateError}</span>}
                             {isDownloading && (
                                 <div className="w-full bg-secondary h-1.5 mt-2 rounded-full overflow-hidden">
                                     <div
@@ -297,11 +367,11 @@ export const AboutView = () => {
                             )}
                         </div>
 
-                        {isUpdateAvailable ? (
+                        {isFlmUpdateAvailable ? (
                             <Button
                                 variant="default"
                                 size="sm"
-                                onClick={handleUpdate}
+                                onClick={handleFlmUpdate}
                                 disabled={isDownloading || isInstalling}
                             >
                                 {isDownloading ? (
@@ -325,16 +395,16 @@ export const AboutView = () => {
                             <Button
                                 variant="secondary"
                                 size="sm"
-                                onClick={checkForUpdates}
-                                disabled={loadingUpdate}
+                                onClick={checkFlmUpdates}
+                                disabled={loadingFlmUpdate}
                             >
-                                {loadingUpdate ? <RefreshCw className="w-4 h-4 animate-spin" /> : t('about.check')}
+                                {loadingFlmUpdate ? <RefreshCw className="w-4 h-4 animate-spin" /> : t('about.check')}
                             </Button>
                         )}
                     </div>
 
-                    {/* Changelog Row */}
-                    {changelog && (
+                    {/* FLM Changelog Row */}
+                    {flmChangelog && (
                         <div >
                             <Accordion type="single" collapsible>
                                 <AccordionItem value="changelog" className="border-b-0">
@@ -343,7 +413,7 @@ export const AboutView = () => {
                                     </AccordionTrigger>
                                     <AccordionContent>
                                         <div className="px-4 pb-4 text-sm bg-muted/30 pt-2 prose prose-sm dark:prose-invert max-w-none max-h-[400px] overflow-y-auto prose-headings:text-foreground prose-p:text-foreground prose-strong:text-foreground prose-li:text-foreground prose-code:text-foreground">
-                                            <ReactMarkdown>{changelog}</ReactMarkdown>
+                                            <ReactMarkdown>{flmChangelog}</ReactMarkdown>
                                         </div>
                                     </AccordionContent>
                                 </AccordionItem>

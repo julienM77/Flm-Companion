@@ -13,14 +13,14 @@ FlmCompagnon is a modern GUI designed to accompany and manage the **FLM** projec
 
 ## To do
 
-* [ ] Clean code and optimisation
+* [X] Clean code and optimisation
 * [ ] Fix the server management design for consistency
-* [ ] Add a version check for the companion application (+ changelog)
-* [ ] Add caching for the list of models, CPU version, and RAM
-* [ ] Force an update of the model list on the server configuration side when models are modified (DLL, delete)
+* [X] Add a version check for the companion application (+ changelog)
+* [X] Add caching for the list of models, CPU version, and RAM
+* [X] Force an update of the model list on the server configuration side when models are modified (DLL, delete)
 * [ ] Add menus to the notification area icon (server management, models)
-* [ ] Complete the translation of all texts for multilingual support
-* [ ] Flm update 0.9.21 → add the option to launch the server without a model using ASR for Whisper
+* [X] Complete the translation of all texts for multilingual support
+* [X] Flm update 0.9.21 → add the option to launch the server without a model using ASR for Whisper
 
 ## FLM Dependency
 

@@ -1,7 +1,6 @@
 import { RefreshCw, Trash2, Download, HardDrive, Info } from "lucide-react";
 import { useEffect, useState } from "react";
-import { FlmService, FlmModel } from "../services/flm";
-import { SystemService } from "../services/system";
+import { FlmService, FlmModel, HardwareInfo } from "../services/flm";
 import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
@@ -17,33 +16,36 @@ import {
 } from "./ui/dialog";
 import { ScrollArea } from "./ui/scroll-area";
 import { useTranslation, Trans } from "react-i18next";
+import { GenericAlertDialog } from "./GenericAlertDialog";
 
-export const Models = () => {
+interface ModelsProps {
+    installedModels: FlmModel[];
+    onRefresh: () => void;
+    hardwareInfo: HardwareInfo | null;
+}
+
+export const Models = ({ installedModels, onRefresh, hardwareInfo }: ModelsProps) => {
     const { t } = useTranslation();
-    const [installedModels, setInstalledModels] = useState<FlmModel[]>([]);
     const [availableModels, setAvailableModels] = useState<FlmModel[]>([]);
     const [loading, setLoading] = useState(false);
     const [downloadingModel, setDownloadingModel] = useState<string | null>(null);
     const [downloadProgress, setDownloadProgress] = useState<number>(0);
     const [downloadStatus, setDownloadStatus] = useState<string>("");
-    const [totalMemory, setTotalMemory] = useState<number>(0);
+    const [alertOpen, setAlertOpen] = useState(false);
+    const [alertMessage, setAlertMessage] = useState("");
 
-    const loadModels = async () => {
+    const loadModels = async (force = false) => {
         setLoading(true);
+
+        // Load models first to show them quickly
         try {
-            const [installed, available, stats] = await Promise.all([
-                FlmService.listModels('installed'),
-                FlmService.listModels('not-installed'),
-                SystemService.getSystemStats()
-            ]);
-            setInstalledModels(installed);
+            const available = await FlmService.listModels('not-installed', force);
             setAvailableModels(available);
-            setTotalMemory(stats.memory.total * 1024 * 1024); // Convert MB to Bytes
-            console.log("Installed models:", installed);
             console.log("Available models:", available);
         } catch (error) {
             console.error("Failed to load models:", error);
         }
+
         setLoading(false);
     };
 
@@ -55,9 +57,11 @@ export const Models = () => {
         try {
             setLoading(true);
             await FlmService.removeModel(name);
-            await loadModels();
+            onRefresh();
+            await loadModels(true);
         } catch (e) {
-            alert(t('models.error_delete') + e);
+            setAlertMessage(t('models.error_delete') + e);
+            setAlertOpen(true);
             setLoading(false);
         }
     };
@@ -67,7 +71,7 @@ export const Models = () => {
         console.log("Starting download for model:", modelName);
         setDownloadingModel(modelName);
         setDownloadProgress(0);
-        setDownloadStatus("Starting download...");
+        setDownloadStatus(t('models.download_starting'));
 
         let totalFiles = 1;
         let baseProgress = 0;
@@ -87,7 +91,7 @@ export const Models = () => {
                     // Base progress is the progress of completed files
                     baseProgress = ((current - 1) / total) * 100;
                     currentFileProgress = 0;
-                    setDownloadStatus(`Downloading file ${current}/${total}...`);
+                    setDownloadStatus(t('models.download_file_progress', { current, total }));
                 }
 
                 // 2. Check for "Overall progress: P%" (Sync point)
@@ -114,22 +118,24 @@ export const Models = () => {
                 }
             });
 
-            setDownloadStatus("Download complete!");
+            setDownloadStatus(t('models.download_complete'));
             setDownloadProgress(100);
             setTimeout(() => {
                 setDownloadingModel(null);
                 setDownloadProgress(0);
                 setDownloadStatus("");
-                loadModels();
+                onRefresh();
+                loadModels(true);
             }, 1000);
         } catch (error) {
-            setDownloadStatus(`Error: ${error}`);
+            setDownloadStatus(t('models.download_error', { error }));
             setTimeout(() => setDownloadingModel(null), 3000);
         }
     };
 
     const isInstalled = (name: string) => installedModels.some(m => m.name === name);
     const isTooLarge = (model: FlmModel) => {
+        const totalMemory = hardwareInfo?.ramTotalBytes || 0;
         if (!totalMemory || !model.realSize) return false;
         // Warning if model size > 90% of total RAM
         return model.realSize > (totalMemory * 0.9);
@@ -145,7 +151,7 @@ export const Models = () => {
                 </div>
                 <Button
                     variant="secondary"
-                    onClick={loadModels}
+                    onClick={() => { onRefresh(); loadModels(true); }}
                     disabled={loading || !!downloadingModel}
                     className="gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-border"
                 >
@@ -407,6 +413,11 @@ export const Models = () => {
                     </Card>
                 </div>
             </div>
+            <GenericAlertDialog
+                open={alertOpen}
+                onOpenChange={setAlertOpen}
+                description={alertMessage}
+            />
         </div>
     );
 };

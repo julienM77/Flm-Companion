@@ -1,5 +1,6 @@
 import { Command, Child } from "@tauri-apps/plugin-shell";
 import { readTextFile } from "@tauri-apps/plugin-fs";
+import { ConfigService } from "./config";
 
 export interface FlmModel {
     name: string;
@@ -46,9 +47,11 @@ export interface FlmStatus {
 export interface HardwareInfo {
     cpu: string;
     ram: string;
+    ramTotalBytes: number;
     npuDriver: string;
     npuName: string;
     sharedMemory: string;
+    sharedMemoryBytes: number;
 }
 
 export interface ServerOptions {
@@ -64,15 +67,50 @@ export interface ServerOptions {
 }
 
 let serverProcess: Child | null = null;
-const MODEL_LIST_PATH = "C:\\Program Files\\flm\\model_list.json";
+let metadataCache: Record<string, FlmModel> | null = null;
+let installedModelsCache: FlmModel[] | null = null;
+let availableModelsCache: FlmModel[] | null = null;
+let hardwareInfoCache: HardwareInfo | null = null;
+
+function getDirectory(path: string): string {
+    const lastSlash = Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\'));
+    if (lastSlash === -1) return ".";
+    return path.substring(0, lastSlash);
+}
 
 export const FlmService = {
     /**
      * Get rich metadata from local JSON file
      */
-    async getModelsMetadata(): Promise<Record<string, FlmModel>> {
+    async getModelsMetadata(forceRefresh = false): Promise<Record<string, FlmModel>> {
+        if (metadataCache && !forceRefresh) {
+            return metadataCache;
+        }
+
         try {
-            const content = await readTextFile(MODEL_LIST_PATH);
+            const config = await ConfigService.loadConfig();
+            let flmPath = config.flmPath;
+
+            // If path is not configured, try to detect it
+            if (!flmPath || flmPath === "flm") {
+                const detected = await this.findFlmPath();
+                if (detected) {
+                    flmPath = detected;
+                }
+            }
+
+            // flmPath is the directory containing model_list.json
+            let modelListPath;
+            if (flmPath && flmPath !== "flm") {
+                const cleanPath = flmPath.replace(/[\\/]+$/, '');
+                const separator = cleanPath.includes('\\') ? '\\' : '/';
+                modelListPath = `${cleanPath}${separator}model_list.json`;
+            } else {
+                // Fallback to default install location if just "flm" is configured
+                modelListPath = "C:\\Program Files\\flm\\model_list.json";
+            }
+
+            const content = await readTextFile(modelListPath);
             const data: ModelListJson = JSON.parse(content);
             const metadata: Record<string, FlmModel> = {};
 
@@ -105,6 +143,7 @@ export const FlmService = {
                     };
                 }
             }
+            metadataCache = metadata;
             return metadata;
         } catch (error) {
             console.warn("Could not read model_list.json:", error);
@@ -117,13 +156,7 @@ export const FlmService = {
      */
     async getVersion(): Promise<string> {
         try {
-            // Try to run 'flm --version' or just check if command exists
-            // Since flm might not have a --version flag, we can try 'flm list' or similar if needed.
-            // Based on research, we'll assume we can run it.
-            // If 'flm' is not in PATH, this might fail.
             const command = Command.create("flm", ["--version"]);
-            // Note: 'flm' needs to be defined in tauri.conf.json or be in the path and allowed scope.
-            // For now we assume 'flm' is the binary name.
 
             const output = await command.execute();
             if (output.code === 0) {
@@ -139,14 +172,20 @@ export const FlmService = {
     /**
      * Get Hardware Information (CPU, RAM, NPU)
      */
-    async getHardwareInfo(): Promise<HardwareInfo> {
+    async getHardwareInfo(forceRefresh = false): Promise<HardwareInfo> {
+        if (hardwareInfoCache && !forceRefresh) {
+            return hardwareInfoCache;
+        }
+
         try {
             const script = `
                 $cpu = (Get-CimInstance Win32_Processor).Name
-                $ram = [math]::Round((Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory / 1GB, 1)
+                $mem = (Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory
+                $ram = [math]::Round($mem / 1GB, 1)
                 $shared = [math]::Round($ram / 2, 1)
+                $sharedBytes = [math]::Round($mem / 2, 0)
                 
-                $npuName = "Non détecté"
+                $npuName = ""
                 $npuDriver = "N/A"
 
                 # Search for NPU driver directly using CIM/WMI which contains the version
@@ -160,7 +199,9 @@ export const FlmService = {
                 @{
                     cpu = $cpu
                     ram = "$ram GB"
+                    ramTotalBytes = $mem
                     sharedMemory = "$shared GB (Max)"
+                    sharedMemoryBytes = $sharedBytes
                     npuName = $npuName
                     npuDriver = $npuDriver
                 } | ConvertTo-Json -Compress
@@ -170,7 +211,9 @@ export const FlmService = {
             const output = await command.execute();
 
             if (output.code === 0) {
-                return JSON.parse(output.stdout);
+                const info = JSON.parse(output.stdout);
+                hardwareInfoCache = info;
+                return info;
             }
             throw new Error(output.stderr);
         } catch (e) {
@@ -178,7 +221,9 @@ export const FlmService = {
             return {
                 cpu: "Unknown",
                 ram: "Unknown",
+                ramTotalBytes: 0,
                 sharedMemory: "Unknown",
+                sharedMemoryBytes: 0,
                 npuName: "Unknown",
                 npuDriver: "Unknown"
             };
@@ -189,8 +234,16 @@ export const FlmService = {
      * List models with optional filter
      * Parses output of `flm list`
      * @param filter 'all' | 'installed' | 'not-installed'
+     * @param forceRefresh Force refresh of the cache
      */
-    async listModels(filter: 'all' | 'installed' | 'not-installed' = 'installed'): Promise<FlmModel[]> {
+    async listModels(filter: 'all' | 'installed' | 'not-installed' = 'installed', forceRefresh = false): Promise<FlmModel[]> {
+        if (filter === 'installed' && installedModelsCache && !forceRefresh) {
+            return installedModelsCache;
+        }
+        if (filter === 'not-installed' && availableModelsCache && !forceRefresh) {
+            return availableModelsCache;
+        }
+
         try {
             // 1. Get Metadata from JSON
             const metadata = await this.getModelsMetadata();
@@ -248,6 +301,12 @@ export const FlmService = {
                 }
             }
 
+            if (filter === 'installed') {
+                installedModelsCache = results;
+            } else if (filter === 'not-installed') {
+                availableModelsCache = results;
+            }
+
             return results;
         } catch (error) {
             console.error("Failed to list models:", error);
@@ -264,7 +323,10 @@ export const FlmService = {
         }
 
         try {
-            const args = ["serve", modelName];
+            const args = ["serve"];
+            if (modelName) {
+                args.push(modelName);
+            }
 
             if (options.pmode) args.push("--pmode", options.pmode);
             if (options.ctxLen && options.ctxLen > 0) args.push("--ctx-len", options.ctxLen.toString());
@@ -326,14 +388,29 @@ export const FlmService = {
 
                 if (onLog) onLog("[SYSTEM] Exit command sent. Waiting for graceful shutdown...");
 
-                // To be safe, we can set a timeout to force kill if it doesn't close
-                setTimeout(async () => {
-                    if (serverProcess) {
-                        if (onLog) onLog("[SYSTEM] Server did not exit gracefully, forcing kill...");
-                        console.log("Server did not exit gracefully, forcing kill...");
-                        await serverProcess.kill();
-                    }
-                }, 5000); // 5 seconds timeout
+                // Wait for process to exit or timeout
+                await new Promise<void>((resolve) => {
+                    const timeoutId = setTimeout(() => {
+                        if (serverProcess) {
+                            if (onLog) onLog("[SYSTEM] Server did not exit gracefully, forcing kill...");
+                            console.log("Server did not exit gracefully, forcing kill...");
+                            serverProcess.kill().catch((e) => {
+                                console.error("Error killing process:", e);
+                            });
+                        }
+                        resolve();
+                    }, 5000);
+
+                    // Poll for exit
+                    const intervalId = setInterval(() => {
+                        if (!serverProcess) {
+                            // Process exited gracefully (handled by startServer's close listener)
+                            clearTimeout(timeoutId);
+                            clearInterval(intervalId);
+                            resolve();
+                        }
+                    }, 100);
+                });
 
             } catch (e) {
                 console.error("Failed to write exit command, forcing kill", e);
@@ -346,9 +423,12 @@ export const FlmService = {
     /**
      * Pull a new model
      */
-    async pullModel(modelName: string, onProgress: (data: string) => void): Promise<void> {
-        return new Promise(async (resolve, reject) => {
+    pullModel(modelName: string, onProgress: (data: string) => void): Promise<void> {
+        installedModelsCache = null; // Invalidate cache
+        availableModelsCache = null; // Invalidate cache
+        return new Promise((resolve, reject) => {
             let errorOutput = "";
+
             try {
                 const command = Command.create("flm", ["pull", modelName]);
 
@@ -374,7 +454,7 @@ export const FlmService = {
                     onProgress(text);
                 });
 
-                await command.spawn();
+                command.spawn().catch(reject);
             } catch (error) {
                 reject(error);
             }
@@ -385,6 +465,8 @@ export const FlmService = {
      * Remove a model
      */
     async removeModel(modelName: string): Promise<void> {
+        installedModelsCache = null; // Invalidate cache
+        availableModelsCache = null; // Invalidate cache
         const command = Command.create("flm", ["remove", modelName]);
         const output = await command.execute();
         if (output.code !== 0) {
@@ -456,5 +538,26 @@ export const FlmService = {
      */
     async stopChat(): Promise<void> {
         await this.stopServer(); // Re-use stopServer logic as it handles killing the process
+    },
+
+    /**
+     * Try to find FLM executable path using PowerShell
+     */
+    async findFlmPath(): Promise<string | null> {
+        try {
+            // Use PowerShell to find the command location
+            const command = Command.create("powershell", ["-Command", "(Get-Command flm -ErrorAction SilentlyContinue).Source"]);
+            const output = await command.execute();
+
+            if (output.code === 0 && output.stdout.trim()) {
+                const fullPath = output.stdout.trim();
+                // We want the directory, not the executable
+                return getDirectory(fullPath);
+            }
+            return null;
+        } catch (error) {
+            console.error("Failed to find FLM path:", error);
+            return null;
+        }
     }
 };

@@ -1,6 +1,6 @@
+use tauri::image::Image;
 use tauri::menu::{Menu, MenuItem};
 use tauri::tray::TrayIconBuilder;
-use tauri::image::Image;
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 #[tauri::command]
@@ -17,22 +17,22 @@ pub fn run() {
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_http::init())
+        .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&quit_i])?;
-            
-            let icon = Image::from_bytes(include_bytes!("../icons/icon.png")).expect("failed to load icon");
+
+            let icon = Image::from_bytes(include_bytes!("../icons/icon.png"))
+                .expect("failed to load icon");
 
             TrayIconBuilder::new()
                 .icon(icon)
                 .menu(&menu)
-                .on_menu_event(|app, event| {
-                    match event.id.as_ref() {
-                        "quit" => {
-                            app.exit(0);
-                        }
-                        _ => {}
+                .on_menu_event(|app, event| match event.id.as_ref() {
+                    "quit" => {
+                        app.exit(0);
                     }
+                    _ => {}
                 })
                 .build(app)?;
             Ok(())

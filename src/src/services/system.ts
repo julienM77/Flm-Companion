@@ -49,7 +49,7 @@ export const SystemService = {
 
     async getLinuxNpuDriverVersion(): Promise<string> {
         // Placeholder for Linux implementation
-        return "À implémenter";
+        return "Not Implemented";
     },
 
     async getSystemStats(): Promise<{ memory: { used: number, total: number, percentage: number }, cpu: { usage: number }, npu: { usage: number, temperature: number, power: number } }> {
@@ -89,7 +89,7 @@ export const SystemService = {
 
             // Mock NPU Stats (Still mocked as no standard API exists yet)
             const npu = {
-                usage: 0, // Set to 0 to avoid confusion with CPU
+                usage: 0,
                 temperature: 0,
                 power: 0
             };

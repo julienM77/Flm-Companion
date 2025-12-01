@@ -1,5 +1,6 @@
 import { BaseDirectory, readTextFile, writeTextFile, exists, mkdir } from "@tauri-apps/plugin-fs";
 import { ServerOptions } from "./flm";
+import packageJson from "../../package.json";
 
 export interface AppConfig {
     theme: "dark" | "light" | "system";
@@ -10,7 +11,7 @@ export interface AppConfig {
 
 const DEFAULT_CONFIG: AppConfig = {
     theme: "dark",
-    flmPath: "flm", // Default command
+    flmPath: "flm",
     lastSelectedModel: "",
     serverOptions: {
         pmode: 'performance',
@@ -28,6 +29,10 @@ const DEFAULT_CONFIG: AppConfig = {
 const CONFIG_FILENAME = "config.json";
 
 export const ConfigService = {
+    getAppVersion(): string {
+        return packageJson.version;
+    },
+
     async loadConfig(): Promise<AppConfig> {
         try {
             // Check if config directory exists, if not create it

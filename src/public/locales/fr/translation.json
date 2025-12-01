@@ -32,7 +32,8 @@
     "stop_server": "Arrêter le Serveur",
     "logs_title": "Logs du Serveur",
     "lines": "lignes",
-    "waiting_logs": "En attente de démarrage du serveur..."
+    "waiting_logs": "En attente de démarrage du serveur...",
+    "no_model_selected": "Aucun Modèle (Audio Seulement)"
   },
   "models": {
     "title": "Gestion des Modèles",
@@ -55,7 +56,11 @@
     "reinstall": "Réinstaller le modèle",
     "download": "Télécharger",
     "no_available_models": "Aucun modèle disponible trouvé",
-    "error_delete": "Erreur lors de la suppression: "
+    "error_delete": "Erreur lors de la suppression: ",
+    "download_starting": "Démarrage du téléchargement...",
+    "download_file_progress": "Téléchargement du fichier {{current}}/{{total}}...",
+    "download_complete": "Téléchargement terminé !",
+    "download_error": "Erreur : {{error}}"
   },
   "settings": {
     "general_config": "Configuration Générale",
@@ -95,7 +100,11 @@
     "update": "Mettre à jour",
     "installing": "Installation...",
     "check": "Vérifier",
-    "release_notes": "Notes de version"
+    "release_notes": "Notes de version",
+    "error_check_updates": "Impossible de vérifier les mises à jour",
+    "error_installer_not_found": "Installeur non trouvé dans la release",
+    "error_download_install": "Erreur lors du téléchargement ou de l'installation",
+    "status_installing_full": "Installation en cours..."
   },
   "status_bar": {
     "server_online": "SERVEUR EN LIGNE",
@@ -103,7 +112,21 @@
     "server_stopped": "SERVEUR ARRÊTÉ"
   },
   "common": {
-    "cancel": "Annuler"
+    "cancel": "Annuler",
+    "alert": "Alerte",
+    "ok": "OK"
+  },
+  "app": {
+    "alert_select_model": "Veuillez sélectionner un modèle.",
+    "notification_server_started_title": "Serveur FLM Démarré",
+    "notification_server_started_body": "Le serveur fonctionne avec le modèle {{model}}",
+    "notification_server_error_title": "Erreur Serveur FLM",
+    "notification_server_error_body": "Le serveur s'est arrêté de manière inattendue. Vérifiez les logs.",
+    "notification_server_stopped_title": "Serveur FLM Arrêté",
+    "notification_server_stopped_body": "Le serveur s'est arrêté correctement.",
+    "log_starting_server": "[SYSTÈME] Démarrage du serveur avec le modèle : {{model}}...",
+    "log_stop_error": "[ERREUR] Échec de l'arrêt du serveur : {{error}}",
+    "log_start_error": "[ERREUR] Échec du démarrage du serveur : {{error}}"
   },
   "chat": {
     "select_model": "Sélectionner un modèle",

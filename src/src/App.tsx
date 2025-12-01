@@ -7,15 +7,18 @@ import { ServerView } from "./components/ServerView";
 import { SettingsView } from "./components/SettingsView";
 import { AboutView } from "./components/AboutView";
 import { StatusBar } from "./components/StatusBar";
-import { FlmService, FlmModel, ServerOptions } from "./services/flm";
+import { FlmService, FlmModel, ServerOptions, HardwareInfo } from "./services/flm";
 import { ConfigService, AppConfig } from "./services/config";
 import { sendNotification, isPermissionGranted, requestPermission } from '@tauri-apps/plugin-notification';
+import { useTranslation } from "react-i18next";
 
 function App() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState("models");
   const [serverStatus, setServerStatus] = useState<"stopped" | "running" | "starting">("stopped");
   const [logs, setLogs] = useState<string[]>([]);
   const [installedModels, setInstalledModels] = useState<FlmModel[]>([]);
+  const [hardwareInfo, setHardwareInfo] = useState<HardwareInfo | null>(null);
   const [selectedModel, setSelectedModel] = useState<string>("");
   const [theme, setTheme] = useState<"dark" | "light" | "system">("dark");
   const [serverOptions, setServerOptions] = useState<ServerOptions>({
@@ -30,19 +33,31 @@ function App() {
     preemption: false
   });
   const [flmPath, setFlmPath] = useState("flm");
-  const APP_VERSION = "0.1.0";
+  const [isConfigLoaded, setIsConfigLoaded] = useState(false);
 
   // Load config on startup
   useEffect(() => {
-    ConfigService.loadConfig().then(config => {
+    ConfigService.loadConfig().then(async config => {
       setTheme(config.theme);
-      setFlmPath(config.flmPath);
+
+      let path = config.flmPath;
+      if (path === "flm" || path === "" || path === null) {
+        const resolvedPath = await FlmService.findFlmPath();
+        if (resolvedPath) {
+          console.log("Resolved FLM path from system:", resolvedPath);
+          path = resolvedPath;
+        }
+      }
+
+      setFlmPath(path);
+
       if (config.lastSelectedModel) {
         setSelectedModel(config.lastSelectedModel);
       }
       if (config.serverOptions) {
         setServerOptions(config.serverOptions);
       }
+      setIsConfigLoaded(true);
     });
   }, []);
 
@@ -79,21 +94,25 @@ function App() {
     root.classList.add(theme);
   }, [theme]);
 
-  const loadInstalledModels = () => {
-    FlmService.listModels('installed').then(models => {
+  const loadInstalledModels = (force = false) => {
+    FlmService.listModels('installed', force).then(models => {
       setInstalledModels(models);
-      // If no model is selected (or the selected one is gone), select the first available
-      // BUT only if we don't have a selected model from config (which is handled by the initial load effect)
-      // We need to be careful not to overwrite the loaded config selection if the model list loads later
       setSelectedModel(prev => {
         if (prev && models.some(m => m.name === prev)) return prev;
-        // If the previous selection (from config) is not in the list, fallback to first available
         return models.length > 0 ? models[0].name : "";
       });
     });
   };
 
+  const loadHardwareInfo = async (force = false) => {
+    const info = await FlmService.getHardwareInfo(force);
+    setHardwareInfo(info);
+  };
+
+  // Load initial data
   useEffect(() => {
+    if (!isConfigLoaded) return;
+
     // Request notification permission
     (async () => {
       let permissionGranted = await isPermissionGranted();
@@ -103,9 +122,9 @@ function App() {
       }
     })();
 
-    // Load models on startup
     loadInstalledModels();
-  }, []);
+    loadHardwareInfo();
+  }, [flmPath, isConfigLoaded]); // Reload models when path changes
 
   const addLog = (log: string) => {
     setLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${log}`]);
@@ -115,21 +134,13 @@ function App() {
     if (serverStatus === "running") {
       try {
         await FlmService.stopServer(addLog);
-        // Note: We don't set status to stopped here immediately, we wait for the process close event
-        // But for UI responsiveness we might want to show "Stopping..."
-        // However, the existing logic sets it to stopped. Let's keep it but maybe the close event will handle it too.
-        // For now, let's leave it as is, but the logs will show what's happening.
       } catch (error) {
-        addLog(`[ERROR] Failed to stop server: ${error}`);
+        addLog(t('app.log_stop_error', { error }));
       }
     } else {
-      if (!selectedModel) {
-        alert("Veuillez sélectionner un modèle.");
-        return;
-      }
-
       setServerStatus("starting");
-      addLog(`[SYSTEM] Starting server with model: ${selectedModel}...`);
+      setLogs([]);
+      addLog(t('app.log_starting_server', { model: selectedModel || "None" }));
 
       try {
         // Use provided options or defaults if called from dashboard (which passes no args)
@@ -141,8 +152,8 @@ function App() {
           if (log.includes("Enter 'exit' to stop the server:")) {
             setServerStatus("running");
             sendNotification({
-              title: 'FLM Server Started',
-              body: `Server is running with model ${selectedModel}`,
+              title: t('app.notification_server_started_title'),
+              body: t('app.notification_server_started_body', { model: selectedModel || "None" }),
             });
           }
           // Check if server stopped (crashed or exited)
@@ -150,20 +161,20 @@ function App() {
             setServerStatus("stopped");
             if (!log.includes("code 0")) {
               sendNotification({
-                title: 'FLM Server Error',
-                body: `The server stopped unexpectedly. Check logs for details.`,
+                title: t('app.notification_server_error_title'),
+                body: t('app.notification_server_error_body'),
               });
             } else {
               sendNotification({
-                title: 'FLM Server Stopped',
-                body: `The server has stopped gracefully.`,
+                title: t('app.notification_server_stopped_title'),
+                body: t('app.notification_server_stopped_body'),
               });
             }
           }
         });
       } catch (error) {
         setServerStatus("stopped");
-        addLog(`[ERROR] Failed to start server: ${error}`);
+        addLog(t('app.log_start_error', { error }));
       }
     }
   };
@@ -194,11 +205,11 @@ function App() {
           />
         );
       case "models":
-        return <Models />;
+        return <Models installedModels={installedModels} onRefresh={() => loadInstalledModels(true)} hardwareInfo={hardwareInfo} />;
       case "settings":
-        return <SettingsView theme={theme} setTheme={setTheme} flmPath={flmPath} setFlmPath={setFlmPath} />;
+        return <SettingsView theme={theme} setTheme={setTheme} />;
       case "about":
-        return <AboutView />;
+        return <AboutView hardwareInfo={hardwareInfo} onRefreshHardware={() => loadHardwareInfo(true)} />;
       default:
         return (
           <ChatView
@@ -224,7 +235,7 @@ function App() {
           </main>
         </div>
       </div>
-      <StatusBar serverStatus={serverStatus} version={APP_VERSION} />
+      <StatusBar serverStatus={serverStatus} version={ConfigService.getAppVersion()} />
     </div>
   );
 }
