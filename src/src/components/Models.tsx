@@ -26,7 +26,6 @@ interface ModelsProps {
 
 export const Models = ({ installedModels, onRefresh, hardwareInfo }: ModelsProps) => {
     const { t } = useTranslation();
-    // const [installedModels, setInstalledModels] = useState<FlmModel[]>([]); // Removed in favor of props
     const [availableModels, setAvailableModels] = useState<FlmModel[]>([]);
     const [loading, setLoading] = useState(false);
     const [downloadingModel, setDownloadingModel] = useState<string | null>(null);
