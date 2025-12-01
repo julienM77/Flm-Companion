@@ -390,15 +390,13 @@ export const FlmService = {
 
                 // Wait for process to exit or timeout
                 await new Promise<void>((resolve) => {
-                    const timeoutId = setTimeout(async () => {
+                    const timeoutId = setTimeout(() => {
                         if (serverProcess) {
                             if (onLog) onLog("[SYSTEM] Server did not exit gracefully, forcing kill...");
                             console.log("Server did not exit gracefully, forcing kill...");
-                            try {
-                                await serverProcess.kill();
-                            } catch (e) {
+                            serverProcess.kill().catch((e) => {
                                 console.error("Error killing process:", e);
-                            }
+                            });
                         }
                         resolve();
                     }, 5000);
