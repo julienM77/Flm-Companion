@@ -75,7 +75,7 @@ export const AboutView = ({ hardwareInfo, onRefreshHardware }: AboutViewProps) =
             const release = await GithubService.getLatestRelease(APP_REPO_NAME);
             setLatestCompanionRelease(release);
         } catch (e) {
-            setCompanionUpdateError("Impossible de vérifier les mises à jour");
+            setCompanionUpdateError(t('about.error_check_updates'));
             console.error(e);
         } finally {
             setLoadingCompanionUpdate(false);
@@ -100,7 +100,7 @@ export const AboutView = ({ hardwareInfo, onRefreshHardware }: AboutViewProps) =
             const release = await GithubService.getLatestRelease(FLM_REPO_NAME);
             setLatestFlmRelease(release);
         } catch (e) {
-            setFlmUpdateError("Impossible de vérifier les mises à jour");
+            setFlmUpdateError(t('about.error_check_updates'));
             console.error(e);
         } finally {
             setLoadingFlmUpdate(false);
@@ -121,7 +121,7 @@ export const AboutView = ({ hardwareInfo, onRefreshHardware }: AboutViewProps) =
 
         const asset = latestFlmRelease.assets.find(a => a.name === "flm-setup.exe" || a.name.endsWith(".exe"));
         if (!asset) {
-            setFlmUpdateError("Installeur non trouvé dans la release");
+            setFlmUpdateError(t('about.error_installer_not_found'));
             return;
         }
 
@@ -170,7 +170,7 @@ export const AboutView = ({ hardwareInfo, onRefreshHardware }: AboutViewProps) =
 
             // Start monitoring installation
             setIsInstalling(true);
-            setFlmUpdateError("Installation en cours...");
+            setFlmUpdateError(t('about.status_installing_full'));
 
             const startVersion = flmVersion;
             const maxAttempts = 60; // 2 minutes
@@ -200,7 +200,7 @@ export const AboutView = ({ hardwareInfo, onRefreshHardware }: AboutViewProps) =
 
         } catch (e) {
             console.error(e);
-            setFlmUpdateError("Erreur lors du téléchargement ou de l'installation");
+            setFlmUpdateError(t('about.error_download_install'));
             setIsInstalling(false);
         } finally {
             setIsDownloading(false);

@@ -42,7 +42,7 @@ export function GenericAlertDialog({
                         onOpenChange(false);
                         if (onConfirm) onConfirm();
                     }}>
-                        {confirmText || "OK"}
+                        {confirmText || t('common.ok')}
                     </Button>
                 </DialogFooter>
             </DialogContent>

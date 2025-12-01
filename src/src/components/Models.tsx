@@ -72,7 +72,7 @@ export const Models = ({ installedModels, onRefresh, hardwareInfo }: ModelsProps
         console.log("Starting download for model:", modelName);
         setDownloadingModel(modelName);
         setDownloadProgress(0);
-        setDownloadStatus("Starting download...");
+        setDownloadStatus(t('models.download_starting'));
 
         let totalFiles = 1;
         let baseProgress = 0;
@@ -92,7 +92,7 @@ export const Models = ({ installedModels, onRefresh, hardwareInfo }: ModelsProps
                     // Base progress is the progress of completed files
                     baseProgress = ((current - 1) / total) * 100;
                     currentFileProgress = 0;
-                    setDownloadStatus(`Downloading file ${current}/${total}...`);
+                    setDownloadStatus(t('models.download_file_progress', { current, total }));
                 }
 
                 // 2. Check for "Overall progress: P%" (Sync point)
@@ -119,7 +119,7 @@ export const Models = ({ installedModels, onRefresh, hardwareInfo }: ModelsProps
                 }
             });
 
-            setDownloadStatus("Download complete!");
+            setDownloadStatus(t('models.download_complete'));
             setDownloadProgress(100);
             setTimeout(() => {
                 setDownloadingModel(null);
@@ -129,7 +129,7 @@ export const Models = ({ installedModels, onRefresh, hardwareInfo }: ModelsProps
                 loadModels(true);
             }, 1000);
         } catch (error) {
-            setDownloadStatus(`Error: ${error}`);
+            setDownloadStatus(t('models.download_error', { error }));
             setTimeout(() => setDownloadingModel(null), 3000);
         }
     };

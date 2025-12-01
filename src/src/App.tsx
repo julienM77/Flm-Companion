@@ -10,9 +10,10 @@ import { StatusBar } from "./components/StatusBar";
 import { FlmService, FlmModel, ServerOptions, HardwareInfo } from "./services/flm";
 import { ConfigService, AppConfig } from "./services/config";
 import { sendNotification, isPermissionGranted, requestPermission } from '@tauri-apps/plugin-notification';
-import { GenericAlertDialog } from "./components/GenericAlertDialog";
+import { useTranslation } from "react-i18next";
 
 function App() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState("models");
   const [serverStatus, setServerStatus] = useState<"stopped" | "running" | "starting">("stopped");
   const [logs, setLogs] = useState<string[]>([]);
@@ -32,8 +33,6 @@ function App() {
     preemption: false
   });
   const [flmPath, setFlmPath] = useState("flm");
-  const [alertOpen, setAlertOpen] = useState(false);
-  const [alertMessage, setAlertMessage] = useState("");
 
   // Load config on startup
   useEffect(() => {
@@ -132,12 +131,12 @@ function App() {
       try {
         await FlmService.stopServer(addLog);
       } catch (error) {
-        addLog(`[ERROR] Failed to stop server: ${error}`);
+        addLog(t('app.log_stop_error', { error }));
       }
     } else {
       setServerStatus("starting");
       setLogs([]);
-      addLog(`[SYSTEM] Starting server with model: ${selectedModel || "None"}...`);
+      addLog(t('app.log_starting_server', { model: selectedModel || "None" }));
 
       try {
         // Use provided options or defaults if called from dashboard (which passes no args)
@@ -149,8 +148,8 @@ function App() {
           if (log.includes("Enter 'exit' to stop the server:")) {
             setServerStatus("running");
             sendNotification({
-              title: 'FLM Server Started',
-              body: `Server is running with model ${selectedModel || "None"}`,
+              title: t('app.notification_server_started_title'),
+              body: t('app.notification_server_started_body', { model: selectedModel || "None" }),
             });
           }
           // Check if server stopped (crashed or exited)
@@ -158,20 +157,20 @@ function App() {
             setServerStatus("stopped");
             if (!log.includes("code 0")) {
               sendNotification({
-                title: 'FLM Server Error',
-                body: `The server stopped unexpectedly. Check logs for details.`,
+                title: t('app.notification_server_error_title'),
+                body: t('app.notification_server_error_body'),
               });
             } else {
               sendNotification({
-                title: 'FLM Server Stopped',
-                body: `The server has stopped gracefully.`,
+                title: t('app.notification_server_stopped_title'),
+                body: t('app.notification_server_stopped_body'),
               });
             }
           }
         });
       } catch (error) {
         setServerStatus("stopped");
-        addLog(`[ERROR] Failed to start server: ${error}`);
+        addLog(t('app.log_start_error', { error }));
       }
     }
   };
@@ -233,11 +232,6 @@ function App() {
         </div>
       </div>
       <StatusBar serverStatus={serverStatus} version={ConfigService.getAppVersion()} />
-      <GenericAlertDialog
-        open={alertOpen}
-        onOpenChange={setAlertOpen}
-        description={alertMessage}
-      />
     </div>
   );
 }

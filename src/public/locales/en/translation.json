@@ -56,7 +56,11 @@
     "reinstall": "Reinstall model",
     "download": "Download",
     "no_available_models": "No available models found",
-    "error_delete": "Error deleting: "
+    "error_delete": "Error deleting: ",
+    "download_starting": "Starting download...",
+    "download_file_progress": "Downloading file {{current}}/{{total}}...",
+    "download_complete": "Download complete!",
+    "download_error": "Error: {{error}}"
   },
   "settings": {
     "general_config": "General Configuration",
@@ -96,7 +100,11 @@
     "update": "Update",
     "installing": "Installing...",
     "check": "Check",
-    "release_notes": "Release Notes"
+    "release_notes": "Release Notes",
+    "error_check_updates": "Unable to check for updates",
+    "error_installer_not_found": "Installer not found in release",
+    "error_download_install": "Error during download or installation",
+    "status_installing_full": "Installation in progress..."
   },
   "status_bar": {
     "server_online": "SERVER ONLINE",
@@ -104,7 +112,21 @@
     "server_stopped": "SERVER STOPPED"
   },
   "common": {
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "alert": "Alert",
+    "ok": "OK"
+  },
+  "app": {
+    "alert_select_model": "Please select a model.",
+    "notification_server_started_title": "FLM Server Started",
+    "notification_server_started_body": "Server is running with model {{model}}",
+    "notification_server_error_title": "FLM Server Error",
+    "notification_server_error_body": "The server stopped unexpectedly. Check logs for details.",
+    "notification_server_stopped_title": "FLM Server Stopped",
+    "notification_server_stopped_body": "The server has stopped gracefully.",
+    "log_starting_server": "[SYSTEM] Starting server with model: {{model}}...",
+    "log_stop_error": "[ERROR] Failed to stop server: {{error}}",
+    "log_start_error": "[ERROR] Failed to start server: {{error}}"
   },
   "chat": {
     "select_model": "Select a model",
