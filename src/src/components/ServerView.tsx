@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { Play, Square, Activity, Terminal, Mic, Cpu, Sliders } from "lucide-react";
+import { Play, Square, Activity, Terminal, Cpu, Sliders, Cog } from "lucide-react";
 import { FlmModel, ServerOptions } from "../services/flm";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
@@ -33,19 +33,6 @@ export const ServerView = ({
 }: ServerViewProps) => {
     const logsEndRef = useRef<HTMLDivElement>(null);
     const { t } = useTranslation();
-
-    // Update default context length when model changes
-    useEffect(() => {
-        if (selectedModel) {
-            const model = models.find(m => m.name === selectedModel);
-            // Only update if ctxLen is 0 (default) or if we want to force update on model change
-            // But user might have customized it. 
-            // Let's only update if the current value is 0 or undefined
-            if (model && model.contextLength && (!options.ctxLen || options.ctxLen === 0)) {
-                setOptions(prev => ({ ...prev, ctxLen: model.contextLength }));
-            }
-        }
-    }, [selectedModel, models]);
 
     // Auto-scroll logs
     useEffect(() => {
@@ -95,7 +82,13 @@ export const ServerView = ({
                                 <label className="block text-xs font-medium text-muted-foreground mb-1.5">{t('server.model_to_load')}</label>
                                 <Select
                                     value={selectedModel}
-                                    onValueChange={onSelectModel}
+                                    onValueChange={(val) => {
+                                        onSelectModel(val);
+                                        const model = models.find(m => m.name === val);
+                                        if (model && model.contextLength) {
+                                            setOptions(prev => ({ ...prev, ctxLen: model.contextLength }));
+                                        }
+                                    }}
                                     disabled={serverStatus !== "stopped"}
                                 >
                                     <SelectTrigger>
@@ -121,7 +114,7 @@ export const ServerView = ({
                     <Card className="bg-card border-border shadow-sm">
                         <CardHeader className="pb-3">
                             <CardTitle className="text-sm font-medium text-foreground flex items-center gap-2">
-                                <Mic size={16} className="text-muted-foreground" />
+                                <Cog size={16} className="text-muted-foreground" />
                                 {t('server.features')}
                             </CardTitle>
                         </CardHeader>
