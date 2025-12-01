@@ -10,7 +10,7 @@ export interface AppConfig {
 
 const DEFAULT_CONFIG: AppConfig = {
     theme: "dark",
-    flmPath: "flm", // Default command
+    flmPath: "",
     lastSelectedModel: "",
     serverOptions: {
         pmode: 'performance',

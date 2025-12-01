@@ -34,9 +34,20 @@ function App() {
 
   // Load config on startup
   useEffect(() => {
-    ConfigService.loadConfig().then(config => {
+    ConfigService.loadConfig().then(async config => {
       setTheme(config.theme);
-      setFlmPath(config.flmPath);
+
+      let path = config.flmPath;
+      if (path === "flm" || path === "" || path === null) {
+        const resolvedPath = await FlmService.findFlmPath();
+        if (resolvedPath) {
+          console.log("Resolved FLM path from system:", resolvedPath);
+          path = resolvedPath;
+        }
+      }
+
+      setFlmPath(path);
+
       if (config.lastSelectedModel) {
         setSelectedModel(config.lastSelectedModel);
       }
@@ -82,12 +93,8 @@ function App() {
   const loadInstalledModels = () => {
     FlmService.listModels('installed').then(models => {
       setInstalledModels(models);
-      // If no model is selected (or the selected one is gone), select the first available
-      // BUT only if we don't have a selected model from config (which is handled by the initial load effect)
-      // We need to be careful not to overwrite the loaded config selection if the model list loads later
       setSelectedModel(prev => {
         if (prev && models.some(m => m.name === prev)) return prev;
-        // If the previous selection (from config) is not in the list, fallback to first available
         return models.length > 0 ? models[0].name : "";
       });
     });
@@ -105,7 +112,7 @@ function App() {
 
     // Load models on startup
     loadInstalledModels();
-  }, []);
+  }, [flmPath]); // Reload models when path changes
 
   const addLog = (log: string) => {
     setLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${log}`]);
@@ -115,10 +122,6 @@ function App() {
     if (serverStatus === "running") {
       try {
         await FlmService.stopServer(addLog);
-        // Note: We don't set status to stopped here immediately, we wait for the process close event
-        // But for UI responsiveness we might want to show "Stopping..."
-        // However, the existing logic sets it to stopped. Let's keep it but maybe the close event will handle it too.
-        // For now, let's leave it as is, but the logs will show what's happening.
       } catch (error) {
         addLog(`[ERROR] Failed to stop server: ${error}`);
       }
@@ -196,7 +199,7 @@ function App() {
       case "models":
         return <Models />;
       case "settings":
-        return <SettingsView theme={theme} setTheme={setTheme} flmPath={flmPath} setFlmPath={setFlmPath} />;
+        return <SettingsView theme={theme} setTheme={setTheme} />;
       case "about":
         return <AboutView />;
       default:

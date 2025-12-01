@@ -1,5 +1,6 @@
 import { Command, Child } from "@tauri-apps/plugin-shell";
 import { readTextFile } from "@tauri-apps/plugin-fs";
+import { ConfigService } from "./config";
 
 export interface FlmModel {
     name: string;
@@ -64,7 +65,12 @@ export interface ServerOptions {
 }
 
 let serverProcess: Child | null = null;
-const MODEL_LIST_PATH = "C:\\Program Files\\flm\\model_list.json";
+
+function getDirectory(path: string): string {
+    const lastSlash = Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\'));
+    if (lastSlash === -1) return ".";
+    return path.substring(0, lastSlash);
+}
 
 export const FlmService = {
     /**
@@ -72,7 +78,28 @@ export const FlmService = {
      */
     async getModelsMetadata(): Promise<Record<string, FlmModel>> {
         try {
-            const content = await readTextFile(MODEL_LIST_PATH);
+            const config = await ConfigService.loadConfig();
+            let flmPath = config.flmPath;
+
+            // If path is not configured, try to detect it
+            if (!flmPath || flmPath === "flm") {
+                const detected = await this.findFlmPath();
+                if (detected) {
+                    flmPath = detected;
+                }
+            }
+
+            // flmPath is the directory containing model_list.json
+            let modelListPath = "model_list.json";
+            if (flmPath && flmPath !== "flm") {
+                const separator = flmPath.includes('\\') ? '\\' : '/';
+                modelListPath = `${flmPath}${separator}model_list.json`;
+            } else {
+                // Fallback to default install location if just "flm" is configured
+                modelListPath = "C:\\Program Files\\flm\\model_list.json";
+            }
+
+            const content = await readTextFile(modelListPath);
             const data: ModelListJson = JSON.parse(content);
             const metadata: Record<string, FlmModel> = {};
 
@@ -117,13 +144,7 @@ export const FlmService = {
      */
     async getVersion(): Promise<string> {
         try {
-            // Try to run 'flm --version' or just check if command exists
-            // Since flm might not have a --version flag, we can try 'flm list' or similar if needed.
-            // Based on research, we'll assume we can run it.
-            // If 'flm' is not in PATH, this might fail.
             const command = Command.create("flm", ["--version"]);
-            // Note: 'flm' needs to be defined in tauri.conf.json or be in the path and allowed scope.
-            // For now we assume 'flm' is the binary name.
 
             const output = await command.execute();
             if (output.code === 0) {
@@ -456,5 +477,26 @@ export const FlmService = {
      */
     async stopChat(): Promise<void> {
         await this.stopServer(); // Re-use stopServer logic as it handles killing the process
+    },
+
+    /**
+     * Try to find FLM executable path using PowerShell
+     */
+    async findFlmPath(): Promise<string | null> {
+        try {
+            // Use PowerShell to find the command location
+            const command = Command.create("powershell", ["-Command", "(Get-Command flm -ErrorAction SilentlyContinue).Source"]);
+            const output = await command.execute();
+
+            if (output.code === 0 && output.stdout.trim()) {
+                const fullPath = output.stdout.trim();
+                // We want the directory, not the executable
+                return getDirectory(fullPath);
+            }
+            return null;
+        } catch (error) {
+            console.error("Failed to find FLM path:", error);
+            return null;
+        }
     }
 };

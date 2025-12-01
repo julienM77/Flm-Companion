@@ -29,7 +29,10 @@ interface ReleaseInfo {
     assets: Asset[];
 }
 
-export const AboutView = () => {
+interface AboutViewProps {
+}
+
+export const AboutView = ({ }: AboutViewProps) => {
     const [flmVersion, setFlmVersion] = useState<string>("Loading...");
     const [latestFlmVersion, setLatestFlmVersion] = useState<string | null>(null);
     const [latestRelease, setLatestRelease] = useState<ReleaseInfo | null>(null);

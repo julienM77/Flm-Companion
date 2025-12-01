@@ -1,7 +1,5 @@
 import { Info } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
 import { ScrollArea } from "./ui/scroll-area";
 import { useTranslation } from "react-i18next";
 
@@ -24,11 +22,9 @@ const SettingItem = ({ label, description, children }: { label: string, descript
     </div>
 );
 
-export const SettingsView = ({ theme, setTheme, flmPath, setFlmPath }: {
+export const SettingsView = ({ theme, setTheme }: {
     theme: "dark" | "light" | "system",
-    setTheme: (t: "dark" | "light" | "system") => void,
-    flmPath: string,
-    setFlmPath: (path: string) => void
+    setTheme: (t: "dark" | "light" | "system") => void
 }) => {
     const { t, i18n } = useTranslation();
 
@@ -80,22 +76,7 @@ export const SettingsView = ({ theme, setTheme, flmPath, setFlmPath }: {
                     </div>
                 </div>
 
-                <div>
-                    <h2 className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-4">{t('settings.paths_executables')}</h2>
-                    <div className="bg-card rounded-xl pl-6 pr-6 border border-border shadow-sm">
-                        <SettingItem label={t('settings.flm_path')}>
-                            <div className="flex gap-2 w-96">
-                                <Input
-                                    value={flmPath}
-                                    onChange={(e) => setFlmPath(e.target.value)}
-                                    placeholder="flm"
-                                    className="bg-input border-border text-foreground h-9 text-sm"
-                                />
-                                <Button variant="secondary" size="sm" className="h-9">{t('settings.browse')}</Button>
-                            </div>
-                        </SettingItem>
-                    </div>
-                </div>
+                {/* Path selection removed as we rely on system PATH and auto-detection */}
             </div>
         </ScrollArea>
     );

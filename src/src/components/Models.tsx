@@ -18,7 +18,10 @@ import {
 import { ScrollArea } from "./ui/scroll-area";
 import { useTranslation, Trans } from "react-i18next";
 
-export const Models = () => {
+interface ModelsProps {
+}
+
+export const Models = ({ }: ModelsProps) => {
     const { t } = useTranslation();
     const [installedModels, setInstalledModels] = useState<FlmModel[]>([]);
     const [availableModels, setAvailableModels] = useState<FlmModel[]>([]);
