@@ -100,7 +100,7 @@ export const ServerView = ({
                                         <SelectValue placeholder={t('server.select_model_placeholder')} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="no-model-selected">{t('server.no_model_selected') || "No Model (Audio Only)"}</SelectItem>
+                                        <SelectItem value="no-model-selected">{t('server.no_model_selected')}</SelectItem>
                                         {models.length === 0 ? (
                                             <SelectItem value="none" disabled>{t('server.no_model_installed')}</SelectItem>
                                         ) : (
