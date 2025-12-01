@@ -347,14 +347,31 @@ export const FlmService = {
 
                 if (onLog) onLog("[SYSTEM] Exit command sent. Waiting for graceful shutdown...");
 
-                // To be safe, we can set a timeout to force kill if it doesn't close
-                setTimeout(async () => {
-                    if (serverProcess) {
-                        if (onLog) onLog("[SYSTEM] Server did not exit gracefully, forcing kill...");
-                        console.log("Server did not exit gracefully, forcing kill...");
-                        await serverProcess.kill();
-                    }
-                }, 5000); // 5 seconds timeout
+                // Wait for process to exit or timeout
+                await new Promise<void>((resolve) => {
+                    const timeoutId = setTimeout(async () => {
+                        if (serverProcess) {
+                            if (onLog) onLog("[SYSTEM] Server did not exit gracefully, forcing kill...");
+                            console.log("Server did not exit gracefully, forcing kill...");
+                            try {
+                                await serverProcess.kill();
+                            } catch (e) {
+                                console.error("Error killing process:", e);
+                            }
+                        }
+                        resolve();
+                    }, 5000);
+
+                    // Poll for exit
+                    const intervalId = setInterval(() => {
+                        if (!serverProcess) {
+                            // Process exited gracefully (handled by startServer's close listener)
+                            clearTimeout(timeoutId);
+                            clearInterval(intervalId);
+                            resolve();
+                        }
+                    }, 100);
+                });
 
             } catch (e) {
                 console.error("Failed to write exit command, forcing kill", e);
@@ -368,8 +385,9 @@ export const FlmService = {
      * Pull a new model
      */
     async pullModel(modelName: string, onProgress: (data: string) => void): Promise<void> {
-        return new Promise(async (resolve, reject) => {
+        return new Promise((resolve, reject) => {
             let errorOutput = "";
+
             try {
                 const command = Command.create("flm", ["pull", modelName]);
 
@@ -395,7 +413,7 @@ export const FlmService = {
                     onProgress(text);
                 });
 
-                await command.spawn();
+                command.spawn().catch(reject);
             } catch (error) {
                 reject(error);
             }
