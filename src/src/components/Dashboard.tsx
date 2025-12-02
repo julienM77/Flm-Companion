@@ -5,9 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "./ui/
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { AreaChart, Area, ResponsiveContainer } from 'recharts';
+import { ServerStatus, DEFAULT_SERVER_PORT } from "../types";
 
 interface DashboardProps {
-    serverStatus: "stopped" | "running" | "starting";
+    serverStatus: ServerStatus;
     onToggleServer: () => void;
     flmVersion: string;
     selectedModel: string;
@@ -65,7 +66,7 @@ export const Dashboard = ({
                         <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
                             <div className="space-y-1">
                                 <CardTitle className="text-base font-medium text-foreground">Serveur FLM</CardTitle>
-                                <CardDescription className="text-muted-foreground">Port: 52625 • v{flmVersion}</CardDescription>
+                                <CardDescription className="text-muted-foreground">Port: {DEFAULT_SERVER_PORT} • v{flmVersion}</CardDescription>
                             </div>
                             <Badge variant={
                                 serverStatus === "running" ? "default" :

@@ -1,7 +1,8 @@
 import { useTranslation } from "react-i18next";
+import type { ServerStatus } from "../types";
 
 interface StatusBarProps {
-    serverStatus: "stopped" | "running" | "starting";
+    serverStatus: ServerStatus;
     version: string;
 }
 

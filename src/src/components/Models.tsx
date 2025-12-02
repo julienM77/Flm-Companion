@@ -1,6 +1,7 @@
 import { RefreshCw, Trash2, Download, HardDrive, Info } from "lucide-react";
 import { useEffect, useState } from "react";
-import { FlmService, FlmModel, HardwareInfo } from "../services/flm";
+import { FlmService } from "../services/flm";
+import type { FlmModel, HardwareInfo } from "../types";
 import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";

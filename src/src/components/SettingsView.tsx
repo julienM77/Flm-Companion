@@ -3,8 +3,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { ScrollArea } from "./ui/scroll-area";
 import { Switch } from "./ui/switch";
 import { useTranslation } from "react-i18next";
+import type { Theme } from "../types";
 
-const SettingItem = ({ label, description, children }: { label: string, description?: string, children: React.ReactNode }) => (
+const SettingItem = ({
+    label,
+    description,
+    children,
+}: {
+    label: string;
+    description?: string;
+    children: React.ReactNode;
+}) => (
     <div className="flex items-center justify-between py-4 min-h-16 border-b border-border last:border-0">
         <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-foreground">{label}</span>
@@ -17,18 +26,23 @@ const SettingItem = ({ label, description, children }: { label: string, descript
                 </div>
             )}
         </div>
-        <div className="flex items-center gap-4">
-            {children}
-        </div>
+        <div className="flex items-center gap-4">{children}</div>
     </div>
 );
 
-export const SettingsView = ({ theme, setTheme, startMinimized, setStartMinimized }: {
-    theme: "dark" | "light" | "system",
-    setTheme: (t: "dark" | "light" | "system") => void,
-    startMinimized: boolean,
-    setStartMinimized: (v: boolean) => void
-}) => {
+interface SettingsViewProps {
+    theme: Theme;
+    setTheme: (t: Theme) => void;
+    startMinimized: boolean;
+    setStartMinimized: (v: boolean) => void;
+}
+
+export const SettingsView = ({
+    theme,
+    setTheme,
+    startMinimized,
+    setStartMinimized,
+}: SettingsViewProps) => {
     const { t, i18n } = useTranslation();
 
     const changeLanguage = (lng: string) => {

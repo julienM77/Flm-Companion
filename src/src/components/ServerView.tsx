@@ -1,6 +1,5 @@
 import { useEffect, useRef } from "react";
 import { Play, Square, Activity, Terminal, Cpu, Sliders, Cog } from "lucide-react";
-import { FlmModel, ServerOptions } from "../services/flm";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -9,9 +8,10 @@ import { Badge } from "./ui/badge";
 import { Switch } from "./ui/switch";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
 import { useTranslation } from "react-i18next";
+import type { FlmModel, ServerOptions, ServerStatus } from "../types";
 
 interface ServerViewProps {
-    serverStatus: "stopped" | "running" | "starting";
+    serverStatus: ServerStatus;
     onToggleServer: (options: ServerOptions) => void;
     models: FlmModel[];
     selectedModel: string;
