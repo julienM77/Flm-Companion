@@ -55,7 +55,7 @@ export function ModelCard({
                             variant="secondary"
                             className="text-[10px] px-1.5 py-0 h-5 bg-purple-500/10 text-purple-400 border-purple-500/20"
                         >
-                            THINK
+                            {t("models.badge_think")}
                         </Badge>
                     )}
                     {model.isVlm && (
@@ -63,7 +63,7 @@ export function ModelCard({
                             variant="secondary"
                             className="text-[10px] px-1.5 py-0 h-5 bg-blue-500/10 text-blue-400 border-blue-500/20"
                         >
-                            VLM
+                            {t("models.badge_vlm")}
                         </Badge>
                     )}
                     {isTooLarge && (
@@ -187,11 +187,11 @@ function DeleteModelDialog({
                 <DialogHeader>
                     <DialogTitle>{t("models.delete_confirm_title")}</DialogTitle>
                     <DialogDescription>
-                        <Trans i18nKey="models.delete_confirm_desc" values={{ name: modelName }}>
-                            Cette action est irréversible. Le modèle{" "}
-                            <span className="font-mono text-foreground">{modelName}</span> sera
-                            définitivement supprimé de votre disque.
-                        </Trans>
+                        <Trans
+                            i18nKey="models.delete_confirm_desc"
+                            values={{ name: modelName }}
+                            components={{ 1: <span className="font-mono text-foreground" /> }}
+                        />
                     </DialogDescription>
                 </DialogHeader>
                 <DialogFooter>

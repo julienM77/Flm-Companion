@@ -41,8 +41,8 @@ export function ModelInfoDialog({ model, trigger }: ModelInfoDialogProps) {
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                         {model.name}
-                        {model.isThink && <Badge variant="secondary">THINK</Badge>}
-                        {model.isVlm && <Badge variant="secondary">VLM</Badge>}
+                        {model.isThink && <Badge variant="secondary">{t("models.badge_think")}</Badge>}
+                        {model.isVlm && <Badge variant="secondary">{t("models.badge_vlm")}</Badge>}
                     </DialogTitle>
                     <DialogDescription>{t("models.dialog_info_desc")}</DialogDescription>
                 </DialogHeader>

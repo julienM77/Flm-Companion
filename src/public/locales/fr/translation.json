@@ -42,6 +42,8 @@
     "installed_title": "Modèles Locaux (Installés)",
     "no_installed_models": "Aucun modèle installé localement",
     "badge_memory": "MÉMOIRE",
+    "badge_think": "THINK",
+    "badge_vlm": "VLM",
     "dialog_info_desc": "Informations détaillées sur le modèle",
     "info_family": "Famille",
     "info_unknown": "Inconnue",
