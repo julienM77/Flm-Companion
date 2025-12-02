@@ -157,6 +157,11 @@
     "quit": "Quit",
     "settings": "Settings",
     "server_running": "Server (Running)",
-    "server_stopped": "Server (Stopped)"
+    "server_stopped": "Server (Stopped)",
+    "select_model": "Select Model",
+    "view_logs": "View Logs",
+    "features": "Features",
+    "asr": "ASR (Audio)",
+    "embed": "Embeddings"
   }
 }

@@ -25,6 +25,7 @@ function App() {
   const [selectedModel, setSelectedModel] = useState<string>("");
   const [theme, setTheme] = useState<"dark" | "light" | "system">("dark");
   const [startMinimized, setStartMinimized] = useState<boolean>(false);
+  const [pendingRestart, setPendingRestart] = useState<ServerOptions | null>(null);
   const [serverOptions, setServerOptions] = useState<ServerOptions>({
     pmode: 'performance',
     port: 52625,
@@ -141,6 +142,18 @@ function App() {
     loadHardwareInfo();
   }, [flmPath, isConfigLoaded]); // Reload models when path changes
 
+  // Handle pending restart after server stops
+  useEffect(() => {
+    if (serverStatus === 'stopped' && pendingRestart) {
+      const optionsToUse = pendingRestart;
+      setPendingRestart(null);
+      // Small delay to ensure everything is clean
+      setTimeout(() => {
+        handleToggleServer(optionsToUse);
+      }, 300);
+    }
+  }, [serverStatus, pendingRestart]);
+
   const addLog = (log: string) => {
     setLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${log}`]);
   };
@@ -197,14 +210,23 @@ function App() {
   useEffect(() => {
     invoke('update_tray_menu', {
       isRunning: serverStatus === 'running',
+      selectedModel: selectedModel,
+      installedModels: installedModels.map(m => m.name),
+      asrEnabled: serverOptions.asr,
+      embedEnabled: serverOptions.embed,
       textStart: t('tray.start'),
       textStop: t('tray.stop'),
       textQuit: t('tray.quit'),
       textSettings: t('tray.settings'),
       textRunning: t('tray.server_running'),
-      textStopped: t('tray.server_stopped')
+      textStopped: t('tray.server_stopped'),
+      textSelectModel: t('tray.select_model'),
+      textViewLogs: t('tray.view_logs'),
+      textFeatures: t('tray.features'),
+      textAsr: t('tray.asr'),
+      textEmbed: t('tray.embed')
     });
-  }, [serverStatus, t]);
+  }, [serverStatus, selectedModel, installedModels, serverOptions, t]);
 
   useEffect(() => {
     const unlistenStart = listen('request-start-server', () => {
@@ -219,11 +241,61 @@ function App() {
       }
     });
 
+    const unlistenSelectModel = listen<string>('select-model', async (event) => {
+      const newModelName = event.payload;
+      if (newModelName === selectedModel) return;
+
+      // Find the model to get its default context
+      const model = installedModels.find(m => m.name === newModelName);
+      const newCtxLen = model?.contextLength || 0;
+      const newOptions = { ...serverOptions, ctxLen: newCtxLen };
+
+      // Update state
+      setSelectedModel(newModelName);
+      setServerOptions(newOptions);
+
+      // If server is running, stop it and schedule restart
+      if (serverStatus === 'running') {
+        setPendingRestart(newOptions);
+        await FlmService.stopServer(addLog);
+      }
+    });
+
+    const unlistenViewLogs = listen('view-logs', () => {
+      setActiveTab('server');
+    });
+
+    const unlistenToggleAsr = listen('toggle-asr', async () => {
+      const newOptions = { ...serverOptions, asr: !serverOptions.asr };
+      setServerOptions(newOptions);
+
+      // If server is running, restart with new options
+      if (serverStatus === 'running') {
+        setPendingRestart(newOptions);
+        await FlmService.stopServer(addLog);
+      }
+    });
+
+    const unlistenToggleEmbed = listen('toggle-embed', async () => {
+      const newOptions = { ...serverOptions, embed: !serverOptions.embed };
+      setServerOptions(newOptions);
+
+      // If server is running, restart with new options
+      if (serverStatus === 'running') {
+        setPendingRestart(newOptions);
+        await FlmService.stopServer(addLog);
+      }
+    });
+
     return () => {
       unlistenStart.then(f => f());
       unlistenStop.then(f => f());
+      unlistenSelectModel.then(f => f());
+      unlistenViewLogs.then(f => f());
+      unlistenToggleAsr.then(f => f());
+      unlistenToggleEmbed.then(f => f());
     }
-  }, [serverStatus, selectedModel, serverOptions]); // Re-bind listeners when state changes to ensure handleToggleServer has fresh closure
+  }, [serverStatus, selectedModel, serverOptions, installedModels]); // Re-bind listeners when state changes to ensure handleToggleServer has fresh closure
 
   const renderContent = () => {
     switch (activeTab) {
