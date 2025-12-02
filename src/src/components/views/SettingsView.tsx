@@ -75,9 +75,6 @@ export const SettingsView = ({
                                 onChange={(e) => setStartMinimized(e.target.checked)}
                             />
                         </SettingItem>
-                        {/*<SettingItem label={t('settings.start_on_boot')} description={t('settings.start_on_boot_desc')}>
-                            <Switch defaultChecked />
-                        </SettingItem>*/}
                         <SettingItem label={t('settings.theme')}>
                             <Select
                                 value={theme}
@@ -95,8 +92,6 @@ export const SettingsView = ({
                         </SettingItem>
                     </div>
                 </div>
-
-                {/* Path selection removed as we rely on system PATH and auto-detection */}
             </div>
         </ScrollArea>
     );
