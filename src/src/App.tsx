@@ -209,22 +209,26 @@ function App() {
 
   useEffect(() => {
     invoke('update_tray_menu', {
-      isRunning: serverStatus === 'running',
-      selectedModel: selectedModel,
-      installedModels: installedModels.map(m => m.name),
-      asrEnabled: serverOptions.asr,
-      embedEnabled: serverOptions.embed,
-      textStart: t('tray.start'),
-      textStop: t('tray.stop'),
-      textQuit: t('tray.quit'),
-      textSettings: t('tray.settings'),
-      textRunning: t('tray.server_running'),
-      textStopped: t('tray.server_stopped'),
-      textSelectModel: t('tray.select_model'),
-      textViewLogs: t('tray.view_logs'),
-      textFeatures: t('tray.features'),
-      textAsr: t('tray.asr'),
-      textEmbed: t('tray.embed')
+      params: {
+        isRunning: serverStatus === 'running',
+        selectedModel: selectedModel,
+        installedModels: installedModels.map(m => m.name),
+        asrEnabled: serverOptions.asr,
+        embedEnabled: serverOptions.embed,
+        texts: {
+          start: t('tray.start'),
+          stop: t('tray.stop'),
+          quit: t('tray.quit'),
+          settings: t('tray.settings'),
+          running: t('tray.server_running'),
+          stopped: t('tray.server_stopped'),
+          selectModel: t('tray.select_model'),
+          viewLogs: t('tray.view_logs'),
+          features: t('tray.features'),
+          asr: t('tray.asr'),
+          embed: t('tray.embed')
+        }
+      }
     });
   }, [serverStatus, selectedModel, installedModels, serverOptions, t]);
 
