@@ -11,6 +11,9 @@ import { FlmService, FlmModel, ServerOptions, HardwareInfo } from "./services/fl
 import { ConfigService, AppConfig } from "./services/config";
 import { sendNotification, isPermissionGranted, requestPermission } from '@tauri-apps/plugin-notification';
 import { useTranslation } from "react-i18next";
+import { listen } from '@tauri-apps/api/event';
+import { invoke } from '@tauri-apps/api/core';
+import { getCurrentWindow } from '@tauri-apps/api/window';
 
 function App() {
   const { t } = useTranslation();
@@ -21,6 +24,7 @@ function App() {
   const [hardwareInfo, setHardwareInfo] = useState<HardwareInfo | null>(null);
   const [selectedModel, setSelectedModel] = useState<string>("");
   const [theme, setTheme] = useState<"dark" | "light" | "system">("dark");
+  const [startMinimized, setStartMinimized] = useState<boolean>(false);
   const [serverOptions, setServerOptions] = useState<ServerOptions>({
     pmode: 'performance',
     port: 52625,
@@ -39,6 +43,14 @@ function App() {
   useEffect(() => {
     ConfigService.loadConfig().then(async config => {
       setTheme(config.theme);
+      setStartMinimized(config.startMinimized);
+
+      if (!config.startMinimized) {
+        const win = getCurrentWindow();
+        await win.unminimize();
+        await win.show();
+        await win.setFocus();
+      }
 
       let path = config.flmPath;
       if (path === "flm" || path === "" || path === null) {
@@ -63,9 +75,12 @@ function App() {
 
   // Save config when settings change
   useEffect(() => {
+    if (!isConfigLoaded) return; // Don't save if config hasn't been loaded yet
+
     const saveSettings = async () => {
       const config: AppConfig = {
         theme,
+        startMinimized,
         flmPath,
         lastSelectedModel: selectedModel,
         serverOptions
@@ -76,7 +91,7 @@ function App() {
     // Debounce saving slightly to avoid too many writes
     const timeoutId = setTimeout(saveSettings, 500);
     return () => clearTimeout(timeoutId);
-  }, [theme, flmPath, selectedModel, serverOptions]);
+  }, [theme, startMinimized, flmPath, selectedModel, serverOptions, isConfigLoaded]);
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -179,6 +194,37 @@ function App() {
     }
   };
 
+  useEffect(() => {
+    invoke('update_tray_menu', {
+      isRunning: serverStatus === 'running',
+      textStart: t('tray.start'),
+      textStop: t('tray.stop'),
+      textQuit: t('tray.quit'),
+      textSettings: t('tray.settings'),
+      textRunning: t('tray.server_running'),
+      textStopped: t('tray.server_stopped')
+    });
+  }, [serverStatus, t]);
+
+  useEffect(() => {
+    const unlistenStart = listen('request-start-server', () => {
+      if (serverStatus === 'stopped') {
+        handleToggleServer();
+      }
+    });
+
+    const unlistenStop = listen('request-stop-server', () => {
+      if (serverStatus === 'running') {
+        handleToggleServer();
+      }
+    });
+
+    return () => {
+      unlistenStart.then(f => f());
+      unlistenStop.then(f => f());
+    }
+  }, [serverStatus, selectedModel, serverOptions]); // Re-bind listeners when state changes to ensure handleToggleServer has fresh closure
+
   const renderContent = () => {
     switch (activeTab) {
       case "chat":
@@ -207,7 +253,7 @@ function App() {
       case "models":
         return <Models installedModels={installedModels} onRefresh={() => loadInstalledModels(true)} hardwareInfo={hardwareInfo} />;
       case "settings":
-        return <SettingsView theme={theme} setTheme={setTheme} />;
+        return <SettingsView theme={theme} setTheme={setTheme} startMinimized={startMinimized} setStartMinimized={setStartMinimized} />;
       case "about":
         return <AboutView hardwareInfo={hardwareInfo} onRefreshHardware={() => loadHardwareInfo(true)} />;
       default:

@@ -4,6 +4,7 @@ import packageJson from "../../package.json";
 
 export interface AppConfig {
     theme: "dark" | "light" | "system";
+    startMinimized: boolean;
     flmPath: string;
     lastSelectedModel: string;
     serverOptions: ServerOptions;
@@ -11,6 +12,7 @@ export interface AppConfig {
 
 const DEFAULT_CONFIG: AppConfig = {
     theme: "dark",
+    startMinimized: false,
     flmPath: "flm",
     lastSelectedModel: "",
     serverOptions: {
