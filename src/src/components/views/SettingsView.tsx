@@ -1,9 +1,9 @@
 import { Info } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
-import { ScrollArea } from "./ui/scroll-area";
-import { Switch } from "./ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import { ScrollArea } from "../ui/scroll-area";
+import { Switch } from "../ui/switch";
 import { useTranslation } from "react-i18next";
-import type { Theme } from "../types";
+import type { Theme } from "../../types";
 
 const SettingItem = ({
     label,

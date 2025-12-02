@@ -5,8 +5,8 @@ import {
     DialogTitle,
     DialogDescription,
     DialogFooter,
-} from "./ui/dialog";
-import { Button } from "./ui/button";
+} from "../ui/dialog";
+import { Button } from "../ui/button";
 import { useTranslation } from "react-i18next";
 
 interface GenericAlertDialogProps {

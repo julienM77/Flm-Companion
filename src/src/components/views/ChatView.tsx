@@ -1,17 +1,17 @@
 import { useState, useEffect, useRef } from 'react';
 import { Send, StopCircle, Play, Settings2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { FlmService } from '../services/flm';
-import type { FlmModel, ServerOptions } from '../types';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { FlmService } from '../../services/flm';
+import type { FlmModel, ServerOptions } from '../../types';
 import ReactMarkdown from 'react-markdown';
-import { cn } from '../lib/utils';
-import { ScrollArea } from './ui/scroll-area';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Label } from './ui/label';
-import { Switch } from './ui/switch';
+import { cn } from '../../lib/utils';
+import { ScrollArea } from '../ui/scroll-area';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { Label } from '../ui/label';
+import { Switch } from '../ui/switch';
 
 interface ChatMessage {
     role: 'user' | 'assistant' | 'system';

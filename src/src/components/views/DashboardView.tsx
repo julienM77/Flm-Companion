@@ -1,13 +1,13 @@
 import { Square, Cpu, Play, Download, Settings } from "lucide-react";
-import { SystemService } from "../services/system";
+import { SystemService } from "../../services/system";
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "./ui/card";
-import { Button } from "./ui/button";
-import { Badge } from "./ui/badge";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../ui/card";
+import { Button } from "../ui/button";
+import { Badge } from "../ui/badge";
 import { AreaChart, Area, ResponsiveContainer } from 'recharts';
-import { ServerStatus, DEFAULT_SERVER_PORT } from "../types";
+import { ServerStatus, DEFAULT_SERVER_PORT } from "../../types";
 
-interface DashboardProps {
+interface DashboardViewProps {
     serverStatus: ServerStatus;
     onToggleServer: () => void;
     flmVersion: string;
@@ -15,13 +15,13 @@ interface DashboardProps {
     onNavigate: (tab: string) => void;
 }
 
-export const Dashboard = ({
+export const DashboardView = ({
     serverStatus,
     onToggleServer,
     flmVersion,
     selectedModel,
     onNavigate
-}: DashboardProps) => {
+}: DashboardViewProps) => {
     const [npuVersion, setNpuVersion] = useState("Détection...");
     const [stats, setStats] = useState<{
         history: { time: string; cpu: number; memory: number }[];

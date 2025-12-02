@@ -1,6 +1,6 @@
 import { Activity, Box, Settings, Info } from "lucide-react";
-import { Button } from "./ui/button";
-import { cn } from "../lib/utils";
+import { Button } from "../ui/button";
+import { cn } from "../../lib/utils";
 import { useTranslation } from "react-i18next";
 
 interface SidebarItemProps {

@@ -1,14 +1,14 @@
-import { useEffect, useRef } from "react";
-import { Play, Square, Activity, Terminal, Cpu, Sliders, Cog } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
-import { Badge } from "./ui/badge";
-import { Switch } from "./ui/switch";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
+import { Play, Square, Activity, Cpu, Sliders, Cog } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import { Badge } from "../ui/badge";
+import { Switch } from "../ui/switch";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion";
 import { useTranslation } from "react-i18next";
-import type { FlmModel, ServerOptions, ServerStatus } from "../types";
+import { LogsViewer } from "../shared/LogsViewer";
+import type { FlmModel, ServerOptions, ServerStatus } from "../../types";
 
 interface ServerViewProps {
     serverStatus: ServerStatus;
@@ -31,13 +31,7 @@ export const ServerView = ({
     options,
     setOptions
 }: ServerViewProps) => {
-    const logsEndRef = useRef<HTMLDivElement>(null);
     const { t } = useTranslation();
-
-    // Auto-scroll logs
-    useEffect(() => {
-        logsEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, [logs]);
 
     const handleOptionChange = (key: keyof ServerOptions, value: any) => {
         setOptions(prev => ({ ...prev, [key]: value }));
@@ -274,33 +268,7 @@ export const ServerView = ({
                 </div>
 
                 {/* Logs Panel */}
-                <Card className="lg:col-span-2 bg-muted border-border flex flex-col overflow-hidden shadow-inner h-full">
-                    <CardHeader className="bg-card px-4 py-3 border-b border-border flex flex-row justify-between items-center space-y-0">
-                        <CardTitle className="text-sm font-medium text-foreground flex items-center gap-2">
-                            <Terminal size={16} className="text-muted-foreground" />
-                            {t('server.logs_title')}
-                        </CardTitle>
-                        <span className="text-xs text-muted-foreground">{logs.length} {t('server.lines')}</span>
-                    </CardHeader>
-                    <CardContent className="flex-1 p-4 overflow-y-auto font-mono text-xs space-y-1">
-                        {logs.length === 0 ? (
-                            <div className="text-muted-foreground text-center mt-20 italic">
-                                {t('server.waiting_logs')}
-                            </div>
-                        ) : (
-                            logs.map((log, i) => (
-                                <div key={i} className={`break-all ${log.includes("[ERROR]") ? "text-red-400" :
-                                    log.includes("[FLM]") ? "text-blue-400" :
-                                        log.includes("[SYSTEM]") ? "text-yellow-400" :
-                                            "text-muted-foreground"
-                                    }`}>
-                                    {log}
-                                </div>
-                            ))
-                        )}
-                        <div ref={logsEndRef} />
-                    </CardContent>
-                </Card>
+                <LogsViewer logs={logs} className="lg:col-span-2 h-full" />
             </div>
         </div>
     );

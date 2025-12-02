@@ -1,11 +1,11 @@
 import "./App.css";
-import { Sidebar } from "./components/Sidebar";
-import { ChatView } from "./components/ChatView";
-import { Models } from "./components/Models";
-import { ServerView } from "./components/ServerView";
-import { SettingsView } from "./components/SettingsView";
-import { AboutView } from "./components/AboutView";
-import { StatusBar } from "./components/StatusBar";
+import { Sidebar } from "./components/layout/Sidebar";
+import { StatusBar } from "./components/layout/StatusBar";
+import { ChatView } from "./components/views/ChatView";
+import { ModelsView } from "./components/views/ModelsView";
+import { ServerView } from "./components/views/ServerView";
+import { SettingsView } from "./components/views/SettingsView";
+import { AboutView } from "./components/views/AboutView";
 import { ConfigService } from "./services/config";
 import { AppProvider, useAppContext } from "./contexts";
 
@@ -51,7 +51,7 @@ function ServerViewWrapper() {
 function ModelsWrapper() {
   const { installedModels, loadInstalledModels, hardwareInfo } = useAppContext();
   return (
-    <Models
+    <ModelsView
       installedModels={installedModels}
       onRefresh={() => loadInstalledModels(true)}
       hardwareInfo={hardwareInfo}
