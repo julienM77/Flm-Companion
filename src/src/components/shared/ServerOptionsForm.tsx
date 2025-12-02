@@ -7,7 +7,7 @@ import type { ServerOptions, PerformanceMode } from "../../types";
 
 interface ServerOptionsFormProps {
     options: ServerOptions;
-    onChange: (key: keyof ServerOptions, value: any) => void;
+    onChange: (key: keyof ServerOptions, value: ServerOptions[keyof ServerOptions]) => void;
     disabled?: boolean;
     /**
      * Which options to show

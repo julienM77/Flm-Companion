@@ -8,7 +8,7 @@ import { Switch } from "../ui/switch";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion";
 import { useTranslation } from "react-i18next";
 import { LogsViewer } from "../shared/LogsViewer";
-import type { FlmModel, ServerOptions, ServerStatus } from "../../types";
+import type { FlmModel, ServerOptions, ServerStatus, PerformanceMode } from "../../types";
 
 interface ServerViewProps {
     serverStatus: ServerStatus;
@@ -33,7 +33,7 @@ export const ServerView = ({
 }: ServerViewProps) => {
     const { t } = useTranslation();
 
-    const handleOptionChange = (key: keyof ServerOptions, value: any) => {
+    const handleOptionChange = (key: keyof ServerOptions, value: ServerOptions[keyof ServerOptions]) => {
         setOptions(prev => ({ ...prev, [key]: value }));
     };
 
@@ -154,7 +154,7 @@ export const ServerView = ({
                                             <label className="block text-xs font-medium text-muted-foreground mb-1.5">{t('server.power_mode')}</label>
                                             <Select
                                                 value={options.pmode}
-                                                onValueChange={(value) => handleOptionChange('pmode', value)}
+                                                onValueChange={(value) => handleOptionChange('pmode', value as PerformanceMode)}
                                                 disabled={serverStatus !== "stopped"}
                                             >
                                                 <SelectTrigger>

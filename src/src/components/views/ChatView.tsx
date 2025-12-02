@@ -5,7 +5,7 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { FlmService } from '../../services/flm';
-import type { FlmModel, ServerOptions } from '../../types';
+import type { FlmModel, ServerOptions, PerformanceMode } from '../../types';
 import ReactMarkdown from 'react-markdown';
 import { cn } from '../../lib/utils';
 import { ScrollArea } from '../ui/scroll-area';
@@ -212,7 +212,7 @@ export const ChatView = ({ models, selectedModel, onSelectModel, options, setOpt
                                 <Label>{t('chat.power_mode')}</Label>
                                 <Select
                                     value={options.pmode}
-                                    onValueChange={(v: any) => setOptions({ ...options, pmode: v })}
+                                    onValueChange={(v: PerformanceMode) => setOptions({ ...options, pmode: v })}
                                 >
                                     <SelectTrigger>
                                         <SelectValue />
