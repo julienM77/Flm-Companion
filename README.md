@@ -25,6 +25,7 @@ Flm Compagnon is a modern GUI designed to accompany and manage the **FastFlowLM 
 * **Models**: Model manager (download, delete, inspect details).
 * **Server**: Configuration and management of the FLM server instance.
 * **System Tray**: Quick access to server controls and status from the notification area.
+* **Start Minimized**: Option to launch the application minimized to the system tray (configurable in settings).
 * **Settings**: Application customization.
 * **About**: View application version, hardware information, and check for updates.
 * **Multilingual**: Interface management in English and French.
