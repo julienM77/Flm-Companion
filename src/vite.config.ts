@@ -19,14 +19,30 @@ export default defineConfig(async () => ({
     host: host || false,
     hmr: host
       ? {
-          protocol: "ws",
-          host,
-          port: 1421,
-        }
+        protocol: "ws",
+        host,
+        port: 1421,
+      }
       : undefined,
     watch: {
       // 3. tell Vite to ignore watching `src-tauri`
       ignored: ["**/src-tauri/**"],
     },
+  },
+
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Vendor chunks
+          react: ["react", "react-dom"],
+          "react-i18n": ["react-i18next", "i18next"],
+          ui: ["@radix-ui/react-accordion", "@radix-ui/react-dialog", "@radix-ui/react-select", "@radix-ui/react-scroll-area"],
+          charts: ["recharts"],
+          markdown: ["react-markdown"],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 600,
   },
 }));

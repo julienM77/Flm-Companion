@@ -72,7 +72,7 @@ export const SettingsView = ({
                         <SettingItem label={t('settings.start_minimized')} description={t('settings.start_minimized_desc')}>
                             <Switch
                                 checked={startMinimized}
-                                onChange={(e) => setStartMinimized(e.target.checked)}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setStartMinimized(e.target.checked)}
                             />
                         </SettingItem>
                         <SettingItem label={t('settings.theme')}>
