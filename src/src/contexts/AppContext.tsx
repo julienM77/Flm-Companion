@@ -91,7 +91,7 @@ export function AppProvider({ children }: AppProviderProps) {
         if (config.isConfigLoaded) {
             config.saveExternalConfig(models.selectedModel, server.serverOptions);
         }
-    }, [models.selectedModel, server.serverOptions, config.isConfigLoaded]);
+    }, [models.selectedModel, server.serverOptions, config.isConfigLoaded, config.saveExternalConfig]);
 
     const value: AppContextType = {
         // Config

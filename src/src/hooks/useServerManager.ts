@@ -72,10 +72,9 @@ export function useServerManager({
         if (!isConfigLoaded) return;
 
         (async () => {
-            let permissionGranted = await isPermissionGranted();
+            const permissionGranted = await isPermissionGranted();
             if (!permissionGranted) {
-                const permission = await requestPermission();
-                permissionGranted = permission === "granted";
+                await requestPermission();
             }
         })();
     }, [isConfigLoaded]);

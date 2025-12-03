@@ -76,7 +76,7 @@ export function ServerOptionsForm({
                 <Switch
                     id="asr-mode"
                     checked={options.asr}
-                    onChange={(e) => onChange("asr", e.target.checked)}
+                    onCheckedChange={(checked) => onChange("asr", checked)}
                     disabled={disabled}
                 />
             </div>
@@ -87,7 +87,7 @@ export function ServerOptionsForm({
                 <Switch
                     id="embed-mode"
                     checked={options.embed}
-                    onChange={(e) => onChange("embed", e.target.checked)}
+                    onCheckedChange={(checked) => onChange("embed", checked)}
                     disabled={disabled}
                 />
             </div>
@@ -134,7 +134,7 @@ export function ServerOptionsForm({
                         <Switch
                             id="cors-mode"
                             checked={options.cors}
-                            onChange={(e) => onChange("cors", e.target.checked)}
+                            onCheckedChange={(checked) => onChange("cors", checked)}
                             disabled={disabled}
                         />
                     </div>
@@ -145,7 +145,7 @@ export function ServerOptionsForm({
                         <Switch
                             id="preemption-mode"
                             checked={options.preemption}
-                            onChange={(e) => onChange("preemption", e.target.checked)}
+                            onCheckedChange={(checked) => onChange("preemption", checked)}
                             disabled={disabled}
                         />
                     </div>
