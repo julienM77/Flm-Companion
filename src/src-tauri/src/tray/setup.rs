@@ -1,4 +1,4 @@
-use tauri::image::Image;
+// use tauri::image::Image;
 use tauri::tray::TrayIconBuilder;
 use tauri::{Manager, Theme};
 
@@ -15,11 +15,8 @@ pub fn init_tray(app: &tauri::App) -> tauri::Result<()> {
     let icons = ThemeIcons::load(is_dark);
     let menu = build_initial_menu(app, &icons)?;
 
-    let icon =
-        Image::from_bytes(include_bytes!("../../icons/icon.png")).expect("failed to load icon");
-
     TrayIconBuilder::with_id("main")
-        .icon(icon)
+        .icon(icons.tray.clone())
         .menu(&menu)
         .on_menu_event(|app, event| {
             handle_menu_event(app, event.id.as_ref());

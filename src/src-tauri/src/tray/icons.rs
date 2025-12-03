@@ -1,6 +1,7 @@
 use tauri::image::Image;
 
 pub struct ThemeIcons {
+    pub tray: Image<'static>,
     pub play: Image<'static>,
     pub stop: Image<'static>,
     pub power: Image<'static>,
@@ -22,6 +23,8 @@ impl ThemeIcons {
 
     fn load_dark() -> Self {
         Self {
+            tray: Image::from_bytes(include_bytes!("../../icons/dark/tray.png"))
+                .expect("failed to load dark/tray.png"),
             play: Image::from_bytes(include_bytes!("../../icons/dark/play.png"))
                 .expect("failed to load dark/play.png"),
             stop: Image::from_bytes(include_bytes!("../../icons/dark/square.png"))
@@ -43,6 +46,8 @@ impl ThemeIcons {
 
     fn load_light() -> Self {
         Self {
+            tray: Image::from_bytes(include_bytes!("../../icons/light/tray.png"))
+                .expect("failed to load light/tray.png"),
             play: Image::from_bytes(include_bytes!("../../icons/light/play.png"))
                 .expect("failed to load light/play.png"),
             stop: Image::from_bytes(include_bytes!("../../icons/light/square.png"))
