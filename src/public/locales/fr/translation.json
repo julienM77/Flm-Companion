@@ -42,6 +42,8 @@
     "installed_title": "Modèles Locaux (Installés)",
     "no_installed_models": "Aucun modèle installé localement",
     "badge_memory": "MÉMOIRE",
+    "badge_think": "THINK",
+    "badge_vlm": "VLM",
     "dialog_info_desc": "Informations détaillées sur le modèle",
     "info_family": "Famille",
     "info_unknown": "Inconnue",
@@ -64,10 +66,11 @@
   },
   "settings": {
     "general_config": "Configuration Générale",
+    "language": "Langue",
     "start_minimized": "Démarrer minimisé",
-    "start_minimized_desc": "Lancer l'application dans la barre des tâches",
-    "start_on_boot": "Lancer au démarrage",
-    "start_on_boot_desc": "Démarrer FLM Manager avec Windows",
+    "start_minimized_desc": "Démarrer l'application cachée dans la zone de notification",
+    "start_on_boot": "Démarrer au lancement",
+    "start_on_boot_desc": "Lancer l'application au démarrage de l'ordinateur",
     "theme": "Thème de l'interface",
     "theme_placeholder": "Thème",
     "theme_dark": "Sombre",
@@ -75,8 +78,7 @@
     "theme_system": "Système",
     "paths_executables": "Chemins & Exécutables",
     "flm_path": "Chemin exécutable FLM",
-    "browse": "Parcourir",
-    "language": "Langue"
+    "browse": "Parcourir"
   },
   "about": {
     "companion_app": "Application compagnon",
@@ -150,5 +152,18 @@
     "system_starting": "Démarrage de {{model}}...",
     "system_process_exited": "Le processus s'est terminé avec le code {{code}}",
     "system_error": "Erreur : {{error}}"
+  },
+  "tray": {
+    "start": "Démarrer",
+    "stop": "Arrêter",
+    "quit": "Quitter",
+    "settings": "Configuration",
+    "server_running": "Serveur (En ligne)",
+    "server_stopped": "Serveur (Arrêté)",
+    "select_model": "Sélection du modèle",
+    "view_logs": "Voir les logs",
+    "features": "Fonctionnalités",
+    "asr": "ASR (Audio)",
+    "embed": "Embeddings"
   }
 }

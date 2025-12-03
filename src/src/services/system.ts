@@ -6,9 +6,6 @@ export interface SystemInfo {
 }
 
 export const SystemService = {
-    /**
-     * Get the NPU Driver Version
-     */
     async getNpuDriverVersion(): Promise<string> {
         const osType = await type();
 
@@ -23,8 +20,6 @@ export const SystemService = {
 
     async getWindowsNpuDriverVersion(): Promise<string> {
         try {
-            // Command to find AMD IPU (Ryzen AI) driver
-            // We look for "AMD IPU Device" or similar and get the DriverVersion
             const script = `
                 $driver = Get-CimInstance Win32_PnPSignedDriver | Where-Object { $_.DeviceName -like "*IPU*" -or $_.DeviceName -like "*NPU*" } | Select-Object -First 1
                 if ($driver) {
@@ -48,13 +43,11 @@ export const SystemService = {
     },
 
     async getLinuxNpuDriverVersion(): Promise<string> {
-        // Placeholder for Linux implementation
         return "Not Implemented";
     },
 
     async getSystemStats(): Promise<{ memory: { used: number, total: number, percentage: number }, cpu: { usage: number }, npu: { usage: number, temperature: number, power: number } }> {
         try {
-            // Get Memory and CPU Stats via PowerShell
             const script = `
                 $os = Get-CimInstance Win32_OperatingSystem
                 $total = $os.TotalVisibleMemorySize / 1024
@@ -87,7 +80,6 @@ export const SystemService = {
                 }
             }
 
-            // Mock NPU Stats (Still mocked as no standard API exists yet)
             const npu = {
                 usage: 0,
                 temperature: 0,

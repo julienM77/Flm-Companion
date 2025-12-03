@@ -1,9 +1,19 @@
 import { Info } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
-import { ScrollArea } from "./ui/scroll-area";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import { ScrollArea } from "../ui/scroll-area";
+import { Switch } from "../ui/switch";
 import { useTranslation } from "react-i18next";
+import type { Theme } from "../../types";
 
-const SettingItem = ({ label, description, children }: { label: string, description?: string, children: React.ReactNode }) => (
+const SettingItem = ({
+    label,
+    description,
+    children,
+}: {
+    label: string;
+    description?: string;
+    children: React.ReactNode;
+}) => (
     <div className="flex items-center justify-between py-4 min-h-16 border-b border-border last:border-0">
         <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-foreground">{label}</span>
@@ -16,16 +26,23 @@ const SettingItem = ({ label, description, children }: { label: string, descript
                 </div>
             )}
         </div>
-        <div className="flex items-center gap-4">
-            {children}
-        </div>
+        <div className="flex items-center gap-4">{children}</div>
     </div>
 );
 
-export const SettingsView = ({ theme, setTheme }: {
-    theme: "dark" | "light" | "system",
-    setTheme: (t: "dark" | "light" | "system") => void
-}) => {
+interface SettingsViewProps {
+    theme: Theme;
+    setTheme: (t: Theme) => void;
+    startMinimized: boolean;
+    setStartMinimized: (v: boolean) => void;
+}
+
+export const SettingsView = ({
+    theme,
+    setTheme,
+    startMinimized,
+    setStartMinimized,
+}: SettingsViewProps) => {
     const { t, i18n } = useTranslation();
 
     const changeLanguage = (lng: string) => {
@@ -40,7 +57,7 @@ export const SettingsView = ({ theme, setTheme }: {
                     <div className="bg-card rounded-xl pl-6 pr-6 border border-border shadow-sm">
                         <SettingItem label={t('settings.language')}>
                             <Select
-                                value={i18n.language}
+                                value={i18n.resolvedLanguage}
                                 onValueChange={changeLanguage}
                             >
                                 <SelectTrigger className="w-40">
@@ -52,12 +69,12 @@ export const SettingsView = ({ theme, setTheme }: {
                                 </SelectContent>
                             </Select>
                         </SettingItem>
-                        {/*<SettingItem label={t('settings.start_minimized')} description={t('settings.start_minimized_desc')}>
-                            <Switch />
+                        <SettingItem label={t('settings.start_minimized')} description={t('settings.start_minimized_desc')}>
+                            <Switch
+                                checked={startMinimized}
+                                onChange={(e) => setStartMinimized(e.target.checked)}
+                            />
                         </SettingItem>
-                        <SettingItem label={t('settings.start_on_boot')} description={t('settings.start_on_boot_desc')}>
-                            <Switch defaultChecked />
-                        </SettingItem>*/}
                         <SettingItem label={t('settings.theme')}>
                             <Select
                                 value={theme}
@@ -75,8 +92,6 @@ export const SettingsView = ({ theme, setTheme }: {
                         </SettingItem>
                     </div>
                 </div>
-
-                {/* Path selection removed as we rely on system PATH and auto-detection */}
             </div>
         </ScrollArea>
     );

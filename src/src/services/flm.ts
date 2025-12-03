@@ -1,22 +1,11 @@
 import { Command, Child } from "@tauri-apps/plugin-shell";
 import { readTextFile } from "@tauri-apps/plugin-fs";
 import { ConfigService } from "./config";
+import type { FlmModel, FlmStatus, HardwareInfo, ServerOptions } from "../types";
+import { MODEL_LIST_FILENAME } from "../types";
 
-export interface FlmModel {
-    name: string;
-    size: string;
-    modified: string;
-    // Extended metadata
-    realSize?: number;
-    description?: string;
-    family?: string;
-    isThink?: boolean;
-    isVlm?: boolean;
-    contextLength?: number;
-    quantization?: string;
-    url?: string;
-    parameterSize?: string;
-}
+// Ré-export des types pour la compatibilité
+export type { FlmModel, FlmStatus, HardwareInfo, ServerOptions };
 
 interface ModelListJson {
     model_path: string;
@@ -39,33 +28,6 @@ interface ModelJsonEntry {
     };
 }
 
-export interface FlmStatus {
-    version: string;
-    isInstalled: boolean;
-}
-
-export interface HardwareInfo {
-    cpu: string;
-    ram: string;
-    ramTotalBytes: number;
-    npuDriver: string;
-    npuName: string;
-    sharedMemory: string;
-    sharedMemoryBytes: number;
-}
-
-export interface ServerOptions {
-    pmode?: 'powersaver' | 'balanced' | 'performance' | 'turbo';
-    ctxLen?: number;
-    port?: number;
-    asr?: boolean;
-    embed?: boolean;
-    socket?: number;
-    qLen?: number;
-    cors?: boolean;
-    preemption?: boolean;
-}
-
 let serverProcess: Child | null = null;
 let metadataCache: Record<string, FlmModel> | null = null;
 let installedModelsCache: FlmModel[] | null = null;
@@ -73,7 +35,7 @@ let availableModelsCache: FlmModel[] | null = null;
 let hardwareInfoCache: HardwareInfo | null = null;
 
 function getDirectory(path: string): string {
-    const lastSlash = Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\'));
+    const lastSlash = Math.max(path.lastIndexOf("/"), path.lastIndexOf("\\"));
     if (lastSlash === -1) return ".";
     return path.substring(0, lastSlash);
 }
@@ -104,10 +66,10 @@ export const FlmService = {
             if (flmPath && flmPath !== "flm") {
                 const cleanPath = flmPath.replace(/[\\/]+$/, '');
                 const separator = cleanPath.includes('\\') ? '\\' : '/';
-                modelListPath = `${cleanPath}${separator}model_list.json`;
+                modelListPath = `${cleanPath}${separator}${MODEL_LIST_FILENAME}`;
             } else {
                 // Fallback to default install location if just "flm" is configured
-                modelListPath = "C:\\Program Files\\flm\\model_list.json";
+                modelListPath = `C:\\Program Files\\flm\\${MODEL_LIST_FILENAME}`;
             }
 
             const content = await readTextFile(modelListPath);
@@ -132,7 +94,7 @@ export const FlmService = {
                         size: sizeStr,
                         modified: details.modified_at,
                         realSize: details.size,
-                        description: details.name, // Using the descriptive name
+                        description: details.name,
                         family: details.details.family,
                         isThink: details.details.think,
                         isVlm: details.vlm || false,
@@ -146,7 +108,7 @@ export const FlmService = {
             metadataCache = metadata;
             return metadata;
         } catch (error) {
-            console.warn("Could not read model_list.json:", error);
+            console.warn(`Could not read ${MODEL_LIST_FILENAME}:`, error);
             return {};
         }
     },
@@ -245,11 +207,8 @@ export const FlmService = {
         }
 
         try {
-            // 1. Get Metadata from JSON
             const metadata = await this.getModelsMetadata();
 
-            // 2. Prepare CLI command based on filter
-            // User instruction: use --filter installed or --filter not-installed
             const args = ["list", "--quiet"];
             if (filter !== 'all') {
                 args.push("--filter", filter);
@@ -268,8 +227,6 @@ export const FlmService = {
             const results: FlmModel[] = [];
 
             for (const line of lines) {
-                // Clean up line (remove bullets, icons if any remain)
-                // We assume the first part of the line is the model name
                 const cleanLine = line.trim().replace(/^[-*+•>]\s+/, '');
                 const parts = cleanLine.split(/\s+/);
 
@@ -277,14 +234,11 @@ export const FlmService = {
 
                 const name = parts[0];
 
-                // Basic validation to skip headers
                 if (name === "NAME" || name.startsWith("---") || name.startsWith("Model")) continue;
 
-                // If we have metadata for this model, use it
                 if (metadata[name]) {
                     results.push(metadata[name]);
                 } else {
-                    // Fallback for models not in JSON (e.g. custom models)
                     let size = "-";
                     if (name.includes(':')) {
                         const split = name.split(':');
@@ -381,14 +335,11 @@ export const FlmService = {
             try {
                 if (onLog) onLog("[SYSTEM] Sending 'exit' command to server...");
 
-                // Try to stop gracefully by sending "exit" command to stdin
-                // Using \r\n to ensure it's recognized as a line break on all platforms/terminals
                 const encoder = new TextEncoder();
                 await serverProcess.write(encoder.encode("exit\r\n"));
 
                 if (onLog) onLog("[SYSTEM] Exit command sent. Waiting for graceful shutdown...");
 
-                // Wait for process to exit or timeout
                 await new Promise<void>((resolve) => {
                     const timeoutId = setTimeout(() => {
                         if (serverProcess) {
@@ -401,10 +352,8 @@ export const FlmService = {
                         resolve();
                     }, 5000);
 
-                    // Poll for exit
                     const intervalId = setInterval(() => {
                         if (!serverProcess) {
-                            // Process exited gracefully (handled by startServer's close listener)
                             clearTimeout(timeoutId);
                             clearInterval(intervalId);
                             resolve();
@@ -424,8 +373,8 @@ export const FlmService = {
      * Pull a new model
      */
     pullModel(modelName: string, onProgress: (data: string) => void): Promise<void> {
-        installedModelsCache = null; // Invalidate cache
-        availableModelsCache = null; // Invalidate cache
+        installedModelsCache = null;
+        availableModelsCache = null;
         return new Promise((resolve, reject) => {
             let errorOutput = "";
 
@@ -465,8 +414,8 @@ export const FlmService = {
      * Remove a model
      */
     async removeModel(modelName: string): Promise<void> {
-        installedModelsCache = null; // Invalidate cache
-        availableModelsCache = null; // Invalidate cache
+        installedModelsCache = null;
+        availableModelsCache = null;
         const command = Command.create("flm", ["remove", modelName]);
         const output = await command.execute();
         if (output.code !== 0) {
@@ -487,9 +436,7 @@ export const FlmService = {
 
             if (options.pmode) args.push("--pmode", options.pmode);
             if (options.ctxLen && options.ctxLen > 0) args.push("--ctx-len", options.ctxLen.toString());
-            // Note: run command might not support all server options like port/cors, but supports pmode, ctx-len etc.
 
-            // Boolean flags
             if (options.asr !== undefined) args.push("--asr", options.asr ? "1" : "0");
             if (options.embed !== undefined) args.push("--embed", options.embed ? "1" : "0");
 
@@ -529,7 +476,6 @@ export const FlmService = {
         if (!serverProcess) return;
 
         const encoder = new TextEncoder();
-        // Add newline to simulate pressing Enter
         await serverProcess.write(encoder.encode(message + "\n"));
     },
 
@@ -537,7 +483,7 @@ export const FlmService = {
      * Stop chat session
      */
     async stopChat(): Promise<void> {
-        await this.stopServer(); // Re-use stopServer logic as it handles killing the process
+        await this.stopServer();
     },
 
     /**
@@ -545,13 +491,11 @@ export const FlmService = {
      */
     async findFlmPath(): Promise<string | null> {
         try {
-            // Use PowerShell to find the command location
             const command = Command.create("powershell", ["-Command", "(Get-Command flm -ErrorAction SilentlyContinue).Source"]);
             const output = await command.execute();
 
             if (output.code === 0 && output.stdout.trim()) {
                 const fullPath = output.stdout.trim();
-                // We want the directory, not the executable
                 return getDirectory(fullPath);
             }
             return null;

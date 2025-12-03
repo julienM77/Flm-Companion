@@ -1,26 +1,27 @@
 import { Square, Cpu, Play, Download, Settings } from "lucide-react";
-import { SystemService } from "../services/system";
+import { SystemService } from "../../services/system";
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "./ui/card";
-import { Button } from "./ui/button";
-import { Badge } from "./ui/badge";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../ui/card";
+import { Button } from "../ui/button";
+import { Badge } from "../ui/badge";
 import { AreaChart, Area, ResponsiveContainer } from 'recharts';
+import { ServerStatus, DEFAULT_SERVER_PORT } from "../../types";
 
-interface DashboardProps {
-    serverStatus: "stopped" | "running" | "starting";
+interface DashboardViewProps {
+    serverStatus: ServerStatus;
     onToggleServer: () => void;
     flmVersion: string;
     selectedModel: string;
     onNavigate: (tab: string) => void;
 }
 
-export const Dashboard = ({
+export const DashboardView = ({
     serverStatus,
     onToggleServer,
     flmVersion,
     selectedModel,
     onNavigate
-}: DashboardProps) => {
+}: DashboardViewProps) => {
     const [npuVersion, setNpuVersion] = useState("Détection...");
     const [stats, setStats] = useState<{
         history: { time: string; cpu: number; memory: number }[];
@@ -65,7 +66,7 @@ export const Dashboard = ({
                         <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
                             <div className="space-y-1">
                                 <CardTitle className="text-base font-medium text-foreground">Serveur FLM</CardTitle>
-                                <CardDescription className="text-muted-foreground">Port: 52625 • v{flmVersion}</CardDescription>
+                                <CardDescription className="text-muted-foreground">Port: {DEFAULT_SERVER_PORT} • v{flmVersion}</CardDescription>
                             </div>
                             <Badge variant={
                                 serverStatus === "running" ? "default" :

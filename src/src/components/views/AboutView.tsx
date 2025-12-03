@@ -1,17 +1,19 @@
 import { useState, useEffect } from 'react';
-import { Github, RefreshCw, Download } from 'lucide-react';
-import { Button } from './ui/button';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
-import { FlmService, HardwareInfo } from '../services/flm';
-import { GithubService, ReleaseInfo } from '../services/github';
+import { RefreshCw, Download } from 'lucide-react';
+import { Button } from '../ui/button';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
+import { FlmService } from '../../services/flm';
+import type { HardwareInfo } from '../../types';
+import { GithubService, ReleaseInfo } from '../../services/github';
 import { openUrl, openPath } from '@tauri-apps/plugin-opener';
 import { fetch } from '@tauri-apps/plugin-http';
 import { writeFile, BaseDirectory } from '@tauri-apps/plugin-fs';
 import { tempDir } from '@tauri-apps/api/path';
 import ReactMarkdown from 'react-markdown';
-import { ScrollArea } from "./ui/scroll-area";
+import { ScrollArea } from "../ui/scroll-area";
 import { useTranslation } from "react-i18next";
-import { ConfigService } from "../services/config";
+import { ConfigService } from "../../services/config";
+import { GithubIcon } from "../icons";
 
 const APP_REPO_NAME = import.meta.env.VITE_GIT_PROJECT_COMPANION || "julienM77/flm-companion";
 const FLM_REPO_NAME = import.meta.env.VITE_GIT_PROJECT_FLM || "FastFlowLM/FastFlowLM";
@@ -240,7 +242,7 @@ export const AboutView = ({ hardwareInfo, onRefreshHardware }: AboutViewProps) =
                             size="sm"
                             onClick={() => openUrl(APP_REPO_URL)}
                         >
-                            <Github className="w-4 h-4 mr-2" />
+                            <GithubIcon className="w-4 h-4 mr-2" />
                             {t('about.view_on_github')}
                         </Button>
                     </div>
@@ -342,7 +344,7 @@ export const AboutView = ({ hardwareInfo, onRefreshHardware }: AboutViewProps) =
                             size="sm"
                             onClick={() => openUrl(FLM_REPO_URL)}
                         >
-                            <Github className="w-4 h-4 mr-2" />
+                            <GithubIcon className="w-4 h-4 mr-2" />
                             {t('about.view_on_github')}
                         </Button>
                     </div>
