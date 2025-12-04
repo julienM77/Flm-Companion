@@ -2,13 +2,15 @@ import { Play, Square, Activity, Cpu, Sliders, Cog } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "../ui/select";
 import { Badge } from "../ui/badge";
 import { Switch } from "../ui/switch";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion";
 import { useTranslation } from "react-i18next";
 import { LogsViewer } from "../shared/LogsViewer";
 import { InfoTooltip } from "../shared/InfoTooltip";
+import { getAllPresets, isPresetId, findPresetById, getPresetDisplayName } from "../../lib/presets";
+import { DEFAULT_PRESETS_CONFIG } from "../../types";
 import type { FlmModel, ServerOptions, ServerStatus, PerformanceMode } from "../../types";
 
 interface ServerViewProps {
@@ -76,35 +78,63 @@ export const ServerView = ({
                             <div>
                                 <label className="block text-xs font-medium text-muted-foreground mb-1.5">{t('server.model_to_load')}</label>
                                 <Select
-                                    value={selectedModel || "no-model-selected"}
+                                    value={selectedModel}
                                     onValueChange={(val) => {
-                                        if (val === "no-model-selected") {
-                                            onSelectModel("");
-                                            setOptions(prev => ({ ...prev, ctxLen: 0 }));
+                                        if (isPresetId(val)) {
+                                            // Apply preset configuration
+                                            const preset = findPresetById(val, DEFAULT_PRESETS_CONFIG);
+                                            if (preset) {
+                                                onSelectModel(val);
+                                                setOptions(prev => ({
+                                                    ...prev,
+                                                    ...preset.options,
+                                                }));
+                                            }
                                         } else {
+                                            // Regular model selection - reset features to defaults
                                             onSelectModel(val);
                                             const model = models.find(m => m.name === val);
-                                            if (model && model.contextLength) {
-                                                setOptions(prev => ({ ...prev, ctxLen: model.contextLength }));
-                                            }
+                                            setOptions(prev => ({
+                                                ...prev,
+                                                ctxLen: model?.contextLength || 0,
+                                                asr: false,
+                                                embed: false,
+                                            }));
                                         }
                                     }}
                                     disabled={serverStatus !== "stopped"}
                                 >
                                     <SelectTrigger>
-                                        <SelectValue placeholder={t('server.select_model_placeholder')} />
+                                        <SelectValue placeholder={t('server.select_model_placeholder')}>
+                                            {isPresetId(selectedModel)
+                                                ? getPresetDisplayName(findPresetById(selectedModel, DEFAULT_PRESETS_CONFIG)!, t)
+                                                : selectedModel || t('server.select_model_placeholder')
+                                            }
+                                        </SelectValue>
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="no-model-selected">{t('server.no_model_selected')}</SelectItem>
-                                        {models.length === 0 ? (
-                                            <SelectItem value="none" disabled>{t('server.no_model_installed')}</SelectItem>
-                                        ) : (
-                                            models.map(m => (
-                                                <SelectItem key={m.name} value={m.name}>
-                                                    {m.name} ({m.size})
+                                        {/* Presets Group */}
+                                        <SelectGroup>
+                                            <SelectLabel>{t('tray.presets_group')}</SelectLabel>
+                                            {getAllPresets(DEFAULT_PRESETS_CONFIG).map(preset => (
+                                                <SelectItem key={preset.id} value={preset.id}>
+                                                    {getPresetDisplayName(preset, t)}
                                                 </SelectItem>
-                                            ))
-                                        )}
+                                            ))}
+                                        </SelectGroup>
+                                        {/* Models Group */}
+                                        <SelectGroup>
+                                            <SelectLabel>{t('tray.models_group')}</SelectLabel>
+                                            {models.length === 0 ? (
+                                                <SelectItem value="none" disabled>{t('server.no_model_installed')}</SelectItem>
+                                            ) : (
+                                                models.map(m => (
+                                                    <SelectItem key={m.name} value={m.name}>
+                                                        {m.name} ({m.size})
+                                                    </SelectItem>
+                                                ))
+                                            )}
+                                        </SelectGroup>
                                     </SelectContent>
                                 </Select>
                             </div>

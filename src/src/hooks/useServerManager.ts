@@ -8,7 +8,8 @@ import {
 import { useTranslation } from "react-i18next";
 import { FlmService } from "../services/flm";
 import type { ServerStatus, ServerOptions, FlmModel } from "../types";
-import { DEFAULT_SERVER_OPTIONS } from "../types";
+import { DEFAULT_SERVER_OPTIONS, DEFAULT_PRESETS_CONFIG } from "../types";
+import { isPresetId, findPresetById } from "../lib/presets";
 
 interface UseServerManagerProps {
     selectedModel: string;
@@ -120,13 +121,21 @@ export function useServerManager({
             } else {
                 setServerStatus("starting");
                 setLogs([]);
-                addLog(t("app.log_starting_server", { model: selectedModelRef.current || "None" }));
+
+                // Get actual model name (extract from preset if needed)
+                let actualModel = selectedModelRef.current;
+                if (isPresetId(actualModel)) {
+                    const preset = findPresetById(actualModel, DEFAULT_PRESETS_CONFIG);
+                    actualModel = preset?.model || "";
+                }
+
+                addLog(t("app.log_starting_server", { model: actualModel || "None" }));
 
                 try {
                     const optionsToUse = options || serverOptionsRef.current;
 
                     await FlmService.startServer(
-                        selectedModelRef.current,
+                        actualModel,
                         optionsToUse,
                         (log) => {
                             addLog(log);
@@ -135,7 +144,7 @@ export function useServerManager({
                                 sendNotification({
                                     title: t("app.notification_server_started_title"),
                                     body: t("app.notification_server_started_body", {
-                                        model: selectedModelRef.current || "None",
+                                        model: actualModel || "None",
                                     }),
                                 });
                             }
@@ -190,14 +199,33 @@ export function useServerManager({
         });
 
         const unlistenSelectModel = listen<string>("select-model", async (event) => {
-            const newModelName = event.payload;
-            if (newModelName === selectedModelRef.current) return;
+            const newSelection = event.payload;
 
-            const model = installedModelsRef.current.find((m) => m.name === newModelName);
-            const newCtxLen = model?.contextLength || 0;
-            const newOptions = { ...serverOptionsRef.current, ctxLen: newCtxLen };
+            if (newSelection === selectedModelRef.current) return;
 
-            setSelectedModel(newModelName);
+            let newOptions: ServerOptions;
+
+            if (isPresetId(newSelection)) {
+                // It's a preset - apply preset options
+                const preset = findPresetById(newSelection, DEFAULT_PRESETS_CONFIG);
+                if (preset) {
+                    newOptions = { ...serverOptionsRef.current, ...preset.options };
+                } else {
+                    newOptions = { ...serverOptionsRef.current, ctxLen: 0 };
+                }
+            } else {
+                // It's a regular model - reset features to defaults
+                const model = installedModelsRef.current.find((m) => m.name === newSelection);
+                const newCtxLen = model?.contextLength || 0;
+                newOptions = {
+                    ...serverOptionsRef.current,
+                    ctxLen: newCtxLen,
+                    asr: false,
+                    embed: false,
+                };
+            }
+
+            setSelectedModel(newSelection);
             setServerOptions(newOptions);
 
             if (serverStatusRef.current === "running") {

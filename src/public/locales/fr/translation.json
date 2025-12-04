@@ -55,6 +55,8 @@
     "badge_memory": "MÉMOIRE",
     "badge_think": "THINK",
     "badge_vlm": "VLM",
+    "badge_embed": "EMBED",
+    "badge_audio": "AUDIO",
     "dialog_info_desc": "Informations détaillées sur le modèle",
     "info_family": "Famille",
     "info_unknown": "Inconnue",
@@ -175,6 +177,11 @@
     "view_logs": "Voir les logs",
     "features": "Fonctionnalités",
     "asr": "ASR (Audio)",
-    "embed": "Embeddings"
+    "embed": "Embeddings",
+    "presets_group": "Configurations",
+    "models_group": "Modèles"
+  },
+  "presets": {
+    "audio_only": "Audio uniquement (sans modèle)"
   }
 }

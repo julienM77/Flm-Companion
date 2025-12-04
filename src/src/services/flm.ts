@@ -98,6 +98,8 @@ export const FlmService = {
                         family: details.details.family,
                         isThink: details.details.think,
                         isVlm: details.vlm || false,
+                        isEmbed: fullName.toLowerCase().includes("embed"),
+                        isAudio: fullName.toLowerCase().includes("whisper"),
                         contextLength: details.default_context_length,
                         quantization: details.details.quantization_level,
                         url: details.url,
@@ -250,7 +252,9 @@ export const FlmService = {
                     results.push({
                         name: name,
                         size: size,
-                        modified: "-"
+                        modified: "-",
+                        isEmbed: name.toLowerCase().includes("embed"),
+                        isAudio: name.toLowerCase().includes("whisper"),
                     });
                 }
             }

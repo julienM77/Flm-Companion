@@ -29,6 +29,8 @@ export interface FlmModel {
     family?: string;
     isThink?: boolean;
     isVlm?: boolean;
+    isEmbed?: boolean;
+    isAudio?: boolean;
     contextLength?: number;
     quantization?: string;
     url?: string;
@@ -59,6 +61,23 @@ export interface FlmStatus {
 }
 
 // ============================================
+// Server Presets
+// ============================================
+
+export interface ServerPreset {
+    id: string;                    // Unique identifier, e.g., "preset:audio-only"
+    nameKey?: string;              // i18n key for system presets (e.g., "presets.audio_only")
+    name?: string;                 // Custom name for user presets
+    model: string;                 // Model to use ("" for no model)
+    options: Partial<ServerOptions>; // Options to apply when preset is selected
+}
+
+export interface PresetsConfig {
+    system: ServerPreset[];
+    user: ServerPreset[];
+}
+
+// ============================================
 // Default constants
 // ============================================
 
@@ -75,6 +94,20 @@ export const DEFAULT_SERVER_OPTIONS: ServerOptions = {
     qLen: 10,
     cors: true,
     preemption: false,
+};
+
+export const DEFAULT_SYSTEM_PRESETS: ServerPreset[] = [
+    {
+        id: "preset:audio-only",
+        nameKey: "presets.audio_only",
+        model: "",
+        options: { asr: true, ctxLen: 0 },
+    },
+];
+
+export const DEFAULT_PRESETS_CONFIG: PresetsConfig = {
+    system: DEFAULT_SYSTEM_PRESETS,
+    user: [],
 };
 
 export const DEFAULT_APP_CONFIG: AppConfig = {

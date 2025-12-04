@@ -42,6 +42,43 @@ pub fn build_tray_menu(
     let models_submenu = Submenu::new(app, &texts.select_model, true)?;
     let _ = models_submenu.set_icon(Some(icons.cpu.clone()));
 
+    // Add presets group
+    let presets_label = MenuItem::with_id(
+        app,
+        "presets_label",
+        &texts.presets_group,
+        false,
+        None::<&str>,
+    )?;
+    let _ = models_submenu.append(&presets_label);
+
+    for preset in &params.presets {
+        let is_selected = preset.id == params.selected_model;
+        let preset_item = CheckMenuItem::with_id(
+            app,
+            format!("model_{}", preset.id),
+            &preset.name,
+            true,
+            is_selected,
+            None::<&str>,
+        )?;
+        let _ = models_submenu.append(&preset_item);
+    }
+
+    // Add separator between presets and models
+    let models_sep = PredefinedMenuItem::separator(app)?;
+    let _ = models_submenu.append(&models_sep);
+
+    // Add models group
+    let models_label = MenuItem::with_id(
+        app,
+        "models_label",
+        &texts.models_group,
+        false,
+        None::<&str>,
+    )?;
+    let _ = models_submenu.append(&models_label);
+
     for model_name in &params.installed_models {
         let is_selected = model_name == &params.selected_model;
         let model_item = CheckMenuItem::with_id(
@@ -55,8 +92,17 @@ pub fn build_tray_menu(
         let _ = models_submenu.append(&model_item);
     }
 
+    // Display current selection (preset name or model name)
     let current_model_text = if params.selected_model.is_empty() {
         String::from("—")
+    } else if params.selected_model.starts_with("preset:") {
+        // Find preset name
+        params
+            .presets
+            .iter()
+            .find(|p| p.id == params.selected_model)
+            .map(|p| p.name.clone())
+            .unwrap_or_else(|| params.selected_model.clone())
     } else {
         params.selected_model.clone()
     };

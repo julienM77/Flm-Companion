@@ -12,10 +12,10 @@ import { TooltipProvider } from "./components/ui/tooltip";
 
 // Wrappers
 function ChatViewWrapper() {
-  const { installedModels, selectedModel, setSelectedModel, serverOptions, setServerOptions } = useAppContext();
+  const { runnableModels, selectedModel, setSelectedModel, serverOptions, setServerOptions } = useAppContext();
   return (
     <ChatView
-      models={installedModels}
+      models={runnableModels}
       selectedModel={selectedModel}
       onSelectModel={setSelectedModel}
       options={serverOptions}
@@ -28,7 +28,7 @@ function ServerViewWrapper() {
   const {
     serverStatus,
     handleToggleServer,
-    installedModels,
+    runnableModels,
     selectedModel,
     setSelectedModel,
     logs,
@@ -39,7 +39,7 @@ function ServerViewWrapper() {
     <ServerView
       serverStatus={serverStatus}
       onToggleServer={handleToggleServer}
-      models={installedModels}
+      models={runnableModels}
       selectedModel={selectedModel}
       onSelectModel={setSelectedModel}
       logs={logs}
