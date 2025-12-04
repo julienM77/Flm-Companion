@@ -32,6 +32,7 @@ interface AppContextType {
     setServerOptions: (options: ServerOptions | ((prev: ServerOptions) => ServerOptions)) => void;
     handleToggleServer: (options?: ServerOptions) => Promise<void>;
     addLog: (log: string) => void;
+    clearLogs: () => void;
 
     // Navigation
     activeTab: string;
@@ -120,6 +121,7 @@ export function AppProvider({ children }: AppProviderProps) {
         setServerOptions: server.setServerOptions,
         handleToggleServer: server.handleToggleServer,
         addLog: server.addLog,
+        clearLogs: server.clearLogs,
 
         // Navigation
         activeTab,

@@ -17,7 +17,6 @@
     "status_starting": "DÉMARRAGE...",
     "status_stopped": "ARRÊTÉ",
     "model": "Modèle",
-    "model_to_load": "Modèle à charger",
     "select_model_placeholder": "Sélectionner un modèle",
     "no_model_installed": "Aucun modèle installé",
     "features": "Fonctionnalités",
@@ -48,6 +47,7 @@
     "logs_title": "Logs du Serveur",
     "lines": "lignes",
     "waiting_logs": "En attente de démarrage du serveur...",
+    "no_logs": "Aucun log à afficher",
     "no_model_selected": "Aucun Modèle (Audio Seulement)"
   },
   "models": {
@@ -177,7 +177,6 @@
     "settings": "Configuration",
     "server_running": "Serveur (En ligne)",
     "server_stopped": "Serveur (Arrêté)",
-    "select_model": "Sélection du modèle",
     "view_logs": "Voir les logs",
     "features": "Fonctionnalités",
     "asr": "ASR (Audio)",
@@ -187,5 +186,10 @@
   },
   "presets": {
     "audio_only": "Audio uniquement (sans modèle)"
+  },
+  "logs": {
+    "copy": "Copier",
+    "copied": "Copié !",
+    "clear": "Effacer"
   }
 }

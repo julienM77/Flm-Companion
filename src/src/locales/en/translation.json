@@ -18,7 +18,6 @@
     "status_starting": "STARTING...",
     "status_stopped": "STOPPED",
     "model": "Model",
-    "model_to_load": "Model to load",
     "select_model_placeholder": "Select a model",
     "no_model_installed": "No model installed",
     "features": "Features",
@@ -48,7 +47,8 @@
     "stop_server": "Stop Server",
     "logs_title": "Server Logs",
     "lines": "lines",
-    "waiting_logs": "Waiting for server start...",
+    "waiting_logs": "Waiting for server to start...",
+    "no_logs": "No logs to display",
     "no_model_selected": "No Model (Audio Only)"
   },
   "models": {
@@ -178,7 +178,6 @@
     "settings": "Settings",
     "server_running": "Server (Running)",
     "server_stopped": "Server (Stopped)",
-    "select_model": "Select Model",
     "view_logs": "View Logs",
     "features": "Features",
     "asr": "ASR (Audio)",
@@ -188,5 +187,10 @@
   },
   "presets": {
     "audio_only": "Audio Only (no model)"
+  },
+  "logs": {
+    "copy": "Copy",
+    "copied": "Copied!",
+    "clear": "Clear"
   }
 }

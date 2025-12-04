@@ -231,7 +231,7 @@ export const AboutView = ({ hardwareInfo, onRefreshHardware }: AboutViewProps) =
                     {/* App Version Row */}
                     <div className="flex items-center justify-between p-4 border-b last:border-0">
                         <span className="text-sm font-medium text-foreground">{t('about.version')}</span>
-                        <div className="font-mono text-sm text-muted-foreground">{companionVersion}</div>
+                        <div className="font-mono text-sm text-muted-foreground">v{companionVersion}</div>
                     </div>
 
                     {/* Source Code Row */}
@@ -275,7 +275,7 @@ export const AboutView = ({ hardwareInfo, onRefreshHardware }: AboutViewProps) =
                             <Accordion type="single" collapsible>
                                 <AccordionItem value="changelog" className="border-b-0">
                                     <AccordionTrigger className="px-4 py-4 hover:no-underline">
-                                        <span className="text-sm font-medium text-foreground">{t('about.release_notes')} <span className="text-muted-foreground font-normal ml-2">({companionVersion})</span></span>
+                                        <span className="text-sm font-medium text-foreground">{t('about.release_notes')} <span className="text-muted-foreground font-normal ml-2">(v{companionVersion})</span></span>
                                     </AccordionTrigger>
                                     <AccordionContent>
                                         <div className="px-4 pb-4 text-sm bg-muted/30 pt-2 prose prose-sm dark:prose-invert max-w-none max-h-[400px] overflow-y-auto prose-headings:text-foreground prose-p:text-foreground prose-strong:text-foreground prose-li:text-foreground prose-code:text-foreground">

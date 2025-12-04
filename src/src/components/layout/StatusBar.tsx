@@ -57,7 +57,7 @@ export const StatusBar = ({ serverStatus, selectedModel, version }: StatusBarPro
                 {flmVersion && (
                     <>
                         <span className="text-border">|</span>
-                        <span>FLM v{flmVersion}</span>
+                        <span>FLM {flmVersion}</span>
                     </>
                 )}
             </div>

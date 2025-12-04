@@ -1,9 +1,8 @@
-import { Play, Square, Activity, Cpu, Sliders, Cog } from "lucide-react";
+import { Play, Square, Activity, Cpu, Sliders, Cog, FileText } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "../ui/select";
-import { Badge } from "../ui/badge";
 import { Switch } from "../ui/switch";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion";
 import { useTranslation } from "react-i18next";
@@ -20,6 +19,7 @@ interface ServerViewProps {
     selectedModel: string;
     onSelectModel: (model: string) => void;
     logs: string[];
+    onClearLogs: () => void;
     options: ServerOptions;
     setOptions: (options: ServerOptions | ((prev: ServerOptions) => ServerOptions)) => void;
 }
@@ -31,6 +31,7 @@ export const ServerView = ({
     selectedModel,
     onSelectModel,
     logs,
+    onClearLogs,
     options,
     setOptions
 }: ServerViewProps) => {
@@ -41,31 +42,45 @@ export const ServerView = ({
     };
 
     return (
-        <div className="h-full flex flex-col space-y-6">
-            <div className="flex justify-between items-center">
+        <div className="h-full flex flex-col space-y-4 lg:space-y-6 overflow-y-auto lg:overflow-hidden">
+            <div className="flex justify-between items-center sticky top-0 bg-background z-10 pb-4 -mb-2 lg:static lg:pb-2 lg:mb-0">
                 <div>
                     <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">{t('server.title')}</h2>
                     <p className="text-muted-foreground text-sm">{t('server.subtitle')}</p>
                 </div>
-                <Badge variant={
-                    serverStatus === "running" ? "default" :
-                        serverStatus === "starting" ? "secondary" :
-                            "destructive"
-                } className={`px-3 py-1 text-xs font-medium flex items-center gap-2 ${serverStatus === "running" ? "bg-green-500/10 text-green-500 border-green-500/20" :
-                    serverStatus === "starting" ? "bg-yellow-500/10 text-yellow-500 border-yellow-500/20" :
-                        "bg-red-500/10 text-red-500 border-red-500/20"
-                    }`}>
-                    <div className={`w-1.5 h-1.5 rounded-full ${serverStatus === "running" ? "bg-green-500 animate-pulse" :
-                        serverStatus === "starting" ? "bg-yellow-500 animate-bounce" :
-                            "bg-red-500"
-                        }`} />
-                    {serverStatus === "running" ? t('server.status_online') : serverStatus === "starting" ? t('server.status_starting') : t('server.status_stopped')}
-                </Badge>
+                <div className="flex items-center gap-3">
+                    {serverStatus === "stopped" ? (
+                        <Button
+                            onClick={() => onToggleServer(options)}
+                            size="sm"
+                            className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
+                        >
+                            <Play size={16} /> {t('server.start_server')}
+                        </Button>
+                    ) : serverStatus === "starting" ? (
+                        <Button
+                            disabled
+                            size="sm"
+                            className="bg-yellow-600/50 text-white flex items-center gap-2 cursor-wait"
+                        >
+                            <Activity size={16} className="animate-spin" /> {t('server.starting')}
+                        </Button>
+                    ) : (
+                        <Button
+                            variant="destructive"
+                            onClick={() => onToggleServer(options)}
+                            size="sm"
+                            className="bg-red-600 hover:bg-red-700 flex items-center gap-2"
+                        >
+                            <Square size={16} /> {t('server.stop_server')}
+                        </Button>
+                    )}
+                </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 m-2 lg:gap-6 lg:flex-1 lg:min-h-0">
                 {/* Configuration Panel */}
-                <div className="lg:col-span-1 space-y-6 overflow-y-auto pr-2">
+                <div className="lg:col-span-1 space-y-4 lg:space-y-6 lg:overflow-y-auto lg:pr-2">
                     {/* Model Selection */}
                     <Card className="bg-card border-border shadow-sm">
                         <CardHeader className="pb-3">
@@ -76,7 +91,6 @@ export const ServerView = ({
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div>
-                                <label className="block text-xs font-medium text-muted-foreground mb-1.5">{t('server.model_to_load')}</label>
                                 <Select
                                     value={selectedModel}
                                     onValueChange={(val) => {
@@ -317,37 +331,46 @@ export const ServerView = ({
                             </Card>
                         </AccordionItem>
                     </Accordion>
-
-                    {/* Action Button */}
-                    <div className="pt-2">
-                        {serverStatus === "stopped" ? (
-                            <Button
-                                onClick={() => onToggleServer(options)}
-                                className="w-full bg-green-600 hover:bg-green-700 text-white py-6 rounded-xl flex items-center justify-center gap-2 font-bold text-lg shadow-lg hover:shadow-green-900/20"
-                            >
-                                <Play size={20} /> {t('server.start_server')}
-                            </Button>
-                        ) : serverStatus === "starting" ? (
-                            <Button
-                                disabled
-                                className="w-full bg-yellow-600/50 text-white py-6 rounded-xl flex items-center justify-center gap-2 font-bold text-lg cursor-wait"
-                            >
-                                <Activity size={20} className="animate-spin" /> {t('server.starting')}
-                            </Button>
-                        ) : (
-                            <Button
-                                variant="destructive"
-                                onClick={() => onToggleServer(options)}
-                                className="w-full py-6 rounded-xl flex items-center justify-center gap-2 font-bold text-lg shadow-lg hover:shadow-red-900/20 bg-red-600 hover:bg-red-700"
-                            >
-                                <Square size={20} /> {t('server.stop_server')}
-                            </Button>
-                        )}
-                    </div>
                 </div>
 
-                {/* Logs Panel */}
-                <LogsViewer logs={logs} className="lg:col-span-2 h-full" />
+                {/* Logs Panel - Accordion on mobile, normal on desktop */}
+                <div className="lg:col-span-2 lg:h-full lg:min-h-0">
+                    {/* Mobile: Accordion */}
+                    <div className="lg:hidden">
+                        <Accordion type="single" collapsible defaultValue="logs" className="w-full">
+                            <AccordionItem value="logs" className="border-none">
+                                <Card className="bg-card border-border shadow-sm">
+                                    <AccordionTrigger className="px-6 py-4 hover:no-underline">
+                                        <CardTitle className="text-sm font-medium text-foreground flex items-center gap-2">
+                                            <FileText size={16} className="text-muted-foreground" />
+                                            {t('server.logs_title')}
+                                        </CardTitle>
+                                    </AccordionTrigger>
+                                    <AccordionContent>
+                                        <div className="px-6 pb-4">
+                                            <LogsViewer
+                                                logs={logs}
+                                                variant="content"
+                                                className="h-80 overflow-y-auto"
+                                                onClear={onClearLogs}
+                                                emptyMessage={serverStatus === "stopped" ? t('server.waiting_logs') : t('server.no_logs')}
+                                            />
+                                        </div>
+                                    </AccordionContent>
+                                </Card>
+                            </AccordionItem>
+                        </Accordion>
+                    </div>
+                    {/* Desktop: Normal display */}
+                    <div className="hidden lg:flex lg:h-full">
+                        <LogsViewer
+                            logs={logs}
+                            className="h-full w-full"
+                            onClear={onClearLogs}
+                            emptyMessage={serverStatus === "stopped" ? t('server.waiting_logs') : t('server.no_logs')}
+                        />
+                    </div>
+                </div>
             </div>
         </div>
     );

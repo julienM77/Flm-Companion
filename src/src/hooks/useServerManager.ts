@@ -27,6 +27,7 @@ interface UseServerManagerReturn {
     setServerOptions: (options: ServerOptions | ((prev: ServerOptions) => ServerOptions)) => void;
     handleToggleServer: (options?: ServerOptions) => Promise<void>;
     addLog: (log: string) => void;
+    clearLogs: () => void;
 }
 
 export function useServerManager({
@@ -108,6 +109,10 @@ export function useServerManager({
 
     const addLog = useCallback((log: string) => {
         setLogs((prev) => [...prev, `[${new Date().toLocaleTimeString()}] ${log}`]);
+    }, []);
+
+    const clearLogs = useCallback(() => {
+        setLogs([]);
     }, []);
 
     const handleToggleServer = useCallback(
@@ -275,5 +280,6 @@ export function useServerManager({
         setServerOptions,
         handleToggleServer,
         addLog,
+        clearLogs,
     };
 }

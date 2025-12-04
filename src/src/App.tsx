@@ -32,6 +32,7 @@ function ServerViewWrapper() {
     selectedModel,
     setSelectedModel,
     logs,
+    clearLogs,
     serverOptions,
     setServerOptions,
   } = useAppContext();
@@ -43,6 +44,7 @@ function ServerViewWrapper() {
       selectedModel={selectedModel}
       onSelectModel={setSelectedModel}
       logs={logs}
+      onClearLogs={clearLogs}
       options={serverOptions}
       setOptions={setServerOptions}
     />

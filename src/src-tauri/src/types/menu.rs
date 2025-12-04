@@ -18,6 +18,7 @@ pub struct TrayMenuParams {
     pub installed_models: Vec<String>,
     pub asr_enabled: bool,
     pub embed_enabled: bool,
+    pub flm_version: String,
     pub texts: TrayMenuTexts,
 }
 
@@ -31,7 +32,6 @@ pub struct TrayMenuTexts {
     pub settings: String,
     pub running: String,
     pub stopped: String,
-    pub select_model: String,
     pub view_logs: String,
     pub features: String,
     pub asr: String,
