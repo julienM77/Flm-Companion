@@ -91,7 +91,7 @@ const TAB_COMPONENTS: Record<string, React.ComponentType> = {
 };
 
 function AppContent() {
-  const { activeTab, setActiveTab, serverStatus } = useAppContext();
+  const { activeTab, setActiveTab, serverStatus, selectedModel } = useAppContext();
 
   const renderContent = () => {
     const Component = TAB_COMPONENTS[activeTab] || ChatViewWrapper;
@@ -110,7 +110,7 @@ function AppContent() {
           </main>
         </div>
       </div>
-      <StatusBar serverStatus={serverStatus} version={ConfigService.getAppVersion()} />
+      <StatusBar serverStatus={serverStatus} selectedModel={selectedModel} version={ConfigService.getAppVersion()} />
     </div>
   );
 }
