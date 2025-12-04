@@ -3,6 +3,7 @@ import { ScrollArea } from "../ui/scroll-area";
 import { Switch } from "../ui/switch";
 import { useTranslation } from "react-i18next";
 import { InfoTooltip } from "../shared/InfoTooltip";
+import { getAvailableLanguages } from "../../i18n";
 import type { Theme } from "../../types";
 
 const SettingItem = ({
@@ -57,8 +58,11 @@ export const SettingsView = ({
                                     <SelectValue placeholder="Language" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="fr">Français</SelectItem>
-                                    <SelectItem value="en">English</SelectItem>
+                                    {getAvailableLanguages().map((lang) => (
+                                        <SelectItem key={lang.code} value={lang.code}>
+                                            {lang.name}
+                                        </SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
                         </SettingItem>

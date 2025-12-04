@@ -1,4 +1,8 @@
 {
+  "_meta": {
+    "code": "fr",
+    "name": "Français"
+  },
   "sidebar": {
     "models": "Modèles",
     "server": "Serveur",

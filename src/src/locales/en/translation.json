@@ -1,4 +1,9 @@
 {
+  "_meta": {
+    "code": "en",
+    "name": "English",
+    "default": true
+  },
   "sidebar": {
     "models": "Models",
     "server": "Server",
