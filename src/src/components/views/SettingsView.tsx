@@ -1,8 +1,8 @@
-import { Info } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { ScrollArea } from "../ui/scroll-area";
 import { Switch } from "../ui/switch";
 import { useTranslation } from "react-i18next";
+import { InfoTooltip } from "../shared/InfoTooltip";
 import type { Theme } from "../../types";
 
 const SettingItem = ({
@@ -17,14 +17,7 @@ const SettingItem = ({
     <div className="flex items-center justify-between py-4 min-h-16 border-b border-border last:border-0">
         <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-foreground">{label}</span>
-            {description && (
-                <div className="group relative">
-                    <Info size={14} className="text-muted-foreground cursor-help" />
-                    <div className="absolute left-6 top-1/2 -translate-y-1/2 w-48 p-2 bg-popover border border-border rounded text-xs text-popover-foreground opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-10 shadow-md">
-                        {description}
-                    </div>
-                </div>
-            )}
+            {description && <InfoTooltip text={description} />}
         </div>
         <div className="flex items-center gap-4">{children}</div>
     </div>
@@ -72,7 +65,7 @@ export const SettingsView = ({
                         <SettingItem label={t('settings.start_minimized')} description={t('settings.start_minimized_desc')}>
                             <Switch
                                 checked={startMinimized}
-                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setStartMinimized(e.target.checked)}
+                                onCheckedChange={(checked) => setStartMinimized(checked)}
                             />
                         </SettingItem>
                         <SettingItem label={t('settings.theme')}>

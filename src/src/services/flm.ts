@@ -285,6 +285,7 @@ export const FlmService = {
             if (options.pmode) args.push("--pmode", options.pmode);
             if (options.ctxLen && options.ctxLen > 0) args.push("--ctx-len", options.ctxLen.toString());
             if (options.port && options.port > 0) args.push("--port", options.port.toString());
+            if (options.host) args.push("--host", options.host);
             if (options.socket && options.socket > 0) args.push("--socket", options.socket.toString());
             if (options.qLen && options.qLen > 0) args.push("--q-len", options.qLen.toString());
 

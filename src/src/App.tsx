@@ -8,6 +8,7 @@ import { SettingsView } from "./components/views/SettingsView";
 import { AboutView } from "./components/views/AboutView";
 import { ConfigService } from "./services/config";
 import { AppProvider, useAppContext } from "./contexts";
+import { TooltipProvider } from "./components/ui/tooltip";
 
 // Wrappers
 function ChatViewWrapper() {
@@ -117,7 +118,9 @@ function AppContent() {
 function App() {
   return (
     <AppProvider>
-      <AppContent />
+      <TooltipProvider delayDuration={200}>
+        <AppContent />
+      </TooltipProvider>
     </AppProvider>
   );
 }

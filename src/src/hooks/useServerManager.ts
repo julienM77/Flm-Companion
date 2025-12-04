@@ -67,6 +67,32 @@ export function useServerManager({
         installedModelsRef.current = installedModels;
     }, [installedModels]);
 
+    // Update options when config is loaded
+    useEffect(() => {
+        if (isConfigLoaded) {
+            setServerOptions((prev) => ({
+                ...prev,
+                ...initialServerOptions,
+            }));
+        }
+    }, [isConfigLoaded, initialServerOptions]);
+
+    // Set default context length from model if not specified
+    useEffect(() => {
+        if (isConfigLoaded && installedModels.length > 0 && selectedModel) {
+            setServerOptions((prev) => {
+                // If context length is 0 (default/unset), try to get it from the model
+                if (!prev.ctxLen) {
+                    const model = installedModels.find((m) => m.name === selectedModel);
+                    if (model?.contextLength) {
+                        return { ...prev, ctxLen: model.contextLength };
+                    }
+                }
+                return prev;
+            });
+        }
+    }, [isConfigLoaded, installedModels, selectedModel]);
+
     // Request notification permission
     useEffect(() => {
         if (!isConfigLoaded) return;

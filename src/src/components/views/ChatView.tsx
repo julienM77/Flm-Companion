@@ -240,7 +240,7 @@ export const ChatView = ({ models, selectedModel, onSelectModel, options, setOpt
                                 <Switch
                                     id="asr-mode"
                                     checked={options.asr}
-                                    onChange={e => setOptions({ ...options, asr: e.target.checked })}
+                                    onCheckedChange={checked => setOptions({ ...options, asr: checked })}
                                 />
                             </div>
 
@@ -249,7 +249,7 @@ export const ChatView = ({ models, selectedModel, onSelectModel, options, setOpt
                                 <Switch
                                     id="embed-mode"
                                     checked={options.embed}
-                                    onChange={e => setOptions({ ...options, embed: e.target.checked })}
+                                    onCheckedChange={checked => setOptions({ ...options, embed: checked })}
                                 />
                             </div>
                         </div>

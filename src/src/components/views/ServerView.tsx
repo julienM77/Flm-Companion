@@ -8,6 +8,7 @@ import { Switch } from "../ui/switch";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion";
 import { useTranslation } from "react-i18next";
 import { LogsViewer } from "../shared/LogsViewer";
+import { InfoTooltip } from "../shared/InfoTooltip";
 import type { FlmModel, ServerOptions, ServerStatus, PerformanceMode } from "../../types";
 
 interface ServerViewProps {
@@ -110,33 +111,45 @@ export const ServerView = ({
                         </CardContent>
                     </Card>
 
-                    {/* Features Panel */}
-                    <Card className="bg-card border-border shadow-sm">
-                        <CardHeader className="pb-3">
-                            <CardTitle className="text-sm font-medium text-foreground flex items-center gap-2">
-                                <Cog size={16} className="text-muted-foreground" />
-                                {t('server.features')}
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="flex items-center justify-between">
-                                <span className="text-sm text-foreground">{t('server.enable_asr')}</span>
-                                <Switch
-                                    checked={options.asr}
-                                    onChange={(e) => handleOptionChange('asr', e.target.checked)}
-                                    disabled={serverStatus !== "stopped"}
-                                />
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <span className="text-sm text-foreground">{t('server.enable_embeddings')}</span>
-                                <Switch
-                                    checked={options.embed}
-                                    onChange={(e) => handleOptionChange('embed', e.target.checked)}
-                                    disabled={serverStatus !== "stopped"}
-                                />
-                            </div>
-                        </CardContent>
-                    </Card>
+                    {/* Features Accordion */}
+                    <Accordion type="single" collapsible className="w-full">
+                        <AccordionItem value="features" className="border-none">
+                            <Card className="bg-card border-border shadow-sm">
+                                <AccordionTrigger className="px-6 py-4 hover:no-underline">
+                                    <CardTitle className="text-sm font-medium text-foreground flex items-center gap-2">
+                                        <Cog size={16} className="text-muted-foreground" />
+                                        {t('server.features')}
+                                    </CardTitle>
+                                </AccordionTrigger>
+                                <AccordionContent>
+                                    <CardContent className="space-y-4 pt-0">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-sm text-foreground">{t('server.enable_asr')}</span>
+                                                <InfoTooltip text={t('server.asr_desc')} />
+                                            </div>
+                                            <Switch
+                                                checked={options.asr}
+                                                onCheckedChange={(checked) => handleOptionChange('asr', checked)}
+                                                disabled={serverStatus !== "stopped"}
+                                            />
+                                        </div>
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-sm text-foreground">{t('server.enable_embeddings')}</span>
+                                                <InfoTooltip text={t('server.embeddings_desc')} />
+                                            </div>
+                                            <Switch
+                                                checked={options.embed}
+                                                onCheckedChange={(checked) => handleOptionChange('embed', checked)}
+                                                disabled={serverStatus !== "stopped"}
+                                            />
+                                        </div>
+                                    </CardContent>
+                                </AccordionContent>
+                            </Card>
+                        </AccordionItem>
+                    </Accordion>
 
                     {/* Advanced Settings Accordion */}
                     <Accordion type="single" collapsible className="w-full">
@@ -151,7 +164,10 @@ export const ServerView = ({
                                 <AccordionContent>
                                     <CardContent className="space-y-4 pt-0">
                                         <div>
-                                            <label className="block text-xs font-medium text-muted-foreground mb-1.5">{t('server.power_mode')}</label>
+                                            <div className="flex items-center gap-2 mb-1.5">
+                                                <label className="block text-xs font-medium text-muted-foreground">{t('server.power_mode')}</label>
+                                                <InfoTooltip text={t('server.power_mode_desc')} />
+                                            </div>
                                             <Select
                                                 value={options.pmode}
                                                 onValueChange={(value) => handleOptionChange('pmode', value as PerformanceMode)}
@@ -171,7 +187,10 @@ export const ServerView = ({
 
                                         <div className="grid grid-cols-2 gap-4">
                                             <div>
-                                                <label className="block text-xs font-medium text-muted-foreground mb-1.5">{t('server.port')}</label>
+                                                <div className="flex items-center gap-2 mb-1.5">
+                                                    <label className="block text-xs font-medium text-muted-foreground">{t('server.port')}</label>
+                                                    <InfoTooltip text={t('server.port_desc')} />
+                                                </div>
                                                 <Input
                                                     type="number"
                                                     value={options.port}
@@ -181,7 +200,27 @@ export const ServerView = ({
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-xs font-medium text-muted-foreground mb-1.5">{t('server.context_tokens')}</label>
+                                                <div className="flex items-center gap-2 mb-1.5">
+                                                    <label className="block text-xs font-medium text-muted-foreground">{t('server.host')}</label>
+                                                    <InfoTooltip text={t('server.host_desc')} />
+                                                </div>
+                                                <Input
+                                                    type="text"
+                                                    value={options.host || "127.0.0.1"}
+                                                    onChange={(e) => handleOptionChange('host', e.target.value)}
+                                                    disabled={serverStatus !== "stopped"}
+                                                    className="bg-input border-input text-foreground h-9"
+                                                    placeholder="127.0.0.1"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <div className="flex items-center gap-2 mb-1.5">
+                                                    <label className="block text-xs font-medium text-muted-foreground">{t('server.context_tokens')}</label>
+                                                    <InfoTooltip text={t('server.context_tokens_desc')} />
+                                                </div>
                                                 <Input
                                                     type="number"
                                                     value={options.ctxLen || ""}
@@ -190,21 +229,11 @@ export const ServerView = ({
                                                     className="bg-input border-input text-foreground h-9"
                                                 />
                                             </div>
-                                        </div>
-
-                                        <div className="grid grid-cols-2 gap-4">
                                             <div>
-                                                <label className="block text-xs font-medium text-muted-foreground mb-1.5">{t('server.socket_conn')}</label>
-                                                <Input
-                                                    type="number"
-                                                    value={options.socket}
-                                                    onChange={(e) => handleOptionChange('socket', parseInt(e.target.value))}
-                                                    disabled={serverStatus !== "stopped"}
-                                                    className="bg-input border-input text-foreground h-9"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-medium text-muted-foreground mb-1.5">{t('server.queue_len')}</label>
+                                                <div className="flex items-center gap-2 mb-1.5">
+                                                    <label className="block text-xs font-medium text-muted-foreground">{t('server.queue_len')}</label>
+                                                    <InfoTooltip text={t('server.queue_len_desc')} />
+                                                </div>
                                                 <Input
                                                     type="number"
                                                     value={options.qLen}
@@ -215,20 +244,40 @@ export const ServerView = ({
                                             </div>
                                         </div>
 
+                                        <div>
+                                            <div className="flex items-center gap-2 mb-1.5">
+                                                <label className="block text-xs font-medium text-muted-foreground">{t('server.socket_conn')}</label>
+                                                <InfoTooltip text={t('server.socket_conn_desc')} />
+                                            </div>
+                                            <Input
+                                                type="number"
+                                                value={options.socket}
+                                                onChange={(e) => handleOptionChange('socket', parseInt(e.target.value))}
+                                                disabled={serverStatus !== "stopped"}
+                                                className="bg-input border-input text-foreground h-9"
+                                            />
+                                        </div>
+
                                         <div className="space-y-4 pt-2">
                                             <div className="flex items-center justify-between">
-                                                <span className="text-sm text-foreground">{t('server.enable_cors')}</span>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-sm text-foreground">{t('server.enable_cors')}</span>
+                                                    <InfoTooltip text={t('server.enable_cors_desc')} />
+                                                </div>
                                                 <Switch
                                                     checked={options.cors}
-                                                    onChange={(e) => handleOptionChange('cors', e.target.checked)}
+                                                    onCheckedChange={(checked) => handleOptionChange('cors', checked)}
                                                     disabled={serverStatus !== "stopped"}
                                                 />
                                             </div>
                                             <div className="flex items-center justify-between">
-                                                <span className="text-sm text-foreground">{t('server.enable_preemption')}</span>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-sm text-foreground">{t('server.enable_preemption')}</span>
+                                                    <InfoTooltip text={t('server.enable_preemption_desc')} />
+                                                </div>
                                                 <Switch
                                                     checked={options.preemption}
-                                                    onChange={(e) => handleOptionChange('preemption', e.target.checked)}
+                                                    onCheckedChange={(checked) => handleOptionChange('preemption', checked)}
                                                     disabled={serverStatus !== "stopped"}
                                                 />
                                             </div>

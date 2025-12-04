@@ -76,7 +76,7 @@ export function ServerOptionsForm({
                 <Switch
                     id="asr-mode"
                     checked={options.asr}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange("asr", e.target.checked)}
+                    onCheckedChange={(checked) => onChange("asr", checked)}
                     disabled={disabled}
                 />
             </div>
@@ -87,7 +87,7 @@ export function ServerOptionsForm({
                 <Switch
                     id="embed-mode"
                     checked={options.embed}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange("embed", e.target.checked)}
+                    onCheckedChange={(checked) => onChange("embed", checked)}
                     disabled={disabled}
                 />
             </div>

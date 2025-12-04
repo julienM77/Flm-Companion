@@ -10,6 +10,7 @@ export interface ServerOptions {
     pmode?: PerformanceMode;
     ctxLen?: number;
     port?: number;
+    host?: string;
     asr?: boolean;
     embed?: boolean;
     socket?: number;
@@ -66,6 +67,7 @@ export const DEFAULT_SERVER_PORT = 52625;
 export const DEFAULT_SERVER_OPTIONS: ServerOptions = {
     pmode: "performance",
     port: DEFAULT_SERVER_PORT,
+    host: "127.0.0.1",
     ctxLen: 0,
     asr: false,
     embed: false,
