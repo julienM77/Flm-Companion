@@ -134,7 +134,7 @@ export function ServerOptionsForm({
                         <Switch
                             id="cors-mode"
                             checked={options.cors}
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange("cors", e.target.checked)}
+                            onCheckedChange={(checked) => onChange("cors", checked)}
                             disabled={disabled}
                         />
                     </div>
@@ -145,7 +145,7 @@ export function ServerOptionsForm({
                         <Switch
                             id="preemption-mode"
                             checked={options.preemption}
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange("preemption", e.target.checked)}
+                            onCheckedChange={(checked) => onChange("preemption", checked)}
                             disabled={disabled}
                         />
                     </div>

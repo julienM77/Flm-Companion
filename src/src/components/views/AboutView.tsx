@@ -63,7 +63,7 @@ export const AboutView = ({ hardwareInfo, onRefreshHardware }: AboutViewProps) =
         try {
             const ver = await FlmService.getVersion();
             setFlmVersion(ver);
-        } catch (e) {
+        } catch {
             setFlmVersion("Unknown");
         }
     };
@@ -88,7 +88,7 @@ export const AboutView = ({ hardwareInfo, onRefreshHardware }: AboutViewProps) =
         try {
             const release = await GithubService.getReleaseByTag(APP_REPO_NAME, version);
             setCompanionChangelog(release.body);
-        } catch (e) {
+        } catch {
             console.log("Companion release note not found for this version");
         }
     };
@@ -113,7 +113,7 @@ export const AboutView = ({ hardwareInfo, onRefreshHardware }: AboutViewProps) =
         try {
             const release = await GithubService.getReleaseByTag(FLM_REPO_NAME, version);
             setFlmChangelog(release.body);
-        } catch (e) {
+        } catch {
             console.log("FLM release note not found for this version");
         }
     };

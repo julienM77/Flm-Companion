@@ -75,7 +75,7 @@ export const SettingsView = ({
                         <SettingItem label={t('settings.theme')}>
                             <Select
                                 value={theme}
-                                onValueChange={(value) => setTheme(value as any)}
+                                onValueChange={(value) => setTheme(value as 'dark' | 'light' | 'system')}
                             >
                                 <SelectTrigger className="w-40">
                                     <SelectValue placeholder={t('settings.theme_placeholder')} />
