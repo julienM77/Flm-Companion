@@ -1,4 +1,8 @@
 {
+  "_meta": {
+    "code": "fr",
+    "name": "Français"
+  },
   "sidebar": {
     "models": "Modèles",
     "server": "Serveur",
@@ -13,26 +17,37 @@
     "status_starting": "DÉMARRAGE...",
     "status_stopped": "ARRÊTÉ",
     "model": "Modèle",
-    "model_to_load": "Modèle à charger",
     "select_model_placeholder": "Sélectionner un modèle",
     "no_model_installed": "Aucun modèle installé",
     "features": "Fonctionnalités",
-    "enable_asr": "Activer ASR (Audio)",
-    "enable_embeddings": "Activer Embeddings",
+    "enable_asr": "ASR (Audio)",
+    "asr_desc": "L'activation lance Whisper en arrière-plan pendant le chargement de votre LLM.",
+    "enable_embeddings": "Embeddings",
+    "embeddings_desc": "Active un modèle d'embedding en parallèle du modèle principal pour la recherche sémantique et le RAG.",
     "advanced_settings": "Paramètres Avancés",
     "power_mode": "Mode de puissance",
+    "power_mode_desc": "Définit le profil de performance du serveur (économie d'énergie vs performance maximale).",
     "port": "Port",
+    "port_desc": "Port d'écoute du serveur local (défaut: 52625).",
+    "host": "Hôte",
+    "host_desc": "Adresse d'écoute du serveur. Défaut: 127.0.0.1. Utilisez 0.0.0.0 pour rendre le serveur accessible sur le réseau local.",
     "context_tokens": "Contexte (tokens)",
+    "context_tokens_desc": "Taille de la fenêtre de contexte. Minimum 512, arrondi automatiquement à la puissance de 2 supérieure.",
     "socket_conn": "Socket Conn.",
+    "socket_conn_desc": "Nombre maximum de connexions socket simultanées. Recommandé : >= taille de la file d'attente.",
     "queue_len": "Queue Len",
-    "enable_cors": "Activer CORS",
-    "enable_preemption": "Activer Preemption",
+    "queue_len_desc": "Nombre maximum de requêtes en attente pour éviter la surcharge du serveur.",
+    "enable_cors": "CORS",
+    "enable_cors_desc": "Active le partage de ressources entre origines multiples (utile pour les applications web).",
+    "enable_preemption": "Preemption",
+    "enable_preemption_desc": "Permet au serveur d'interrompre une requête en cours pour en traiter une plus prioritaire.",
     "start_server": "Démarrer le Serveur",
     "starting": "Démarrage...",
     "stop_server": "Arrêter le Serveur",
     "logs_title": "Logs du Serveur",
     "lines": "lignes",
     "waiting_logs": "En attente de démarrage du serveur...",
+    "no_logs": "Aucun log à afficher",
     "no_model_selected": "Aucun Modèle (Audio Seulement)"
   },
   "models": {
@@ -44,6 +59,8 @@
     "badge_memory": "MÉMOIRE",
     "badge_think": "THINK",
     "badge_vlm": "VLM",
+    "badge_embed": "EMBED",
+    "badge_audio": "AUDIO",
     "dialog_info_desc": "Informations détaillées sur le modèle",
     "info_family": "Famille",
     "info_unknown": "Inconnue",
@@ -160,10 +177,19 @@
     "settings": "Configuration",
     "server_running": "Serveur (En ligne)",
     "server_stopped": "Serveur (Arrêté)",
-    "select_model": "Sélection du modèle",
     "view_logs": "Voir les logs",
     "features": "Fonctionnalités",
     "asr": "ASR (Audio)",
-    "embed": "Embeddings"
+    "embed": "Embeddings",
+    "presets_group": "Configurations",
+    "models_group": "Modèles"
+  },
+  "presets": {
+    "audio_only": "Audio uniquement (sans modèle)"
+  },
+  "logs": {
+    "copy": "Copier",
+    "copied": "Copié !",
+    "clear": "Effacer"
   }
 }

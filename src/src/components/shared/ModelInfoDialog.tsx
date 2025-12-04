@@ -39,10 +39,40 @@ export function ModelInfoDialog({ model, trigger }: ModelInfoDialogProps) {
             </DialogTrigger>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2">
+                    <DialogTitle className="flex items-center gap-2 flex-wrap">
                         {model.name}
-                        {model.isThink && <Badge variant="secondary">{t("models.badge_think")}</Badge>}
-                        {model.isVlm && <Badge variant="secondary">{t("models.badge_vlm")}</Badge>}
+                        {model.isThink && (
+                            <Badge
+                                variant="secondary"
+                                className="text-[10px] px-1.5 py-0 h-5 bg-purple-500/10 text-purple-400 border-purple-500/20"
+                            >
+                                {t("models.badge_think")}
+                            </Badge>
+                        )}
+                        {model.isVlm && (
+                            <Badge
+                                variant="secondary"
+                                className="text-[10px] px-1.5 py-0 h-5 bg-blue-500/10 text-blue-400 border-blue-500/20"
+                            >
+                                {t("models.badge_vlm")}
+                            </Badge>
+                        )}
+                        {model.isEmbed && (
+                            <Badge
+                                variant="secondary"
+                                className="text-[10px] px-1.5 py-0 h-5 bg-green-500/10 text-green-400 border-green-500/20"
+                            >
+                                {t("models.badge_embed")}
+                            </Badge>
+                        )}
+                        {model.isAudio && (
+                            <Badge
+                                variant="secondary"
+                                className="text-[10px] px-1.5 py-0 h-5 bg-orange-500/10 text-orange-400 border-orange-500/20"
+                            >
+                                {t("models.badge_audio")}
+                            </Badge>
+                        )}
                     </DialogTitle>
                     <DialogDescription>{t("models.dialog_info_desc")}</DialogDescription>
                 </DialogHeader>

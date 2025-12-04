@@ -8,13 +8,14 @@ import { SettingsView } from "./components/views/SettingsView";
 import { AboutView } from "./components/views/AboutView";
 import { ConfigService } from "./services/config";
 import { AppProvider, useAppContext } from "./contexts";
+import { TooltipProvider } from "./components/ui/tooltip";
 
 // Wrappers
 function ChatViewWrapper() {
-  const { installedModels, selectedModel, setSelectedModel, serverOptions, setServerOptions } = useAppContext();
+  const { runnableModels, selectedModel, setSelectedModel, serverOptions, setServerOptions } = useAppContext();
   return (
     <ChatView
-      models={installedModels}
+      models={runnableModels}
       selectedModel={selectedModel}
       onSelectModel={setSelectedModel}
       options={serverOptions}
@@ -27,10 +28,11 @@ function ServerViewWrapper() {
   const {
     serverStatus,
     handleToggleServer,
-    installedModels,
+    runnableModels,
     selectedModel,
     setSelectedModel,
     logs,
+    clearLogs,
     serverOptions,
     setServerOptions,
   } = useAppContext();
@@ -38,10 +40,11 @@ function ServerViewWrapper() {
     <ServerView
       serverStatus={serverStatus}
       onToggleServer={handleToggleServer}
-      models={installedModels}
+      models={runnableModels}
       selectedModel={selectedModel}
       onSelectModel={setSelectedModel}
       logs={logs}
+      onClearLogs={clearLogs}
       options={serverOptions}
       setOptions={setServerOptions}
     />
@@ -90,7 +93,7 @@ const TAB_COMPONENTS: Record<string, React.ComponentType> = {
 };
 
 function AppContent() {
-  const { activeTab, setActiveTab, serverStatus } = useAppContext();
+  const { activeTab, setActiveTab, serverStatus, selectedModel } = useAppContext();
 
   const renderContent = () => {
     const Component = TAB_COMPONENTS[activeTab] || ChatViewWrapper;
@@ -109,7 +112,7 @@ function AppContent() {
           </main>
         </div>
       </div>
-      <StatusBar serverStatus={serverStatus} version={ConfigService.getAppVersion()} />
+      <StatusBar serverStatus={serverStatus} selectedModel={selectedModel} version={ConfigService.getAppVersion()} />
     </div>
   );
 }
@@ -117,7 +120,9 @@ function AppContent() {
 function App() {
   return (
     <AppProvider>
-      <AppContent />
+      <TooltipProvider delayDuration={200}>
+        <AppContent />
+      </TooltipProvider>
     </AppProvider>
   );
 }

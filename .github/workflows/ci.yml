@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src/src-tauri
+
+      - name: Install dependencies
+        working-directory: src
+        run: npm install
+
+      - name: Lint TypeScript
+        working-directory: src
+        run: npm run lint
+
+      - name: Type check & Build frontend
+        working-directory: src
+        run: npm run build
+
+      - name: Check Rust formatting
+        working-directory: src/src-tauri
+        run: cargo fmt --check
+
+      - name: Clippy (Rust linter)
+        working-directory: src/src-tauri
+        run: cargo clippy -- -D warnings
+
+      - name: Build Tauri app
+        working-directory: src
+        run: npm run tauri build

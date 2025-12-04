@@ -39,7 +39,25 @@ pub fn build_tray_menu(
     let _ = start_i.set_enabled(!params.is_running);
     let _ = stop_i.set_enabled(params.is_running);
 
-    let models_submenu = Submenu::new(app, &texts.select_model, true)?;
+    // Presets submenu
+    let presets_submenu = Submenu::new(app, &texts.presets_group, true)?;
+    let _ = presets_submenu.set_icon(Some(icons.cog.clone()));
+
+    for preset in &params.presets {
+        let is_selected = preset.id == params.selected_model;
+        let preset_item = CheckMenuItem::with_id(
+            app,
+            format!("model_{}", preset.id),
+            &preset.name,
+            true,
+            is_selected,
+            None::<&str>,
+        )?;
+        let _ = presets_submenu.append(&preset_item);
+    }
+
+    // Models submenu
+    let models_submenu = Submenu::new(app, &texts.models_group, true)?;
     let _ = models_submenu.set_icon(Some(icons.cpu.clone()));
 
     for model_name in &params.installed_models {
@@ -55,8 +73,17 @@ pub fn build_tray_menu(
         let _ = models_submenu.append(&model_item);
     }
 
+    // Display current selection (preset name or model name)
     let current_model_text = if params.selected_model.is_empty() {
         String::from("—")
+    } else if params.selected_model.starts_with("preset:") {
+        // Find preset name
+        params
+            .presets
+            .iter()
+            .find(|p| p.id == params.selected_model)
+            .map(|p| p.name.clone())
+            .unwrap_or_else(|| params.selected_model.clone())
     } else {
         params.selected_model.clone()
     };
@@ -99,6 +126,7 @@ pub fn build_tray_menu(
 
     let server_sep1 = PredefinedMenuItem::separator(app)?;
     let server_sep2 = PredefinedMenuItem::separator(app)?;
+    let selection_sep = PredefinedMenuItem::separator(app)?;
 
     let server_submenu = Submenu::with_items(
         app,
@@ -106,6 +134,8 @@ pub fn build_tray_menu(
         true,
         &[
             &current_model_i,
+            &selection_sep,
+            &presets_submenu,
             &models_submenu,
             &features_submenu,
             &server_sep1,
@@ -120,6 +150,15 @@ pub fn build_tray_menu(
     let package_info = app.package_info();
     let title = format!("{} v{}", package_info.name, package_info.version);
     let app_info_i = MenuItem::with_id(app, "app_info", &title, false, None::<&str>)?;
+
+    // FLM version display
+    let flm_version_text = if params.flm_version.is_empty() {
+        String::from("FLM: —")
+    } else {
+        format!("FLM {}", params.flm_version)
+    };
+    let flm_info_i = MenuItem::with_id(app, "flm_info", &flm_version_text, false, None::<&str>)?;
+
     let separator_top = PredefinedMenuItem::separator(app)?;
 
     let settings_i = IconMenuItem::with_id(
@@ -143,6 +182,7 @@ pub fn build_tray_menu(
 
     let menu = Menu::new(app)?;
     menu.append(&app_info_i)?;
+    menu.append(&flm_info_i)?;
     menu.append(&separator_top)?;
     menu.append(&server_submenu)?;
     menu.append(&settings_i)?;

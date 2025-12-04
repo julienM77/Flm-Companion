@@ -5,3 +5,4 @@ export { ModelCard } from "./ModelCard";
 export { ModelInfoDialog } from "./ModelInfoDialog";
 export { ServerOptionsForm } from "./ServerOptionsForm";
 export { ServerStatusBadge, ServerStatusIndicator } from "./ServerStatusBadge";
+export { InfoTooltip } from "./InfoTooltip";

@@ -1,4 +1,4 @@
-import { Command, Child } from "@tauri-apps/plugin-shell";
+import { Command, Child, TerminatedPayload } from "@tauri-apps/plugin-shell";
 import { readTextFile } from "@tauri-apps/plugin-fs";
 import { ConfigService } from "./config";
 import type { FlmModel, FlmStatus, HardwareInfo, ServerOptions } from "../types";
@@ -98,6 +98,8 @@ export const FlmService = {
                         family: details.details.family,
                         isThink: details.details.think,
                         isVlm: details.vlm || false,
+                        isEmbed: fullName.toLowerCase().includes("embed"),
+                        isAudio: fullName.toLowerCase().includes("whisper"),
                         contextLength: details.default_context_length,
                         quantization: details.details.quantization_level,
                         url: details.url,
@@ -250,7 +252,9 @@ export const FlmService = {
                     results.push({
                         name: name,
                         size: size,
-                        modified: "-"
+                        modified: "-",
+                        isEmbed: name.toLowerCase().includes("embed"),
+                        isAudio: name.toLowerCase().includes("whisper"),
                     });
                 }
             }
@@ -285,6 +289,7 @@ export const FlmService = {
             if (options.pmode) args.push("--pmode", options.pmode);
             if (options.ctxLen && options.ctxLen > 0) args.push("--ctx-len", options.ctxLen.toString());
             if (options.port && options.port > 0) args.push("--port", options.port.toString());
+            if (options.host) args.push("--host", options.host);
             if (options.socket && options.socket > 0) args.push("--socket", options.socket.toString());
             if (options.qLen && options.qLen > 0) args.push("--q-len", options.qLen.toString());
 
@@ -299,22 +304,22 @@ export const FlmService = {
 
             const command = Command.create("flm", args);
 
-            command.on('close', (data: any) => {
+            command.on('close', (data: TerminatedPayload) => {
                 console.log(`command finished with code ${data.code} and signal ${data.signal}`);
                 serverProcess = null;
                 onLog(`[SYSTEM] Server stopped with code ${data.code}`);
             });
 
-            command.on('error', (error: any) => {
+            command.on('error', (error: string) => {
                 console.error(`command error: "${error}"`);
                 onLog(`[ERROR] ${error}`);
             });
 
-            command.stdout.on('data', (line: any) => {
+            command.stdout.on('data', (line: string) => {
                 onLog(`[FLM] ${line}`);
             });
 
-            command.stderr.on('data', (line: any) => {
+            command.stderr.on('data', (line: string) => {
                 onLog(`[FLM ERR] ${line}`);
             });
 
@@ -381,7 +386,7 @@ export const FlmService = {
             try {
                 const command = Command.create("flm", ["pull", modelName]);
 
-                command.on('close', (data: any) => {
+                command.on('close', (data: TerminatedPayload) => {
                     if (data.code === 0) {
                         resolve();
                     } else {
@@ -389,15 +394,15 @@ export const FlmService = {
                     }
                 });
 
-                command.on('error', (error: any) => {
-                    reject(error);
+                command.on('error', (error: string) => {
+                    reject(new Error(error));
                 });
 
-                command.stdout.on('data', (line: any) => {
+                command.stdout.on('data', (line: string) => {
                     onProgress(line.toString());
                 });
 
-                command.stderr.on('data', (line: any) => {
+                command.stderr.on('data', (line: string) => {
                     const text = line.toString();
                     errorOutput += text;
                     onProgress(text);
@@ -444,20 +449,20 @@ export const FlmService = {
 
             const command = Command.create("flm", args);
 
-            command.on('close', (data: any) => {
+            command.on('close', (data: TerminatedPayload) => {
                 serverProcess = null;
-                onData({ type: 'exit', code: data.code });
+                onData({ type: 'exit', code: data.code ?? undefined });
             });
 
-            command.on('error', (error: any) => {
+            command.on('error', (error: string) => {
                 onData({ type: 'stderr', content: error.toString() });
             });
 
-            command.stdout.on('data', (line: any) => {
+            command.stdout.on('data', (line: string) => {
                 onData({ type: 'stdout', content: line });
             });
 
-            command.stderr.on('data', (line: any) => {
+            command.stderr.on('data', (line: string) => {
                 onData({ type: 'stderr', content: line });
             });
 

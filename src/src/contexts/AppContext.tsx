@@ -18,6 +18,7 @@ interface AppContextType {
 
     // Models
     installedModels: FlmModel[];
+    runnableModels: FlmModel[];
     selectedModel: string;
     setSelectedModel: (model: string) => void;
     hardwareInfo: HardwareInfo | null;
@@ -31,6 +32,7 @@ interface AppContextType {
     setServerOptions: (options: ServerOptions | ((prev: ServerOptions) => ServerOptions)) => void;
     handleToggleServer: (options?: ServerOptions) => Promise<void>;
     addLog: (log: string) => void;
+    clearLogs: () => void;
 
     // Navigation
     activeTab: string;
@@ -72,7 +74,7 @@ export function AppProvider({ children }: AppProviderProps) {
     const server = useServerManager({
         selectedModel: models.selectedModel,
         setSelectedModel: models.setSelectedModel,
-        installedModels: models.installedModels,
+        installedModels: models.runnableModels,
         initialServerOptions,
         isConfigLoaded: config.isConfigLoaded,
         onNavigateToLogs: () => setActiveTab("server"),
@@ -82,7 +84,7 @@ export function AppProvider({ children }: AppProviderProps) {
     useTrayMenu({
         serverStatus: server.serverStatus,
         selectedModel: models.selectedModel,
-        installedModels: models.installedModels,
+        installedModels: models.runnableModels,
         serverOptions: server.serverOptions,
     });
 
@@ -105,6 +107,7 @@ export function AppProvider({ children }: AppProviderProps) {
 
         // Models
         installedModels: models.installedModels,
+        runnableModels: models.runnableModels,
         selectedModel: models.selectedModel,
         setSelectedModel: models.setSelectedModel,
         hardwareInfo: models.hardwareInfo,
@@ -118,6 +121,7 @@ export function AppProvider({ children }: AppProviderProps) {
         setServerOptions: server.setServerOptions,
         handleToggleServer: server.handleToggleServer,
         addLog: server.addLog,
+        clearLogs: server.clearLogs,
 
         // Navigation
         activeTab,
