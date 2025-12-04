@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { FlmService } from "../services/flm";
+import { isPresetId } from "../lib/presets";
 import type { FlmModel, HardwareInfo } from "../types";
 
 interface UseModelsManagerProps {
@@ -36,6 +37,7 @@ export function useModelsManager({
             setRunnableModels(runnable);
 
             setSelectedModel((prev) => {
+                if (prev && isPresetId(prev)) return prev;
                 if (prev && runnable.some((m) => m.name === prev)) return prev;
                 if (prev === "") return "";
                 return runnable.length > 0 ? runnable[0].name : "";

@@ -120,10 +120,13 @@ export const ServerView = ({
                                 >
                                     <SelectTrigger>
                                         <SelectValue placeholder={t('server.select_model_placeholder')}>
-                                            {isPresetId(selectedModel)
-                                                ? getPresetDisplayName(findPresetById(selectedModel, DEFAULT_PRESETS_CONFIG)!, t)
-                                                : selectedModel || t('server.select_model_placeholder')
-                                            }
+                                            {(() => {
+                                                if (isPresetId(selectedModel)) {
+                                                    const preset = findPresetById(selectedModel, DEFAULT_PRESETS_CONFIG);
+                                                    return preset ? getPresetDisplayName(preset, t) : selectedModel;
+                                                }
+                                                return selectedModel || t('server.select_model_placeholder');
+                                            })()}
                                         </SelectValue>
                                     </SelectTrigger>
                                     <SelectContent>
