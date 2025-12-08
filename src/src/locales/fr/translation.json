@@ -154,6 +154,8 @@
     "notification_server_stopped_body": "Le serveur s'est arrêté correctement.",
     "notification_model_download_complete_title": "Téléchargement Terminé",
     "notification_model_download_complete_body": "Le modèle {{model}} a été téléchargé avec succès",
+    "notification_model_download_start_title": "Téléchargement en cours",
+    "notification_model_download_start_body": "Le modèle {{model}} va être téléchargé",
     "notification_model_download_error_title": "Échec du Téléchargement",
     "notification_model_download_error_body": "Impossible de télécharger le modèle {{model}}",
     "notification_model_delete_complete_title": "Modèle Supprimé",
@@ -199,7 +201,13 @@
     "asr": "ASR (Audio)",
     "embed": "Embeddings",
     "presets_group": "Configurations",
-    "models_group": "Modèles"
+    "models_group": "Modèles",
+    "models_menu": "Modèles",
+    "installed": "Installés",
+    "catalog": "Catalogue",
+    "start_with_model": "Démarrer le serveur",
+    "delete_model": "Supprimer",
+    "download_model": "Télécharger"
   },
   "presets": {
     "audio_only": "Audio uniquement (sans modèle)"

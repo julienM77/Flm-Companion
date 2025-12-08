@@ -155,6 +155,8 @@
     "notification_server_stopped_body": "The server has stopped gracefully.",
     "notification_model_download_complete_title": "Download Complete",
     "notification_model_download_complete_body": "Model {{model}} has been downloaded successfully",
+    "notification_model_download_start_title": "Download Starting",
+    "notification_model_download_start_body": "Model {{model}} is starting to download",
     "notification_model_download_error_title": "Download Failed",
     "notification_model_download_error_body": "Failed to download model {{model}}",
     "notification_model_delete_complete_title": "Model Deleted",
@@ -200,7 +202,13 @@
     "asr": "ASR (Audio)",
     "embed": "Embeddings",
     "presets_group": "Configurations",
-    "models_group": "Models"
+    "models_group": "Models",
+    "models_menu": "Models",
+    "installed": "Installed",
+    "catalog": "Catalog",
+    "start_with_model": "Start Server",
+    "delete_model": "Delete",
+    "download_model": "Download"
   },
   "presets": {
     "audio_only": "Audio Only (no model)"

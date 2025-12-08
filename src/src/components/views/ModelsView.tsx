@@ -70,6 +70,11 @@ export const ModelsView = ({ installedModels, onRefresh, hardwareInfo }: ModelsV
         setDownloadProgress(0);
         setDownloadStatus(t("models.download_starting"));
 
+        NotificationService.send(
+            t("app.notification_model_download_start_title"),
+            t("app.notification_model_download_start_body", { model: modelName })
+        );
+
         let totalFiles = 1;
         let baseProgress = 0;
         let currentFileProgress = 0;

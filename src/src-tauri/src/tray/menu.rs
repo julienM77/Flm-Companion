@@ -4,6 +4,79 @@ use tauri::AppHandle;
 use crate::tray::icons::ThemeIcons;
 use crate::types::TrayMenuParams;
 
+fn build_models_menu(
+    app: &AppHandle,
+    params: &TrayMenuParams,
+    icons: &ThemeIcons,
+) -> tauri::Result<Submenu<tauri::Wry>> {
+    let texts = &params.texts;
+
+    // Sous-menu Installed
+    let installed_submenu = Submenu::new(app, &texts.installed, true)?;
+    let _ = installed_submenu.set_icon(Some(icons.hard_drive.clone()));
+
+    for model_name in &params.installed_models {
+        // Sous-menu pour chaque modèle installé
+        let model_submenu = Submenu::new(app, model_name, true)?;
+
+        if params.startable_models.contains(model_name) {
+            // Action: Start Server
+            let start_item = IconMenuItem::with_id(
+                app,
+                format!("start_model_{}", model_name),
+                &texts.start_with_model,
+                true,
+                Some(icons.play.clone()),
+                None::<&str>,
+            )?;
+            let _ = model_submenu.append(&start_item);
+        }
+
+        // Action: Delete
+        let delete_item = IconMenuItem::with_id(
+            app,
+            format!("delete_model_{}", model_name),
+            &texts.delete_model,
+            true,
+            Some(icons.trash.clone()),
+            None::<&str>,
+        )?;
+        let _ = model_submenu.append(&delete_item);
+
+        let _ = installed_submenu.append(&model_submenu);
+    }
+
+    // Sous-menu Catalog
+    let catalog_submenu = Submenu::new(app, &texts.catalog, true)?;
+    let _ = catalog_submenu.set_icon(Some(icons.download.clone()));
+
+    for model_name in &params.available_models {
+        // Sous-menu pour chaque modèle disponible
+        let model_submenu = Submenu::new(app, model_name, true)?;
+
+        // Action: Download
+        let download_item = IconMenuItem::with_id(
+            app,
+            format!("download_model_{}", model_name),
+            &texts.download_model,
+            true,
+            Some(icons.download.clone()),
+            None::<&str>,
+        )?;
+        let _ = model_submenu.append(&download_item);
+
+        let _ = catalog_submenu.append(&model_submenu);
+    }
+
+    // Menu principal Models
+    let models_menu = Submenu::new(app, &texts.models_menu, true)?;
+    let _ = models_menu.set_icon(Some(icons.cpu.clone()));
+    let _ = models_menu.append(&installed_submenu);
+    let _ = models_menu.append(&catalog_submenu);
+
+    Ok(models_menu)
+}
+
 pub fn build_tray_menu(
     app: &AppHandle,
     params: &TrayMenuParams,
@@ -180,10 +253,14 @@ pub fn build_tray_menu(
     )?;
     let separator = PredefinedMenuItem::separator(app)?;
 
+    // Build Models menu
+    let models_menu = build_models_menu(app, params, icons)?;
+
     let menu = Menu::new(app)?;
     menu.append(&app_info_i)?;
     menu.append(&flm_info_i)?;
     menu.append(&separator_top)?;
+    menu.append(&models_menu)?;
     menu.append(&server_submenu)?;
     menu.append(&settings_i)?;
     menu.append(&separator)?;

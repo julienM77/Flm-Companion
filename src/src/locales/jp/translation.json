@@ -154,6 +154,8 @@
     "notification_server_stopped_body": "サーバーは正常に停止しました",
     "notification_model_download_complete_title": "ダウンロード完了",
     "notification_model_download_complete_body": "モデル {{model}} のダウンロードが完了しました",
+    "notification_model_download_start_title": "ダウンロード開始",
+    "notification_model_download_start_body": "モデル {{model}} のダウンロードを開始します",
     "notification_model_download_error_title": "ダウンロード失敗",
     "notification_model_download_error_body": "モデル {{model}} のダウンロードに失敗しました",
     "notification_model_delete_complete_title": "モデル削除完了",
@@ -199,7 +201,13 @@
     "asr": "ASR（音声）",
     "embed": "Embeddings",
     "presets_group": "プリセット",
-    "models_group": "モデル"
+    "models_group": "モデル",
+    "models_menu": "モデル",
+    "installed": "インストール済み",
+    "catalog": "カタログ",
+    "start_with_model": "モデルでサーバーを開始",
+    "delete_model": "削除",
+    "download_model": "ダウンロード"
   },
   "presets": {
     "audio_only": "音声のみ（モデルなし）"

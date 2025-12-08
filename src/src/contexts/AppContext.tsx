@@ -88,7 +88,9 @@ export function AppProvider({ children }: AppProviderProps) {
     useTrayMenu({
         serverStatus: server.serverStatus,
         selectedModel: models.selectedModel,
-        installedModels: models.runnableModels,
+        installedModels: models.installedModels,
+        availableModels: models.availableModels,
+        runnableModels: models.runnableModels,
         serverOptions: server.serverOptions,
     });
 
