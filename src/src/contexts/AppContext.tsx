@@ -4,6 +4,7 @@ import { useModelsManager } from "../hooks/useModelsManager";
 import { useServerManager } from "../hooks/useServerManager";
 import { useTrayMenu } from "../hooks/useTrayMenu";
 import { ConfigService } from "../services/config";
+import { NotificationService } from "../services/notification";
 import type { Theme, ServerStatus, ServerOptions, FlmModel, HardwareInfo } from "../types";
 
 interface AppContextType {
@@ -53,9 +54,12 @@ export function AppProvider({ children }: AppProviderProps) {
     // Config manager
     const config = useConfigManager();
 
-    // Load initial values from config
+    // Load initial values from config and initialize notification service
     useEffect(() => {
         if (config.isConfigLoaded) {
+            // Initialize notification permissions
+            NotificationService.init();
+
             ConfigService.loadConfig().then((loadedConfig) => {
                 setInitialServerOptions(loadedConfig.serverOptions || {});
                 setInitialSelectedModel(loadedConfig.lastSelectedModel || "");

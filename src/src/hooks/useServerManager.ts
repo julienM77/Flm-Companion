@@ -1,12 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { listen } from "@tauri-apps/api/event";
-import {
-    sendNotification,
-    isPermissionGranted,
-    requestPermission,
-} from "@tauri-apps/plugin-notification";
 import { useTranslation } from "react-i18next";
 import { FlmService } from "../services/flm";
+import { NotificationService } from "../services/notification";
 import type { ServerStatus, ServerOptions, FlmModel } from "../types";
 import { DEFAULT_SERVER_OPTIONS, DEFAULT_PRESETS_CONFIG } from "../types";
 import { isPresetId, findPresetById } from "../lib/presets";
@@ -95,18 +91,6 @@ export function useServerManager({
         }
     }, [isConfigLoaded, installedModels, selectedModel]);
 
-    // Request notification permission
-    useEffect(() => {
-        if (!isConfigLoaded) return;
-
-        (async () => {
-            const permissionGranted = await isPermissionGranted();
-            if (!permissionGranted) {
-                await requestPermission();
-            }
-        })();
-    }, [isConfigLoaded]);
-
     const addLog = useCallback((log: string) => {
         setLogs((prev) => [...prev, `[${new Date().toLocaleTimeString()}] ${log}`]);
     }, []);
@@ -136,6 +120,12 @@ export function useServerManager({
 
                 addLog(t("app.log_starting_server", { model: actualModel || "None" }));
 
+                // Notify server starting (only if window not visible)
+                NotificationService.send(
+                    t("app.notification_server_starting_title"),
+                    t("app.notification_server_starting_body", { model: actualModel || "None" })
+                );
+
                 try {
                     const optionsToUse = options || serverOptionsRef.current;
 
@@ -146,25 +136,25 @@ export function useServerManager({
                             addLog(log);
                             if (log.includes("Enter 'exit' to stop the server:")) {
                                 setServerStatus("running");
-                                sendNotification({
-                                    title: t("app.notification_server_started_title"),
-                                    body: t("app.notification_server_started_body", {
+                                NotificationService.send(
+                                    t("app.notification_server_started_title"),
+                                    t("app.notification_server_started_body", {
                                         model: actualModel || "None",
-                                    }),
-                                });
+                                    })
+                                );
                             }
                             if (log.includes("[SYSTEM] Server stopped with code")) {
                                 setServerStatus("stopped");
                                 if (!log.includes("code 0")) {
-                                    sendNotification({
-                                        title: t("app.notification_server_error_title"),
-                                        body: t("app.notification_server_error_body"),
-                                    });
+                                    NotificationService.send(
+                                        t("app.notification_server_error_title"),
+                                        t("app.notification_server_error_body")
+                                    );
                                 } else {
-                                    sendNotification({
-                                        title: t("app.notification_server_stopped_title"),
-                                        body: t("app.notification_server_stopped_body"),
-                                    });
+                                    NotificationService.send(
+                                        t("app.notification_server_stopped_title"),
+                                        t("app.notification_server_stopped_body")
+                                    );
                                 }
                             }
                         }
