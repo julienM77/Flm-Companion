@@ -37,6 +37,7 @@
     "autostart:allow-enable",
     "autostart:allow-disable",
     "autostart:allow-is-enabled",
+    "process:default",
     "dialog:default",
     "shell:allow-open",
     {
