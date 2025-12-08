@@ -128,7 +128,14 @@
   "status_bar": {
     "server_online": "SERVER ONLINE",
     "starting": "STARTING...",
-    "server_stopped": "SERVER STOPPED"
+    "server_stopped": "SERVER STOPPED",
+    "companion_label": "Companion",
+    "flm_label": "FLM"
+  },
+  "status_badge": {
+    "online": "オンライン",
+    "starting": "起動中...",
+    "stopped": "停止"
   },
   "common": {
     "cancel": "Cancel",

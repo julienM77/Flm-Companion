@@ -129,7 +129,14 @@
   "status_bar": {
     "server_online": "SERVER ONLINE",
     "starting": "STARTING...",
-    "server_stopped": "SERVER STOPPED"
+    "server_stopped": "SERVER STOPPED",
+    "companion_label": "Companion",
+    "flm_label": "FLM"
+  },
+  "status_badge": {
+    "online": "Online",
+    "starting": "Starting...",
+    "stopped": "Stopped"
   },
   "common": {
     "cancel": "Cancel",

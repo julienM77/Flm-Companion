@@ -224,28 +224,15 @@ export const ServerView = ({
                                                     <SelectValue placeholder={t('server.power_mode')} />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    <SelectItem value="powersaver">Power Saver</SelectItem>
-                                                    <SelectItem value="balanced">Balanced</SelectItem>
-                                                    <SelectItem value="performance">Performance</SelectItem>
-                                                    <SelectItem value="turbo">Turbo</SelectItem>
+                                                    <SelectItem value="powersaver">{t('chat.power_modes.powersaver')}</SelectItem>
+                                                    <SelectItem value="balanced">{t('chat.power_modes.balanced')}</SelectItem>
+                                                    <SelectItem value="performance">{t('chat.power_modes.performance')}</SelectItem>
+                                                    <SelectItem value="turbo">{t('chat.power_modes.turbo')}</SelectItem>
                                                 </SelectContent>
                                             </Select>
                                         </div>
 
                                         <div className="grid grid-cols-2 gap-4">
-                                            <div>
-                                                <div className="flex items-center gap-2 mb-1.5">
-                                                    <label className="block text-xs font-medium text-muted-foreground">{t('server.port')}</label>
-                                                    <InfoTooltip text={t('server.port_desc')} />
-                                                </div>
-                                                <Input
-                                                    type="number"
-                                                    value={options.port}
-                                                    onChange={(e) => handleOptionChange('port', parseInt(e.target.value))}
-                                                    disabled={serverStatus !== "stopped"}
-                                                    className="bg-input border-input text-foreground h-9"
-                                                />
-                                            </div>
                                             <div>
                                                 <div className="flex items-center gap-2 mb-1.5">
                                                     <label className="block text-xs font-medium text-muted-foreground">{t('server.host')}</label>
@@ -260,18 +247,31 @@ export const ServerView = ({
                                                     placeholder="127.0.0.1"
                                                 />
                                             </div>
+                                            <div>
+                                                <div className="flex items-center gap-2 mb-1.5">
+                                                    <label className="block text-xs font-medium text-muted-foreground">{t('server.port')}</label>
+                                                    <InfoTooltip text={t('server.port_desc')} />
+                                                </div>
+                                                <Input
+                                                    type="number"
+                                                    value={options.port}
+                                                    onChange={(e) => handleOptionChange('port', parseInt(e.target.value))}
+                                                    disabled={serverStatus !== "stopped"}
+                                                    className="bg-input border-input text-foreground h-9"
+                                                />
+                                            </div>
                                         </div>
 
                                         <div className="grid grid-cols-2 gap-4">
                                             <div>
                                                 <div className="flex items-center gap-2 mb-1.5">
-                                                    <label className="block text-xs font-medium text-muted-foreground">{t('server.context_tokens')}</label>
-                                                    <InfoTooltip text={t('server.context_tokens_desc')} />
+                                                    <label className="block text-xs font-medium text-muted-foreground">{t('server.socket_conn')}</label>
+                                                    <InfoTooltip text={t('server.socket_conn_desc')} />
                                                 </div>
                                                 <Input
                                                     type="number"
-                                                    value={options.ctxLen || ""}
-                                                    onChange={(e) => handleOptionChange('ctxLen', parseInt(e.target.value) || 0)}
+                                                    value={options.socket}
+                                                    onChange={(e) => handleOptionChange('socket', parseInt(e.target.value))}
                                                     disabled={serverStatus !== "stopped"}
                                                     className="bg-input border-input text-foreground h-9"
                                                 />
@@ -293,13 +293,13 @@ export const ServerView = ({
 
                                         <div>
                                             <div className="flex items-center gap-2 mb-1.5">
-                                                <label className="block text-xs font-medium text-muted-foreground">{t('server.socket_conn')}</label>
-                                                <InfoTooltip text={t('server.socket_conn_desc')} />
+                                                <label className="block text-xs font-medium text-muted-foreground">{t('server.context_tokens')}</label>
+                                                <InfoTooltip text={t('server.context_tokens_desc')} />
                                             </div>
                                             <Input
                                                 type="number"
-                                                value={options.socket}
-                                                onChange={(e) => handleOptionChange('socket', parseInt(e.target.value))}
+                                                value={options.ctxLen || ""}
+                                                onChange={(e) => handleOptionChange('ctxLen', parseInt(e.target.value) || 0)}
                                                 disabled={serverStatus !== "stopped"}
                                                 className="bg-input border-input text-foreground h-9"
                                             />

@@ -128,7 +128,14 @@
   "status_bar": {
     "server_online": "SERVEUR EN LIGNE",
     "starting": "DÉMARRAGE...",
-    "server_stopped": "SERVEUR ARRÊTÉ"
+    "server_stopped": "SERVEUR ARRÊTÉ",
+    "companion_label": "Companion",
+    "flm_label": "FLM"
+  },
+  "status_badge": {
+    "online": "En ligne",
+    "starting": "Démarrage...",
+    "stopped": "Arrêté"
   },
   "common": {
     "cancel": "Annuler",
