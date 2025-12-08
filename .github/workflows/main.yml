@@ -35,8 +35,8 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            src/src-tauri/target/release/flm-manager.exe
-          #  src/src-tauri/target/release/bundle/nsis/*.exe
+          #  src/src-tauri/target/release/flm-manager.exe
+            src/src-tauri/target/release/bundle/nsis/*.exe
           draft: false
           prerelease: false
           generate_release_notes: true

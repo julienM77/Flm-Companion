@@ -5,6 +5,8 @@ import { useTranslation } from "react-i18next";
 import { InfoTooltip } from "../shared/InfoTooltip";
 import { getAvailableLanguages } from "../../i18n";
 import type { Theme } from "../../types";
+import { enable, disable, isEnabled } from '@tauri-apps/plugin-autostart';
+import { useEffect, useState } from 'react';
 
 const SettingItem = ({
     label,
@@ -38,6 +40,24 @@ export const SettingsView = ({
     setStartMinimized,
 }: SettingsViewProps) => {
     const { t, i18n } = useTranslation();
+    const [autostartEnabled, setAutostartEnabled] = useState(false);
+
+    useEffect(() => {
+        isEnabled().then(setAutostartEnabled).catch(console.error);
+    }, []);
+
+    const toggleAutostart = async (checked: boolean) => {
+        try {
+            if (checked) {
+                await enable();
+            } else {
+                await disable();
+            }
+            setAutostartEnabled(checked);
+        } catch (error) {
+            console.error('Failed to toggle autostart:', error);
+        }
+    };
 
     const changeLanguage = (lng: string) => {
         i18n.changeLanguage(lng);
@@ -70,6 +90,12 @@ export const SettingsView = ({
                             <Switch
                                 checked={startMinimized}
                                 onCheckedChange={(checked) => setStartMinimized(checked)}
+                            />
+                        </SettingItem>
+                        <SettingItem label={t('settings.autostart')} description={t('settings.autostart_desc')}>
+                            <Switch
+                                checked={autostartEnabled}
+                                onCheckedChange={toggleAutostart}
                             />
                         </SettingItem>
                         <SettingItem label={t('settings.theme')}>
