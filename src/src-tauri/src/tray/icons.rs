@@ -10,6 +10,9 @@ pub struct ThemeIcons {
     pub cog: Image<'static>,
     pub cpu: Image<'static>,
     pub file_clock: Image<'static>,
+    pub trash: Image<'static>,
+    pub download: Image<'static>,
+    pub hard_drive: Image<'static>,
 }
 
 impl ThemeIcons {
@@ -41,6 +44,12 @@ impl ThemeIcons {
                 .expect("failed to load dark/cpu.png"),
             file_clock: Image::from_bytes(include_bytes!("../../icons/dark/file-clock.png"))
                 .expect("failed to load dark/file-clock.png"),
+            trash: Image::from_bytes(include_bytes!("../../icons/dark/trash.png"))
+                .expect("failed to load dark/trash.png"),
+            download: Image::from_bytes(include_bytes!("../../icons/dark/download.png"))
+                .expect("failed to load dark/download.png"),
+            hard_drive: Image::from_bytes(include_bytes!("../../icons/dark/hard-drive.png"))
+                .expect("failed to load dark/hard-drive.png"),
         }
     }
 
@@ -64,6 +73,12 @@ impl ThemeIcons {
                 .expect("failed to load light/cpu.png"),
             file_clock: Image::from_bytes(include_bytes!("../../icons/light/file-clock.png"))
                 .expect("failed to load light/file-clock.png"),
+            trash: Image::from_bytes(include_bytes!("../../icons/light/trash.png"))
+                .expect("failed to load light/trash.png"),
+            download: Image::from_bytes(include_bytes!("../../icons/light/download.png"))
+                .expect("failed to load light/download.png"),
+            hard_drive: Image::from_bytes(include_bytes!("../../icons/light/hard-drive.png"))
+                .expect("failed to load light/hard-drive.png"),
         }
     }
 

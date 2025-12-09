@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "flm-manager",
+  "productName": "Flm Companion",
   "version": "0.4.0",
-  "identifier": "com.julienm77.flm-manager",
+  "identifier": "flm-companion",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "Flm Manager",
+        "title": "Flm Companion",
         "width": 1140,
         "minWidth": 800,
         "height": 620,
@@ -35,6 +35,15 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "publisher": "JulienM77"
+    "publisher": "JulienM77",
+    "windows": {
+      "nsis": {
+        "languages": [
+          "English",
+          "French",
+          "Japanese"
+        ]
+      }
+    }
   }
 }

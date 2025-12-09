@@ -84,10 +84,10 @@
   "settings": {
     "general_config": "一般設定",
     "language": "言語",
-    "start_minimized": "最小化で起動",
-    "start_minimized_desc": "アプリをシステムトレイに表示したまま起動します",
-    "start_on_boot": "自動起動",
-    "start_on_boot_desc": "PC 起動時にアプリを自動で開始します",
+    "start_minimized": "最小化して起動",
+    "start_minimized_desc": "起動時にシステムトレイに最小化します",
+    "autostart": "スタートアップ起動",
+    "autostart_desc": "ログイン時に自動的にアプリケーションを起動します",
     "theme": "テーマ",
     "theme_placeholder": "テーマを選択",
     "theme_dark": "ダーク",
@@ -128,7 +128,14 @@
   "status_bar": {
     "server_online": "SERVER ONLINE",
     "starting": "STARTING...",
-    "server_stopped": "SERVER STOPPED"
+    "server_stopped": "SERVER STOPPED",
+    "companion_label": "Companion",
+    "flm_label": "FLM"
+  },
+  "status_badge": {
+    "online": "オンライン",
+    "starting": "起動中...",
+    "stopped": "停止"
   },
   "common": {
     "cancel": "Cancel",
@@ -137,12 +144,24 @@
   },
   "app": {
     "alert_select_model": "モデルを選択してください",
+    "notification_server_starting_title": "サーバーを起動中",
+    "notification_server_starting_body": "モデル {{model}} でサーバーを起動しています...",
     "notification_server_started_title": "サーバーが起動しました",
     "notification_server_started_body": "モデル {{model}} が使用されています",
     "notification_server_error_title": "サーバーエラー",
     "notification_server_error_body": "サーバーが予期せず停止しましたログをご確認ください",
     "notification_server_stopped_title": "サーバーが停止しました",
     "notification_server_stopped_body": "サーバーは正常に停止しました",
+    "notification_model_download_complete_title": "ダウンロード完了",
+    "notification_model_download_complete_body": "モデル {{model}} のダウンロードが完了しました",
+    "notification_model_download_start_title": "ダウンロード開始",
+    "notification_model_download_start_body": "モデル {{model}} のダウンロードを開始します",
+    "notification_model_download_error_title": "ダウンロード失敗",
+    "notification_model_download_error_body": "モデル {{model}} のダウンロードに失敗しました",
+    "notification_model_delete_complete_title": "モデル削除完了",
+    "notification_model_delete_complete_body": "モデル {{model}} を削除しました",
+    "notification_model_delete_error_title": "削除失敗",
+    "notification_model_delete_error_body": "モデル {{model}} の削除に失敗しました",
     "log_starting_server": "[SYSTEM] {{model}} を起動しています…",
     "log_stop_error": "[ERROR] サーバー停止に失敗しました: {{error}}",
     "log_start_error": "[ERROR] サーバー起動に失敗しました: {{error}}"
@@ -182,7 +201,13 @@
     "asr": "ASR（音声）",
     "embed": "Embeddings",
     "presets_group": "プリセット",
-    "models_group": "モデル"
+    "models_group": "モデル",
+    "models_menu": "モデル",
+    "installed": "インストール済み",
+    "catalog": "カタログ",
+    "start_with_model": "モデルでサーバーを開始",
+    "delete_model": "削除",
+    "download_model": "ダウンロード"
   },
   "presets": {
     "audio_only": "音声のみ（モデルなし）"

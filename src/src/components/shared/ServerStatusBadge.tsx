@@ -1,5 +1,6 @@
 import { Badge } from "../ui/badge";
 import type { ServerStatus } from "../../types";
+import { useTranslation } from "react-i18next";
 
 interface ServerStatusBadgeProps {
     status: ServerStatus;
@@ -40,11 +41,12 @@ export function ServerStatusBadge({
     showIndicator = true,
     className = "",
 }: ServerStatusBadgeProps) {
+    const { t } = useTranslation();
     const config = statusConfig[status];
     const defaultLabels = {
-        running: "Online",
-        starting: "Starting...",
-        stopped: "Stopped",
+        running: t('status_badge.online'),
+        starting: t('status_badge.starting'),
+        stopped: t('status_badge.stopped'),
     };
     const displayLabels = labels || defaultLabels;
 

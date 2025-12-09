@@ -1,6 +1,7 @@
 import { RefreshCw, HardDrive, Download } from "lucide-react";
 import { useEffect, useState } from "react";
 import { FlmService } from "../../services/flm";
+import { NotificationService } from "../../services/notification";
 import type { FlmModel, HardwareInfo } from "../../types";
 import { Card, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
@@ -44,9 +45,19 @@ export const ModelsView = ({ installedModels, onRefresh, hardwareInfo }: ModelsV
         try {
             setLoading(true);
             await FlmService.removeModel(name);
+            // Notify deletion success
+            NotificationService.send(
+                t("app.notification_model_delete_complete_title"),
+                t("app.notification_model_delete_complete_body", { model: name })
+            );
             onRefresh();
             await loadModels(true);
         } catch (e) {
+            // Notify deletion error
+            NotificationService.send(
+                t("app.notification_model_delete_error_title"),
+                t("app.notification_model_delete_error_body", { model: name })
+            );
             setAlertMessage(t("models.error_delete") + e);
             setAlertOpen(true);
             setLoading(false);
@@ -58,6 +69,11 @@ export const ModelsView = ({ installedModels, onRefresh, hardwareInfo }: ModelsV
         setDownloadingModel(modelName);
         setDownloadProgress(0);
         setDownloadStatus(t("models.download_starting"));
+
+        NotificationService.send(
+            t("app.notification_model_download_start_title"),
+            t("app.notification_model_download_start_body", { model: modelName })
+        );
 
         let totalFiles = 1;
         let baseProgress = 0;
@@ -107,6 +123,11 @@ export const ModelsView = ({ installedModels, onRefresh, hardwareInfo }: ModelsV
 
             setDownloadStatus(t("models.download_complete"));
             setDownloadProgress(100);
+            // Notify download complete
+            NotificationService.send(
+                t("app.notification_model_download_complete_title"),
+                t("app.notification_model_download_complete_body", { model: modelName })
+            );
             setTimeout(() => {
                 setDownloadingModel(null);
                 setDownloadProgress(0);
@@ -115,6 +136,11 @@ export const ModelsView = ({ installedModels, onRefresh, hardwareInfo }: ModelsV
                 loadModels(true);
             }, 1000);
         } catch (error) {
+            // Notify download error
+            NotificationService.send(
+                t("app.notification_model_download_error_title"),
+                t("app.notification_model_download_error_body", { model: modelName })
+            );
             setDownloadStatus(t("models.download_error", { error }));
             setTimeout(() => setDownloadingModel(null), 3000);
         }

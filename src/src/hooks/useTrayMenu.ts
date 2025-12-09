@@ -15,6 +15,8 @@ interface UseTrayMenuProps {
     serverStatus: ServerStatus;
     selectedModel: string;
     installedModels: FlmModel[];
+    availableModels: FlmModel[];
+    runnableModels: FlmModel[];
     serverOptions: ServerOptions;
 }
 
@@ -22,6 +24,8 @@ export function useTrayMenu({
     serverStatus,
     selectedModel,
     installedModels,
+    availableModels,
+    runnableModels,
     serverOptions,
 }: UseTrayMenuProps): void {
     const { t } = useTranslation();
@@ -49,6 +53,8 @@ export function useTrayMenu({
                 selectedModel: selectedModel,
                 presets: presets,
                 installedModels: installedModels.map((m) => m.name),
+                availableModels: availableModels.map((m) => m.name),
+                startableModels: runnableModels.map((m) => m.name),
                 asrEnabled: serverOptions.asr,
                 embedEnabled: serverOptions.embed,
                 flmVersion: flmVersion,
@@ -65,8 +71,14 @@ export function useTrayMenu({
                     embed: t("tray.embed"),
                     presetsGroup: t("tray.presets_group"),
                     modelsGroup: t("tray.models_group"),
+                    modelsMenu: t("tray.models_menu"),
+                    installed: t("tray.installed"),
+                    catalog: t("tray.catalog"),
+                    startWithModel: t("tray.start_with_model"),
+                    deleteModel: t("tray.delete_model"),
+                    downloadModel: t("tray.download_model"),
                 },
             },
         });
-    }, [serverStatus, selectedModel, installedModels, serverOptions, flmVersion, t]);
+    }, [serverStatus, selectedModel, installedModels, availableModels, runnableModels, serverOptions, flmVersion, t]);
 }

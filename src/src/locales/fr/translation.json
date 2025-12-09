@@ -84,10 +84,10 @@
   "settings": {
     "general_config": "Configuration Générale",
     "language": "Langue",
-    "start_minimized": "Démarrer minimisé",
-    "start_minimized_desc": "Démarrer l'application cachée dans la zone de notification",
-    "start_on_boot": "Démarrer au lancement",
-    "start_on_boot_desc": "Lancer l'application au démarrage de l'ordinateur",
+    "start_minimized": "Démarrer réduit",
+    "start_minimized_desc": "Démarrer l'application réduite dans la barre d'état système.",
+    "autostart": "Lancer au démarrage",
+    "autostart_desc": "Lancer automatiquement l'application à l'ouverture de session.",
     "theme": "Thème de l'interface",
     "theme_placeholder": "Thème",
     "theme_dark": "Sombre",
@@ -128,7 +128,14 @@
   "status_bar": {
     "server_online": "SERVEUR EN LIGNE",
     "starting": "DÉMARRAGE...",
-    "server_stopped": "SERVEUR ARRÊTÉ"
+    "server_stopped": "SERVEUR ARRÊTÉ",
+    "companion_label": "Companion",
+    "flm_label": "FLM"
+  },
+  "status_badge": {
+    "online": "En ligne",
+    "starting": "Démarrage...",
+    "stopped": "Arrêté"
   },
   "common": {
     "cancel": "Annuler",
@@ -137,12 +144,24 @@
   },
   "app": {
     "alert_select_model": "Veuillez sélectionner un modèle.",
+    "notification_server_starting_title": "Démarrage du Serveur FLM",
+    "notification_server_starting_body": "Démarrage du serveur avec le modèle {{model}}...",
     "notification_server_started_title": "Serveur FLM Démarré",
     "notification_server_started_body": "Le serveur fonctionne avec le modèle {{model}}",
     "notification_server_error_title": "Erreur Serveur FLM",
     "notification_server_error_body": "Le serveur s'est arrêté de manière inattendue. Vérifiez les logs.",
     "notification_server_stopped_title": "Serveur FLM Arrêté",
     "notification_server_stopped_body": "Le serveur s'est arrêté correctement.",
+    "notification_model_download_complete_title": "Téléchargement Terminé",
+    "notification_model_download_complete_body": "Le modèle {{model}} a été téléchargé avec succès",
+    "notification_model_download_start_title": "Téléchargement en cours",
+    "notification_model_download_start_body": "Le modèle {{model}} va être téléchargé",
+    "notification_model_download_error_title": "Échec du Téléchargement",
+    "notification_model_download_error_body": "Impossible de télécharger le modèle {{model}}",
+    "notification_model_delete_complete_title": "Modèle Supprimé",
+    "notification_model_delete_complete_body": "Le modèle {{model}} a été supprimé",
+    "notification_model_delete_error_title": "Échec de la Suppression",
+    "notification_model_delete_error_body": "Impossible de supprimer le modèle {{model}}",
     "log_starting_server": "[SYSTÈME] Démarrage du serveur avec le modèle : {{model}}...",
     "log_stop_error": "[ERREUR] Échec de l'arrêt du serveur : {{error}}",
     "log_start_error": "[ERREUR] Échec du démarrage du serveur : {{error}}"
@@ -182,7 +201,13 @@
     "asr": "ASR (Audio)",
     "embed": "Embeddings",
     "presets_group": "Configurations",
-    "models_group": "Modèles"
+    "models_group": "Modèles",
+    "models_menu": "Modèles",
+    "installed": "Installés",
+    "catalog": "Catalogue",
+    "start_with_model": "Démarrer le serveur",
+    "delete_model": "Supprimer",
+    "download_model": "Télécharger"
   },
   "presets": {
     "audio_only": "Audio uniquement (sans modèle)"

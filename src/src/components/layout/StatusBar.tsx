@@ -53,11 +53,11 @@ export const StatusBar = ({ serverStatus, selectedModel, version }: StatusBarPro
             </div>
 
             <div className="flex items-center gap-4 text-muted-foreground">
-                <span>Companion v{version}</span>
+                <span>{t('status_bar.companion_label')} v{version}</span>
                 {flmVersion && (
                     <>
                         <span className="text-border">|</span>
-                        <span>FLM {flmVersion}</span>
+                        <span>{t('status_bar.flm_label')} {flmVersion}</span>
                     </>
                 )}
             </div>

@@ -86,10 +86,10 @@
     "general_config": "General Configuration",
     "language": "Language",
     "start_minimized": "Start Minimized",
-    "start_minimized_desc": "Start the application hidden in the system tray",
-    "start_on_boot": "Start on Boot",
-    "start_on_boot_desc": "Launch application when computer starts",
-    "theme": "Interface Theme",
+    "start_minimized_desc": "Start the application minimized to the system tray.",
+    "autostart": "Launch at Startup",
+    "autostart_desc": "Automatically launch the application when you log in.",
+    "theme": "Theme",
     "theme_placeholder": "Theme",
     "theme_dark": "Dark",
     "theme_light": "Light",
@@ -129,7 +129,14 @@
   "status_bar": {
     "server_online": "SERVER ONLINE",
     "starting": "STARTING...",
-    "server_stopped": "SERVER STOPPED"
+    "server_stopped": "SERVER STOPPED",
+    "companion_label": "Companion",
+    "flm_label": "FLM"
+  },
+  "status_badge": {
+    "online": "Online",
+    "starting": "Starting...",
+    "stopped": "Stopped"
   },
   "common": {
     "cancel": "Cancel",
@@ -138,12 +145,24 @@
   },
   "app": {
     "alert_select_model": "Please select a model.",
+    "notification_server_starting_title": "FLM Server Starting",
+    "notification_server_starting_body": "Starting server with model {{model}}...",
     "notification_server_started_title": "FLM Server Started",
     "notification_server_started_body": "Server is running with model {{model}}",
     "notification_server_error_title": "FLM Server Error",
     "notification_server_error_body": "The server stopped unexpectedly. Check logs for details.",
     "notification_server_stopped_title": "FLM Server Stopped",
     "notification_server_stopped_body": "The server has stopped gracefully.",
+    "notification_model_download_complete_title": "Download Complete",
+    "notification_model_download_complete_body": "Model {{model}} has been downloaded successfully",
+    "notification_model_download_start_title": "Download Starting",
+    "notification_model_download_start_body": "Model {{model}} is starting to download",
+    "notification_model_download_error_title": "Download Failed",
+    "notification_model_download_error_body": "Failed to download model {{model}}",
+    "notification_model_delete_complete_title": "Model Deleted",
+    "notification_model_delete_complete_body": "Model {{model}} has been deleted",
+    "notification_model_delete_error_title": "Deletion Failed",
+    "notification_model_delete_error_body": "Failed to delete model {{model}}",
     "log_starting_server": "[SYSTEM] Starting server with model: {{model}}...",
     "log_stop_error": "[ERROR] Failed to stop server: {{error}}",
     "log_start_error": "[ERROR] Failed to start server: {{error}}"
@@ -183,7 +202,13 @@
     "asr": "ASR (Audio)",
     "embed": "Embeddings",
     "presets_group": "Configurations",
-    "models_group": "Models"
+    "models_group": "Models",
+    "models_menu": "Models",
+    "installed": "Installed",
+    "catalog": "Catalog",
+    "start_with_model": "Start Server",
+    "delete_model": "Delete",
+    "download_model": "Download"
   },
   "presets": {
     "audio_only": "Audio Only (no model)"

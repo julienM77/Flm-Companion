@@ -22,6 +22,22 @@ pub fn handle_menu_event(app: &AppHandle, event_id: &str) {
                 let _ = app.emit("select-model", model_name);
             }
         }
+        id if id.starts_with("start_model_") => {
+            if let Some(model_name) = id.strip_prefix("start_model_") {
+                let _ = app.emit("select-model", model_name);
+                let _ = app.emit("request-start-server", ());
+            }
+        }
+        id if id.starts_with("delete_model_") => {
+            if let Some(model_name) = id.strip_prefix("delete_model_") {
+                let _ = app.emit("request-delete-model", model_name);
+            }
+        }
+        id if id.starts_with("download_model_") => {
+            if let Some(model_name) = id.strip_prefix("download_model_") {
+                let _ = app.emit("request-download-model", model_name);
+            }
+        }
         _ => {}
     }
 }

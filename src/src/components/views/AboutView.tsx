@@ -9,6 +9,7 @@ import { openUrl, openPath } from '@tauri-apps/plugin-opener';
 import { fetch } from '@tauri-apps/plugin-http';
 import { writeFile, BaseDirectory } from '@tauri-apps/plugin-fs';
 import { tempDir } from '@tauri-apps/api/path';
+import { exit } from '@tauri-apps/plugin-process';
 import ReactMarkdown from 'react-markdown';
 import { ScrollArea } from "../ui/scroll-area";
 import { useTranslation } from "react-i18next";
@@ -44,6 +45,8 @@ export const AboutView = ({ hardwareInfo, onRefreshHardware }: AboutViewProps) =
     const [companionChangelog, setCompanionChangelog] = useState<string | null>(null);
     const [loadingCompanionUpdate, setLoadingCompanionUpdate] = useState(false);
     const [companionUpdateError, setCompanionUpdateError] = useState<string | null>(null);
+    const [isCompanionDownloading, setIsCompanionDownloading] = useState(false);
+    const [companionDownloadProgress, setCompanionDownloadProgress] = useState<number | null>(null);
 
     const { t } = useTranslation();
 
@@ -51,6 +54,7 @@ export const AboutView = ({ hardwareInfo, onRefreshHardware }: AboutViewProps) =
         loadFlmVersion();
         // Load changelog for current companion version
         fetchCompanionChangelog(companionVersion);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useEffect(() => {
@@ -90,6 +94,73 @@ export const AboutView = ({ hardwareInfo, onRefreshHardware }: AboutViewProps) =
             setCompanionChangelog(release.body);
         } catch {
             console.log("Companion release note not found for this version");
+        }
+    };
+
+    const handleCompanionUpdate = async () => {
+        if (!latestCompanionRelease) return;
+
+        // Find asset starting with "Flm Companion" or "Flm Manager" and ending with ".exe"
+        // This handles version numbers in the filename automatically
+        const asset = latestCompanionRelease.assets.find(a =>
+            a.name.startsWith("Flm Companion") &&
+            a.name.endsWith(".exe")
+        );
+        if (!asset) {
+            setCompanionUpdateError(t('about.error_installer_not_found'));
+            return;
+        }
+
+        setIsCompanionDownloading(true);
+        setCompanionDownloadProgress(0);
+        setCompanionUpdateError(null);
+
+        try {
+            const response = await fetch(asset.browser_download_url);
+            if (!response.ok) throw new Error("Download failed");
+            if (!response.body) throw new Error("No response body");
+
+            const contentLength = +response.headers.get('Content-Length')!;
+            const reader = response.body.getReader();
+            let receivedLength = 0;
+            const chunks = [];
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                chunks.push(value);
+                receivedLength += value.length;
+                if (contentLength) {
+                    setCompanionDownloadProgress(Math.round((receivedLength / contentLength) * 100));
+                }
+            }
+
+            const allChunks = new Uint8Array(receivedLength);
+            let position = 0;
+            for (const chunk of chunks) {
+                allChunks.set(chunk, position);
+                position += chunk.length;
+            }
+
+            // Save to temp directory
+            const filename = asset.name;
+            await writeFile(filename, allChunks, { baseDir: BaseDirectory.Temp });
+
+            // Launch the installer
+            const tempDirPath = await tempDir();
+            const absolutePath = `${tempDirPath}${filename}`;
+            await openPath(absolutePath);
+
+            // Close the application to allow update
+            await exit(0);
+
+        } catch (e) {
+            console.error(e);
+            setCompanionUpdateError(t('about.error_download_install'));
+        } finally {
+            setIsCompanionDownloading(false);
+            setCompanionDownloadProgress(null);
         }
     };
 
@@ -259,14 +330,35 @@ export const AboutView = ({ hardwareInfo, onRefreshHardware }: AboutViewProps) =
                             {companionUpdateError && <span className="text-xs text-destructive">{companionUpdateError}</span>}
                         </div>
 
-                        <Button
-                            variant="secondary"
-                            size="sm"
-                            onClick={checkCompanionUpdates}
-                            disabled={loadingCompanionUpdate}
-                        >
-                            {loadingCompanionUpdate ? <RefreshCw className="w-4 h-4 animate-spin" /> : t('about.check')}
-                        </Button>
+                        <div className="flex gap-2">
+                            {isCompanionUpdateAvailable && (
+                                <Button
+                                    size="sm"
+                                    onClick={handleCompanionUpdate}
+                                    disabled={isCompanionDownloading}
+                                >
+                                    {isCompanionDownloading ? (
+                                        <>
+                                            <RefreshCw className="w-4 h-4 animate-spin mr-2" />
+                                            {companionDownloadProgress !== null ? `${companionDownloadProgress}%` : t('about.downloading')}
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Download className="w-4 h-4 mr-2" />
+                                            {t('about.update')}
+                                        </>
+                                    )}
+                                </Button>
+                            )}
+                            <Button
+                                variant="secondary"
+                                size="sm"
+                                onClick={checkCompanionUpdates}
+                                disabled={loadingCompanionUpdate || isCompanionDownloading}
+                            >
+                                {loadingCompanionUpdate ? <RefreshCw className="w-4 h-4 animate-spin" /> : t('about.check')}
+                            </Button>
+                        </div>
                     </div>
 
                     {/* Companion Changelog Row */}
