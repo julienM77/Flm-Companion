@@ -24,11 +24,12 @@ Flm Compagnon is a modern GUI designed to accompany and manage the **FastFlowLM 
 
 * **Models**: Model manager (download, delete, inspect details).
 * **Server**: Configuration and management of the FLM server instance.
-* **System Tray**: Quick access to server controls and status from the notification area.
+* **System Tray**: Quick access to server controls, **model selection**, and status directly from the notification area.
+* **Auto-start**: Option to launch the application automatically at Windows startup.
 * **Start Minimized**: Option to launch the application minimized to the system tray (configurable in settings).
 * **Settings**: Application customization.
 * **About**: View application version, hardware information, and check for updates.
-* **Multilingual**: Interface management in English and French.
+* **Multilingual**: Interface management in **English, French, and Japanese**.
 * **Theme**: Management of light and dark themes.
 
 ## 📸 Screens
@@ -56,21 +57,35 @@ Flm Compagnon is a modern GUI designed to accompany and manage the **FastFlowLM 
 
 ### 🔔 System Tray
 
-| Notification Menu |
-|:---:|
-| [![Notification](screen/notification.png)](screen/notification.png) |
-| *Quick access to server controls from system tray* |
+| Server gestion | Models gestion |
+|:---:|:---:|
+| [![Server](screen/notification.png)](screen/notification.png) | [![Models](screen/notification_models.png)](screen/notification_models.png) |
+| *Quick access to server controls from system tray* | *Quick access to models controls from system tray* |
 
 ## 📋 To do
 
+* [ ] Add a startup check when FLM is launched (verify model availability and server prerequisites)  
+* [ ] Add an automatic update check at application startup  
+* [ ] Finalize saving and loading of custom usage configuration (persist user presets)  
+* [ ] Add an in-app memory / resource calculator for chosen model + server configuration  
+* [ ] Add NPU and RAM usage monitoring and display (real-time stats) 
+* [ ] Ensure "Run at startup" setting is preserved across updates and installer actions
+
+<details>
+
+<summary>Completed</summary>
+
 * [X] Clean code and optimisation
-* [ ] Fix the server management design for consistency
+* [X] Fix the server management design for consistency
 * [X] Add a version check for the companion application (+ changelog)
 * [X] Add caching for the list of models, CPU version, and RAM
 * [X] Force an update of the model list on the server configuration side when models are modified (DLL, delete)
-* [ ] Add menus to the notification area icon (server management, models)
+* [X] Add menus to the notification area icon (server management, models)
 * [X] Complete the translation of all texts for multilingual support
 * [X] Flm update 0.9.21 → add the option to launch the server without a model using ASR for Whisper
+* [X] Flm update 0.9.22 → add the option to launch the server with host parameters
+
+</details>
 
 ## 🤝 Contribution
 
