@@ -99,6 +99,7 @@ export function AppProvider({ children }: AppProviderProps) {
         if (config.isConfigLoaded) {
             config.saveExternalConfig(models.selectedModel, server.serverOptions);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [models.selectedModel, server.serverOptions, config.isConfigLoaded, config.saveExternalConfig]);
 
     const value: AppContextType = {

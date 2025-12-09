@@ -54,6 +54,7 @@ export const AboutView = ({ hardwareInfo, onRefreshHardware }: AboutViewProps) =
         loadFlmVersion();
         // Load changelog for current companion version
         fetchCompanionChangelog(companionVersion);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useEffect(() => {

@@ -78,7 +78,7 @@ export function useModelsManager({
             );
             loadInstalledModels(true);
             loadAvailableModels(true);
-        } catch (error) {
+        } catch {
             NotificationService.send(
                 t("app.notification_model_delete_error_title"),
                 t("app.notification_model_delete_error_body", { model: modelName })
@@ -99,7 +99,7 @@ export function useModelsManager({
             );
             loadInstalledModels(true);
             loadAvailableModels(true);
-        } catch (error) {
+        } catch {
             NotificationService.send(
                 t("app.notification_model_download_error_title"),
                 t("app.notification_model_download_error_body", { model: modelName })
