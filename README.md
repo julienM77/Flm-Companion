@@ -59,7 +59,7 @@ Flm Compagnon is a modern GUI designed to accompany and manage the **FastFlowLM 
 
 | Server gestion | Models gestion |
 |:---:|:---:|
-| [![Server](screen/notification.png)](screen/notification.png) | [![Models](screen/notification_models.png)](screen/notification_models.png) |
+| <img src="screen/notification.png" height="400"> | <img src="screen/notification_models.png" height="400"> |
 | *Quick access to server controls from system tray* | *Quick access to models controls from system tray* |
 
 ## 📋 To do
