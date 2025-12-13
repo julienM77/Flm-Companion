@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { RefreshCw, Download } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
-import { FlmService } from '../../services/flm';
 import type { HardwareInfo } from '../../types';
 import { GithubService, ReleaseInfo } from '../../services/github';
 import { openUrl, openPath } from '@tauri-apps/plugin-opener';
@@ -15,6 +14,8 @@ import { ScrollArea } from "../ui/scroll-area";
 import { useTranslation } from "react-i18next";
 import { ConfigService } from "../../services/config";
 import { GithubIcon } from "../icons";
+import { useAppContext } from "../../contexts/AppContext";
+import { FlmService } from "../../services/flm";
 
 const APP_REPO_NAME = import.meta.env.VITE_GIT_PROJECT_COMPANION || "julienM77/flm-companion";
 const FLM_REPO_NAME = import.meta.env.VITE_GIT_PROJECT_FLM || "FastFlowLM/FastFlowLM";
@@ -28,8 +29,9 @@ interface AboutViewProps {
 }
 
 export const AboutView = ({ hardwareInfo, onRefreshHardware }: AboutViewProps) => {
+    const { flmVersion, loadFlmVersion } = useAppContext();
+
     // FLM State
-    const [flmVersion, setFlmVersion] = useState<string>("Loading...");
     const [latestFlmRelease, setLatestFlmRelease] = useState<ReleaseInfo | null>(null);
     const [flmChangelog, setFlmChangelog] = useState<string | null>(null);
     const [loadingFlmUpdate, setLoadingFlmUpdate] = useState(false);
@@ -62,15 +64,6 @@ export const AboutView = ({ hardwareInfo, onRefreshHardware }: AboutViewProps) =
             fetchFlmChangelog(flmVersion);
         }
     }, [flmVersion]);
-
-    const loadFlmVersion = async () => {
-        try {
-            const ver = await FlmService.getVersion();
-            setFlmVersion(ver);
-        } catch {
-            setFlmVersion("Unknown");
-        }
-    };
 
     // --- Companion Logic ---
 
@@ -255,7 +248,7 @@ export const AboutView = ({ hardwareInfo, onRefreshHardware }: AboutViewProps) =
                     const currentVer = await FlmService.getVersion();
                     // Check if version changed and is valid
                     if (currentVer !== startVersion && currentVer !== "Unknown" && currentVer !== "Loading...") {
-                        setFlmVersion(currentVer);
+                        await loadFlmVersion(true);
                         setIsInstalling(false);
                         setFlmUpdateError(null);
                         clearInterval(interval);

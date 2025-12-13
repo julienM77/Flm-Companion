@@ -1,9 +1,10 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
 import { useConfigManager } from "../hooks/useConfigManager";
 import { useModelsManager } from "../hooks/useModelsManager";
 import { useServerManager } from "../hooks/useServerManager";
 import { useTrayMenu } from "../hooks/useTrayMenu";
 import { ConfigService } from "../services/config";
+import { FlmService } from "../services/flm";
 import { NotificationService } from "../services/notification";
 import type { Theme, ServerStatus, ServerOptions, FlmModel, HardwareInfo } from "../types";
 
@@ -25,6 +26,10 @@ interface AppContextType {
     hardwareInfo: HardwareInfo | null;
     loadInstalledModels: (force?: boolean) => void;
     loadHardwareInfo: (force?: boolean) => Promise<void>;
+
+    // FLM Version
+    flmVersion: string;
+    loadFlmVersion: (force?: boolean) => Promise<void>;
 
     // Server
     serverStatus: ServerStatus;
@@ -50,9 +55,28 @@ export function AppProvider({ children }: AppProviderProps) {
     const [activeTab, setActiveTab] = useState("models");
     const [initialServerOptions, setInitialServerOptions] = useState<ServerOptions>({});
     const [initialSelectedModel, setInitialSelectedModel] = useState<string>("");
+    const [flmVersion, setFlmVersion] = useState<string>("");
 
     // Config manager
     const config = useConfigManager();
+
+    // Load FLM version
+    const loadFlmVersion = useCallback(async (force = false) => {
+        if (!force && flmVersion) return; // Cache si déjà chargé
+        try {
+            const ver = await FlmService.getVersion();
+            if (ver && ver !== "Not Found" && ver !== "Unknown") {
+                setFlmVersion(ver);
+            }
+        } catch {
+            setFlmVersion("Unknown");
+        }
+    }, [flmVersion]);
+
+    // Load FLM version on mount
+    useEffect(() => {
+        loadFlmVersion();
+    }, [loadFlmVersion]);
 
     // Load initial values from config and initialize notification service
     useEffect(() => {
@@ -92,6 +116,7 @@ export function AppProvider({ children }: AppProviderProps) {
         availableModels: models.availableModels,
         runnableModels: models.runnableModels,
         serverOptions: server.serverOptions,
+        flmVersion: flmVersion,
     });
 
     // Save config when external values change
@@ -120,6 +145,10 @@ export function AppProvider({ children }: AppProviderProps) {
         hardwareInfo: models.hardwareInfo,
         loadInstalledModels: models.loadInstalledModels,
         loadHardwareInfo: models.loadHardwareInfo,
+
+        // FLM Version
+        flmVersion,
+        loadFlmVersion,
 
         // Server
         serverStatus: server.serverStatus,

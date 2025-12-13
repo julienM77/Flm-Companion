@@ -1,10 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useTranslation } from "react-i18next";
 import type { ServerStatus, ServerOptions, FlmModel } from "../types";
 import { DEFAULT_PRESETS_CONFIG } from "../types";
 import { getAllPresets, getPresetDisplayName } from "../lib/presets";
-import { FlmService } from "../services/flm";
 
 interface TrayPreset {
     id: string;
@@ -18,6 +17,7 @@ interface UseTrayMenuProps {
     availableModels: FlmModel[];
     runnableModels: FlmModel[];
     serverOptions: ServerOptions;
+    flmVersion: string;
 }
 
 export function useTrayMenu({
@@ -27,18 +27,9 @@ export function useTrayMenu({
     availableModels,
     runnableModels,
     serverOptions,
+    flmVersion,
 }: UseTrayMenuProps): void {
     const { t } = useTranslation();
-    const [flmVersion, setFlmVersion] = useState<string>("");
-
-    // Load FLM version once on mount
-    useEffect(() => {
-        FlmService.getVersion().then(ver => {
-            if (ver && ver !== "Not Found" && ver !== "Unknown") {
-                setFlmVersion(ver);
-            }
-        });
-    }, []);
 
     useEffect(() => {
         // Build presets list with translated names
