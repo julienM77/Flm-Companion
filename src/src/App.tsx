@@ -9,6 +9,7 @@ import { AboutView } from "./components/views/AboutView";
 import { ConfigService } from "./services/config";
 import { AppProvider, useAppContext } from "./contexts";
 import { TooltipProvider } from "./components/ui/tooltip";
+import { Toaster } from "sonner";
 
 // Wrappers
 function ChatViewWrapper() {
@@ -121,6 +122,12 @@ function App() {
   return (
     <AppProvider>
       <TooltipProvider delayDuration={200}>
+        <Toaster
+          position="bottom-right"
+          expand={false}
+          richColors
+          closeButton
+        />
         <AppContent />
       </TooltipProvider>
     </AppProvider>
