@@ -30,12 +30,15 @@ fn build_models_menu(
     }
 
     // Ajouter les modèles disponibles (non installés)
+    // Exclure ceux qui sont déjà dans installed_models pour éviter les doublons
     for model_name in &params.available_models {
-        unified_models.push(UnifiedModel {
-            name: model_name.clone(),
-            is_installed: false,
-            is_startable: false,
-        });
+        if !params.installed_models.contains(model_name) {
+            unified_models.push(UnifiedModel {
+                name: model_name.clone(),
+                is_installed: false,
+                is_startable: false,
+            });
+        }
     }
 
     // Trier alphabétiquement par nom
