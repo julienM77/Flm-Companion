@@ -72,8 +72,6 @@ export function useTrayMenu({
                     presetsGroup: t("tray.presets_group"),
                     modelsGroup: t("tray.models_group"),
                     modelsMenu: t("tray.models_menu"),
-                    installed: t("tray.installed"),
-                    catalog: t("tray.catalog"),
                     startWithModel: t("tray.start_with_model"),
                     deleteModel: t("tray.delete_model"),
                     downloadModel: t("tray.download_model"),

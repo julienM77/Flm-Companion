@@ -4,6 +4,12 @@ use tauri::AppHandle;
 use crate::tray::icons::ThemeIcons;
 use crate::types::TrayMenuParams;
 
+struct UnifiedModel {
+    name: String,
+    is_installed: bool,
+    is_startable: bool,
+}
+
 fn build_models_menu(
     app: &AppHandle,
     params: &TrayMenuParams,
@@ -11,68 +17,83 @@ fn build_models_menu(
 ) -> tauri::Result<Submenu<tauri::Wry>> {
     let texts = &params.texts;
 
-    // Sous-menu Installed
-    let installed_submenu = Submenu::new(app, &texts.installed, true)?;
-    let _ = installed_submenu.set_icon(Some(icons.hard_drive.clone()));
+    // Créer une liste unifiée de tous les modèles
+    let mut unified_models = Vec::new();
 
+    // Ajouter les modèles installés
     for model_name in &params.installed_models {
-        // Sous-menu pour chaque modèle installé
-        let model_submenu = Submenu::new(app, model_name, true)?;
-
-        if params.startable_models.contains(model_name) {
-            // Action: Start Server
-            let start_item = IconMenuItem::with_id(
-                app,
-                format!("start_model_{}", model_name),
-                &texts.start_with_model,
-                true,
-                Some(icons.play.clone()),
-                None::<&str>,
-            )?;
-            let _ = model_submenu.append(&start_item);
-        }
-
-        // Action: Delete
-        let delete_item = IconMenuItem::with_id(
-            app,
-            format!("delete_model_{}", model_name),
-            &texts.delete_model,
-            true,
-            Some(icons.trash.clone()),
-            None::<&str>,
-        )?;
-        let _ = model_submenu.append(&delete_item);
-
-        let _ = installed_submenu.append(&model_submenu);
+        unified_models.push(UnifiedModel {
+            name: model_name.clone(),
+            is_installed: true,
+            is_startable: params.startable_models.contains(model_name),
+        });
     }
 
-    // Sous-menu Catalog
-    let catalog_submenu = Submenu::new(app, &texts.catalog, true)?;
-    let _ = catalog_submenu.set_icon(Some(icons.download.clone()));
-
+    // Ajouter les modèles disponibles (non installés)
     for model_name in &params.available_models {
-        // Sous-menu pour chaque modèle disponible
-        let model_submenu = Submenu::new(app, model_name, true)?;
-
-        // Action: Download
-        let download_item = IconMenuItem::with_id(
-            app,
-            format!("download_model_{}", model_name),
-            &texts.download_model,
-            true,
-            Some(icons.download.clone()),
-            None::<&str>,
-        )?;
-        let _ = model_submenu.append(&download_item);
-
-        let _ = catalog_submenu.append(&model_submenu);
+        unified_models.push(UnifiedModel {
+            name: model_name.clone(),
+            is_installed: false,
+            is_startable: false,
+        });
     }
+
+    // Trier alphabétiquement par nom
+    unified_models.sort_by(|a, b| a.name.cmp(&b.name));
 
     // Menu principal Models
     let models_menu = Submenu::new(app, &texts.models_menu, true)?;
     let _ = models_menu.set_icon(Some(icons.cpu.clone()));
-    let _ = models_menu.append(&installed_submenu);
-    let _ = models_menu.append(&catalog_submenu);
+
+    // Créer un sous-menu pour chaque modèle
+    for model in unified_models {
+        let model_submenu = Submenu::new(app, &model.name, true)?;
+
+        if model.is_installed {
+            // Modèle installé : icône disque dur
+            let _ = model_submenu.set_icon(Some(icons.hard_drive.clone()));
+
+            if model.is_startable {
+                // Action: Start Server
+                let start_item = IconMenuItem::with_id(
+                    app,
+                    format!("start_model_{}", model.name),
+                    &texts.start_with_model,
+                    true,
+                    Some(icons.play.clone()),
+                    None::<&str>,
+                )?;
+                let _ = model_submenu.append(&start_item);
+            }
+
+            // Action: Delete
+            let delete_item = IconMenuItem::with_id(
+                app,
+                format!("delete_model_{}", model.name),
+                &texts.delete_model,
+                true,
+                Some(icons.trash.clone()),
+                None::<&str>,
+            )?;
+            let _ = model_submenu.append(&delete_item);
+        } else {
+            // Modèle disponible : icône download
+            let _ = model_submenu.set_icon(Some(icons.download.clone()));
+
+            // Action: Download
+            let download_item = IconMenuItem::with_id(
+                app,
+                format!("download_model_{}", model.name),
+                &texts.download_model,
+                true,
+                Some(icons.download.clone()),
+                None::<&str>,
+            )?;
+            let _ = model_submenu.append(&download_item);
+        }
+
+        let _ = models_menu.append(&model_submenu);
+    }
 
     Ok(models_menu)
 }

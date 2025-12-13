@@ -41,8 +41,6 @@ pub struct TrayMenuTexts {
     pub presets_group: String,
     pub models_group: String,
     pub models_menu: String,
-    pub installed: String,
-    pub catalog: String,
     pub start_with_model: String,
     pub delete_model: String,
     pub download_model: String,
