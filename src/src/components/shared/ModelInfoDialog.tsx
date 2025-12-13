@@ -1,4 +1,4 @@
-import { Info } from "lucide-react";
+import { Info, Brain, Eye, Layers, Mic, AlertTriangle, XCircle } from "lucide-react";
 import { Badge } from "../ui/badge";
 import {
     Dialog,
@@ -8,12 +8,19 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "../ui/dialog";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+} from "../ui/tooltip";
 import { Button } from "../ui/button";
 import { useTranslation } from "react-i18next";
 import type { FlmModel } from "../../types";
+import type { PerformanceWarning } from "../../lib/performance";
 
 interface ModelInfoDialogProps {
     model: FlmModel;
+    performanceWarning?: PerformanceWarning;
     trigger?: React.ReactNode;
 }
 
@@ -21,7 +28,7 @@ interface ModelInfoDialogProps {
  * Reusable dialog component to display model information
  * Used in Models.tsx for both installed and available models
  */
-export function ModelInfoDialog({ model, trigger }: ModelInfoDialogProps) {
+export function ModelInfoDialog({ model, performanceWarning = "none", trigger }: ModelInfoDialogProps) {
     const { t } = useTranslation();
 
     return (
@@ -42,36 +49,94 @@ export function ModelInfoDialog({ model, trigger }: ModelInfoDialogProps) {
                     <DialogTitle className="flex items-center gap-2 flex-wrap">
                         {model.name}
                         {model.isThink && (
-                            <Badge
-                                variant="secondary"
-                                className="text-[10px] px-1.5 py-0 h-5 bg-purple-500/10 text-purple-400 border-purple-500/20"
-                            >
-                                {t("models.badge_think")}
-                            </Badge>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Badge
+                                        variant="secondary"
+                                        className="px-1.5 py-0.5 h-5 bg-purple-500/10 text-purple-400 border border-purple-500/30"
+                                    >
+                                        <Brain size={12} />
+                                    </Badge>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>{t("models.badge_think_tooltip")}</p>
+                                </TooltipContent>
+                            </Tooltip>
                         )}
                         {model.isVlm && (
-                            <Badge
-                                variant="secondary"
-                                className="text-[10px] px-1.5 py-0 h-5 bg-blue-500/10 text-blue-400 border-blue-500/20"
-                            >
-                                {t("models.badge_vlm")}
-                            </Badge>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Badge
+                                        variant="secondary"
+                                        className="px-1.5 py-0.5 h-5 bg-blue-500/10 text-blue-400 border border-blue-500/30"
+                                    >
+                                        <Eye size={12} />
+                                    </Badge>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>{t("models.badge_vlm_tooltip")}</p>
+                                </TooltipContent>
+                            </Tooltip>
                         )}
                         {model.isEmbed && (
-                            <Badge
-                                variant="secondary"
-                                className="text-[10px] px-1.5 py-0 h-5 bg-green-500/10 text-green-400 border-green-500/20"
-                            >
-                                {t("models.badge_embed")}
-                            </Badge>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Badge
+                                        variant="secondary"
+                                        className="px-1.5 py-0.5 h-5 bg-green-500/10 text-green-400 border border-green-500/30"
+                                    >
+                                        <Layers size={12} />
+                                    </Badge>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>{t("models.badge_embed_tooltip")}</p>
+                                </TooltipContent>
+                            </Tooltip>
                         )}
                         {model.isAudio && (
-                            <Badge
-                                variant="secondary"
-                                className="text-[10px] px-1.5 py-0 h-5 bg-orange-500/10 text-orange-400 border-orange-500/20"
-                            >
-                                {t("models.badge_audio")}
-                            </Badge>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Badge
+                                        variant="secondary"
+                                        className="px-1.5 py-0.5 h-5 bg-orange-500/10 text-orange-400 border border-orange-500/30"
+                                    >
+                                        <Mic size={12} />
+                                    </Badge>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>{t("models.badge_audio_tooltip")}</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        )}
+                        {performanceWarning === "warning" && (
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Badge
+                                        variant="secondary"
+                                        className="px-1.5 py-0.5 h-5 bg-yellow-500/10 text-yellow-400 border border-yellow-500/30"
+                                    >
+                                        <AlertTriangle size={12} />
+                                    </Badge>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>{t("models.badge_performance_warning_tooltip")}</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        )}
+                        {performanceWarning === "critical" && (
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Badge
+                                        variant="secondary"
+                                        className="px-1.5 py-0.5 h-5 bg-red-500/10 text-red-400 border border-red-500/30"
+                                    >
+                                        <XCircle size={12} />
+                                    </Badge>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>{t("models.badge_performance_critical_tooltip")}</p>
+                                </TooltipContent>
+                            </Tooltip>
                         )}
                     </DialogTitle>
                     <DialogDescription>{t("models.dialog_info_desc")}</DialogDescription>
