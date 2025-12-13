@@ -157,7 +157,7 @@ pub fn build_tray_menu(
     let models_submenu = Submenu::new(app, &texts.models_group, true)?;
     let _ = models_submenu.set_icon(Some(icons.cpu.clone()));
 
-    for model_name in &params.installed_models {
+    for model_name in &params.startable_models {
         let is_selected = model_name == &params.selected_model;
         let model_item = CheckMenuItem::with_id(
             app,
