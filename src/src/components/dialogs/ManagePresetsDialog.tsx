@@ -58,21 +58,21 @@ export const ManagePresetsDialog = ({
 
     const getPresetDetails = (preset: ServerPreset): string => {
         const details: string[] = [];
-        
+
         details.push(`${t('server.model')}: ${preset.model || t('server.no_model')}`);
-        
+
         if (preset.options.pmode) {
             details.push(`${t('server.power_mode')}: ${t(`chat.power_modes.${preset.options.pmode}`)}`);
         }
-        
+
         if (preset.options.asr) details.push(`✓ ${t('server.enable_asr')}`);
         if (preset.options.embed) details.push(`✓ ${t('server.enable_embeddings')}`);
         if (preset.options.cors) details.push(`✓ ${t('server.enable_cors')}`);
-        
+
         if (preset.options.port) details.push(`${t('server.port')}: ${preset.options.port}`);
         if (preset.options.host) details.push(`${t('server.host')}: ${preset.options.host}`);
         if (preset.options.ctxLen) details.push(`${t('server.context_tokens')}: ${preset.options.ctxLen}`);
-        
+
         return details.join('\n');
     };
 
