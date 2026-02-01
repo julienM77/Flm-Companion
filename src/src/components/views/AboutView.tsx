@@ -63,8 +63,11 @@ export const AboutView = ({ hardwareInfo, onRefreshHardware }: AboutViewProps) =
             flmVersion !== "Loading..." &&
             flmVersion !== "Unknown" &&
             flmVersion !== "Not Found" &&
-            flmVersion.match(/^\d+\.\d+/)) { // Ensure it's a valid version format
+            flmVersion.match(/^v?\d+\.\d+/)) { // Accept versions with or without "v" prefix
+            console.log('[AboutView] Triggering FLM changelog fetch for version:', flmVersion);
             fetchFlmChangelog(flmVersion);
+        } else {
+            console.log('[AboutView] Skipping FLM changelog fetch, invalid version:', flmVersion);
         }
     }, [flmVersion]);
 
