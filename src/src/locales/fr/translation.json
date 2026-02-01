@@ -214,6 +214,23 @@
     "system_process_exited": "Le processus s'est terminé avec le code {{code}}",
     "system_error": "Erreur : {{error}}"
   },
+  "performance": {
+    "resource_monitor": "Moniteur de Ressources",
+    "live": "En direct",
+    "ram_usage": "Utilisation RAM",
+    "npu_usage": "Utilisation NPU",
+    "used": "utilisé",
+    "total": "total",
+    "idle": "Inactif",
+    "compute": "Calcul",
+    "shared_memory": "Mémoire partagée",
+    "not_detected": "Non détecté",
+    "last_update": "Dernière mise à jour",
+    "start_monitoring": "Démarrer le moniteur",
+    "stop_monitoring": "Arrêter le moniteur",
+    "monitoring_info": "La surveillance des ressources peut consommer du CPU. Arrêtez-la si vous n'en avez pas besoin.",
+    "monitoring_stopped": "Surveillance arrêtée"
+  },
   "tray": {
     "start": "Démarrer",
     "stop": "Arrêter",

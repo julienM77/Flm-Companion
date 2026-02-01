@@ -219,6 +219,23 @@
     "system_process_exited": "Process exited with code {{code}}",
     "system_error": "Error: {{error}}"
   },
+  "performance": {
+    "resource_monitor": "Resource Monitor",
+    "live": "Live",
+    "ram_usage": "RAM Usage",
+    "npu_usage": "NPU Usage",
+    "used": "used",
+    "total": "total",
+    "idle": "Idle",
+    "compute": "Compute",
+    "shared_memory": "Shared Memory",
+    "not_detected": "Not detected",
+    "last_update": "Last update",
+    "start_monitoring": "Start Monitor",
+    "stop_monitoring": "Stop Monitor",
+    "monitoring_info": "Resource monitoring can consume CPU resources. Stop it if you don't need it.",
+    "monitoring_stopped": "Monitoring stopped"
+  },
   "tray": {
     "start": "Start",
     "stop": "Stop",

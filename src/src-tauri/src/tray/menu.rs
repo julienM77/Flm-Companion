@@ -139,6 +139,7 @@ pub fn build_tray_menu(
     // Presets submenu
     let presets_submenu = Submenu::new(app, &texts.presets_group, true)?;
     let _ = presets_submenu.set_icon(Some(icons.cog.clone()));
+    let _ = presets_submenu.set_enabled(!params.is_running); // Disable when server is running
 
     // Separate system and user presets
     let system_presets: Vec<_> = params.presets.iter().filter(|p| p.is_system).collect();
@@ -181,6 +182,7 @@ pub fn build_tray_menu(
     // Models submenu
     let models_submenu = Submenu::new(app, &texts.models_group, true)?;
     let _ = models_submenu.set_icon(Some(icons.cpu.clone()));
+    let _ = models_submenu.set_enabled(!params.is_running); // Disable when server is running
 
     if params.startable_models.is_empty() {
         // No models available, add disabled item
@@ -258,6 +260,7 @@ pub fn build_tray_menu(
     let features_submenu =
         Submenu::with_items(app, &texts.features, true, &[&asr_item, &embed_item])?;
     let _ = features_submenu.set_icon(Some(icons.cog.clone()));
+    let _ = features_submenu.set_enabled(!params.is_running); // Disable when server is running
 
     let server_sep1 = PredefinedMenuItem::separator(app)?;
     let server_sep2 = PredefinedMenuItem::separator(app)?;

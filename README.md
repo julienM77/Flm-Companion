@@ -24,11 +24,14 @@ Flm Compagnon is a modern GUI designed to accompany and manage the **FastFlowLM 
 
 * **Models**: Model manager (download, delete, inspect details).
 * **Server**: Configuration and management of the FLM server instance.
-* **System Tray**: Quick access to server controls, **model selection**, and status directly from the notification area.
+* **Resource Monitor**: Real-time NPU and RAM usage monitoring with historical charts when server is running.
+* **Presets**: Save and manage custom server configurations as presets for quick access.
+* **System Tray**: Quick access to server controls, **model selection**, **presets**, and status directly from the notification area.
+* **Auto-Updates**: Automatic update check at startup for both FLM Companion and FastFlowLM with integrated installer.
 * **Auto-start**: Option to launch the application automatically at Windows startup.
 * **Start Minimized**: Option to launch the application minimized to the system tray (configurable in settings).
 * **Settings**: Application customization.
-* **About**: View application version, hardware information, and check for updates.
+* **About**: View application version, hardware information, FLM changelog, and check for updates.
 * **Multilingual**: Interface management in **English, French, and Japanese**.
 * **Theme**: Management of light and dark themes.
 
@@ -64,17 +67,13 @@ Flm Compagnon is a modern GUI designed to accompany and manage the **FastFlowLM 
 
 ## 📋 To do
 
-* [ ] Add a startup check when FLM is launched (verify model availability and server prerequisites)  
-* [ ] Add an automatic update check at application startup  
-* [ ] Finalize saving and loading of custom usage configuration (persist user presets)  
-* [ ] Add an in-app memory / resource calculator for chosen model + server configuration  
-* [ ] Add NPU and RAM usage monitoring and display (real-time stats) 
-* [ ] Ensure "Run at startup" setting is preserved across updates and installer actions
+* [ ] Add an in-app memory / resource calculator for chosen model + server configuration
 
 <details>
 
 <summary>Completed</summary>
 
+* [X] Add NPU and RAM usage monitoring and display (real-time stats)
 * [X] Clean code and optimisation
 * [X] Fix the server management design for consistency
 * [X] Add a version check for the companion application (+ changelog)
@@ -84,6 +83,13 @@ Flm Compagnon is a modern GUI designed to accompany and manage the **FastFlowLM 
 * [X] Complete the translation of all texts for multilingual support
 * [X] Flm update 0.9.21 → add the option to launch the server without a model using ASR for Whisper
 * [X] Flm update 0.9.22 → add the option to launch the server with host parameters
+* [X] Add a startup check when FLM is launched (verify model availability and server prerequisites)
+* [X] Add an automatic update check at application startup with integrated installer
+* [X] Finalize saving and loading of custom usage configuration (persist user presets)
+* [X] Add preset management system (save, delete, and quick access to server configurations)
+* [X] Display FLM changelog in About view
+* [X] GitHub API rate limiting with caching to prevent 403 errors
+* [X] Ensure "Run at startup" setting is preserved across updates and installer actions
 
 </details>
 

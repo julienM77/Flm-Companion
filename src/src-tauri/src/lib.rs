@@ -30,7 +30,10 @@ pub fn run() {
             tray::init_tray(app)?;
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![commands::update_tray_menu])
+        .invoke_handler(tauri::generate_handler![
+            commands::update_tray_menu,
+            commands::get_npu_info
+        ])
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
                 let _ = window.hide();

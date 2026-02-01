@@ -216,6 +216,23 @@
     "system_process_exited": "プロセスがコード {{code}} で終了しました",
     "system_error": "エラー: {{error}}"
   },
+  "performance": {
+    "resource_monitor": "リソースモニター",
+    "live": "ライブ",
+    "ram_usage": "RAM使用量",
+    "npu_usage": "NPU使用量",
+    "used": "使用中",
+    "total": "合計",
+    "idle": "アイドル",
+    "compute": "演算",
+    "shared_memory": "共有メモリ",
+    "not_detected": "検出されません",
+    "last_update": "最終更新",
+    "start_monitoring": "モニター開始",
+    "stop_monitoring": "モニター停止",
+    "monitoring_info": "リソースの監視はCPUリソースを消費する可能性があります。必要ない場合は停止してください。",
+    "monitoring_stopped": "監視停止中"
+  },
   "tray": {
     "start": "開始",
     "stop": "停止",
