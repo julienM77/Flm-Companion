@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { ConfigService } from "../../services/config";
 import type { ServerPreset, PresetsConfig } from "../../types";
 import { getPresetDisplayName } from "../../lib/presets";
+import { InfoTooltip } from "../shared/InfoTooltip";
 
 interface ManagePresetsDialogProps {
     open: boolean;
@@ -55,6 +56,26 @@ export const ManagePresetsDialog = ({
         }
     };
 
+    const getPresetDetails = (preset: ServerPreset): string => {
+        const details: string[] = [];
+        
+        details.push(`${t('server.model')}: ${preset.model || t('server.no_model')}`);
+        
+        if (preset.options.pmode) {
+            details.push(`${t('server.power_mode')}: ${t(`chat.power_modes.${preset.options.pmode}`)}`);
+        }
+        
+        if (preset.options.asr) details.push(`✓ ${t('server.enable_asr')}`);
+        if (preset.options.embed) details.push(`✓ ${t('server.enable_embeddings')}`);
+        if (preset.options.cors) details.push(`✓ ${t('server.enable_cors')}`);
+        
+        if (preset.options.port) details.push(`${t('server.port')}: ${preset.options.port}`);
+        if (preset.options.host) details.push(`${t('server.host')}: ${preset.options.host}`);
+        if (preset.options.ctxLen) details.push(`${t('server.context_tokens')}: ${preset.options.ctxLen}`);
+        
+        return details.join('\n');
+    };
+
     const renderPreset = (preset: ServerPreset, canDelete: boolean) => (
         <div key={preset.id} className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors">
             <div className="flex items-center gap-3 flex-1">
@@ -70,17 +91,20 @@ export const ManagePresetsDialog = ({
                     </div>
                 </div>
             </div>
-            {canDelete && (
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDelete(preset.id)}
-                    disabled={deletingId === preset.id}
-                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                >
-                    <Trash2 className="w-4 h-4" />
-                </Button>
-            )}
+            <div className="flex items-center gap-2">
+                <InfoTooltip text={getPresetDetails(preset)} />
+                {canDelete && (
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDelete(preset.id)}
+                        disabled={deletingId === preset.id}
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                    >
+                        <Trash2 className="w-4 h-4" />
+                    </Button>
+                )}
+            </div>
         </div>
     );
 
@@ -90,7 +114,7 @@ export const ManagePresetsDialog = ({
                 <DialogHeader>
                     <DialogTitle>{t('server.manage_presets')}</DialogTitle>
                     <DialogDescription>
-                        {t('server.manage_presets_description')}
+                        {t('server.manage_user_presets_description')}
                     </DialogDescription>
                 </DialogHeader>
 
@@ -100,38 +124,18 @@ export const ManagePresetsDialog = ({
                     </div>
                 ) : (
                     <ScrollArea className="max-h-[400px] pr-4">
-                        <div className="space-y-4">
-                            {presetsConfig && presetsConfig.system.length > 0 && (
-                                <div>
-                                    <h4 className="text-sm font-medium text-muted-foreground mb-2 px-1">
-                                        {t('server.system_presets')}
-                                    </h4>
-                                    <div className="space-y-2">
-                                        {presetsConfig.system.map(preset => renderPreset(preset, false))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {presetsConfig && presetsConfig.user.length > 0 && (
-                                <div>
-                                    <h4 className="text-sm font-medium text-muted-foreground mb-2 px-1">
-                                        {t('server.user_presets')}
-                                    </h4>
-                                    <div className="space-y-2">
-                                        {presetsConfig.user.map(preset => renderPreset(preset, true))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {presetsConfig && presetsConfig.user.length === 0 && (
-                                <div className="text-center py-8">
-                                    <Bookmark className="w-12 h-12 mx-auto text-muted-foreground/50 mb-2" />
-                                    <p className="text-sm text-muted-foreground">
-                                        {t('server.no_user_presets')}
-                                    </p>
-                                </div>
-                            )}
-                        </div>
+                        {presetsConfig && presetsConfig.user.length > 0 ? (
+                            <div className="space-y-2">
+                                {presetsConfig.user.map(preset => renderPreset(preset, true))}
+                            </div>
+                        ) : (
+                            <div className="text-center py-8">
+                                <Bookmark className="w-12 h-12 mx-auto text-muted-foreground/50 mb-2" />
+                                <p className="text-sm text-muted-foreground">
+                                    {t('server.no_user_presets')}
+                                </p>
+                            </div>
+                        )}
                     </ScrollArea>
                 )}
             </DialogContent>

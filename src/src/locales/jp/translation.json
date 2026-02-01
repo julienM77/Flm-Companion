@@ -62,6 +62,7 @@
     "cors_enabled": "CORS有効",
     "manage_presets": "プリセット管理",
     "manage_presets_description": "保存したプリセットの表示と管理。システムプリセットは削除できません。",
+    "manage_user_presets_description": "カスタムサーバープリセットを表示および管理します。",
     "system_presets": "システムプリセット",
     "user_presets": "マイプリセット",
     "no_user_presets": "ユーザープリセットはまだありません。サーバービューから最初のプリセットを保存しましょう！"

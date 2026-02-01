@@ -63,6 +63,7 @@
     "cors_enabled": "CORS enabled",
     "manage_presets": "Manage Presets",
     "manage_presets_description": "View and manage your saved presets. System presets cannot be deleted.",
+    "manage_user_presets_description": "View and manage your custom server presets.",
     "system_presets": "System Presets",
     "user_presets": "My Presets",
     "no_user_presets": "No user presets yet. Save your first preset from the Server view!",

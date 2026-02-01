@@ -37,5 +37,10 @@ export function getPresetDisplayName(
     if (preset.nameKey) {
         return t(preset.nameKey);
     }
-    return preset.name || preset.id;
+    // For user presets, clean the ID by removing "preset:user-" prefix
+    if (preset.name) {
+        return preset.name;
+    }
+    // Fallback: remove preset prefix from ID
+    return preset.id.replace(/^preset:(user-|system-)?/, '').replace(/-/g, ' ');
 }
