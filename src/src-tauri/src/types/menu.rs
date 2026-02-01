@@ -8,7 +8,7 @@ pub struct TrayPreset {
     pub name: String,
 }
 
-/// Paramètres pour la mise à jour du menu tray
+/// Parameters for tray menu update
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TrayMenuParams {
@@ -21,10 +21,11 @@ pub struct TrayMenuParams {
     pub asr_enabled: bool,
     pub embed_enabled: bool,
     pub flm_version: String,
+    pub is_flm_available: bool,
     pub texts: TrayMenuTexts,
 }
 
-/// Textes localisés pour le menu tray
+/// Localized texts for tray menu
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TrayMenuTexts {
@@ -41,6 +42,7 @@ pub struct TrayMenuTexts {
     pub presets_group: String,
     pub models_group: String,
     pub models_menu: String,
+    pub no_models_available: String,
     pub start_with_model: String,
     pub delete_model: String,
     pub download_model: String,

@@ -126,8 +126,7 @@
     "installing": "Installation...",
     "check": "Vérifier",
     "release_notes": "Notes de version",
-    "error_check_updates": "Impossible de vérifier les mises à jour",
-    "error_installer_not_found": "Installeur non trouvé dans la release",
+    "error_check_updates": "Impossible de vérifier les mises à jour",    "error_rate_limit": "Limite de l'API GitHub atteinte. Réessayez plus tard.",    "error_installer_not_found": "Installeur non trouvé dans la release",
     "error_download_install": "Erreur lors du téléchargement ou de l'installation",
     "status_installing_full": "Installation en cours..."
   },
@@ -209,6 +208,7 @@
     "presets_group": "Configurations",
     "models_group": "Modèles",
     "models_menu": "Modèles",
+    "no_models_available": "Aucun modèle disponible",
     "installed": "Installés",
     "catalog": "Catalogue",
     "start_with_model": "Démarrer le serveur",
@@ -222,5 +222,24 @@
     "copy": "Copier",
     "copied": "Copié !",
     "clear": "Effacer"
+  },
+  "startup": {
+    "flm_required": "FLM est requis",
+    "flm_not_installed_desc": "FLM n'est pas installé ou n'est pas détecté sur votre système. L'application nécessite FLM version {{minVersion}} ou supérieure pour fonctionner correctement.",
+    "download_install_flm": "Télécharger et installer FLM",
+    "downloading": "Téléchargement...",
+    "visit_github": "Visiter GitHub",
+    "install_instruction": "Après l'installation, redémarrez l'application pour détecter FLM.",
+    "error_installer_not_found": "Installeur non trouvé dans la release",
+    "error_download_install": "Erreur lors du téléchargement ou de l'installation",
+    "updates_available": "Mises à jour disponibles",
+    "updates_available_desc": "De nouvelles versions sont disponibles pour vos logiciels.",
+    "companion_update": "Mise à jour de Flm Companion",
+    "flm_update": "Mise à jour de FLM",
+    "new_version_available": "Nouvelle version disponible : {{version}}",
+    "current_version": "Version actuelle",
+    "update_companion": "Mettre à jour Companion",
+    "update_flm": "Mettre à jour FLM",
+    "remind_later": "Me le rappeler plus tard"
   }
 }

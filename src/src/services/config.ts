@@ -7,7 +7,7 @@ import {
     CONFIG_FILENAME,
 } from "../types";
 
-// Ré-export des types pour la compatibilité
+// Re-export types for compatibility
 export type { AppConfig, ServerOptions };
 
 export const ConfigService = {

@@ -127,6 +127,7 @@
     "check": "確認",
     "release_notes": "リリースノート",
     "error_check_updates": "アップデートを確認できませんでした",
+    "error_rate_limit": "GitHub APIの制限に達しました。しばらくしてから再試行してください。",
     "error_installer_not_found": "インストーラが見つかりませんでした",
     "error_download_install": "ダウンロードまたはインストール中にエラーが発生しました",
     "status_installing_full": "インストールを実行しています…"
@@ -208,8 +209,7 @@
     "embed": "Embeddings",
     "presets_group": "プリセット",
     "models_group": "モデル",
-    "models_menu": "モデル",
-    "installed": "インストール済み",
+    "models_menu": "モデル",    "no_models_available": "利用可能なモデルがありません",    "installed": "インストール済み",
     "catalog": "カタログ",
     "start_with_model": "モデルでサーバーを開始",
     "delete_model": "削除",
@@ -222,5 +222,24 @@
     "copy": "コピー",
     "copied": "コピーしました",
     "clear": "クリア"
+  },
+  "startup": {
+    "flm_required": "FLMが必要です",
+    "flm_not_installed_desc": "FLMがインストールされていないか、システムで検出されません。アプリケーションが正常に動作するには、FLMバージョン{{minVersion}}以上が必要です。",
+    "download_install_flm": "FLMをダウンロードしてインストール",
+    "downloading": "ダウンロード中...",
+    "visit_github": "GitHubにアクセス",
+    "install_instruction": "インストール後、アプリケーションを再起動してFLMを検出してください。",
+    "error_installer_not_found": "リリースにインストーラーが見つかりません",
+    "error_download_install": "ダウンロードまたはインストール中にエラーが発生しました",
+    "updates_available": "更新が利用可能です",
+    "updates_available_desc": "ソフトウェアの新しいバージョンが利用可能です。",
+    "companion_update": "Flm Companionの更新",
+    "flm_update": "FLMの更新",
+    "new_version_available": "新しいバージョンが利用可能：{{version}}",
+    "current_version": "現在のバージョン",
+    "update_companion": "Companionを更新",
+    "update_flm": "FLMを更新",
+    "remind_later": "後で通知"
   }
 }

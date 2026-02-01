@@ -43,7 +43,7 @@ export function useServerManager({
     });
     const [pendingRestart, setPendingRestart] = useState<ServerOptions | null>(null);
 
-    // Refs pour les closures dans les event listeners
+    // Refs for closures in event listeners
     const serverStatusRef = useRef(serverStatus);
     const selectedModelRef = useRef(selectedModel);
     const serverOptionsRef = useRef(serverOptions);

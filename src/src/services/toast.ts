@@ -17,7 +17,7 @@ export const ToastService = {
         return sonnerToast.loading(title, { description });
     },
 
-    // Permet de dismiss un toast spécifique
+    // Allows dismissing a specific toast
     dismiss(id: string | number) {
         sonnerToast.dismiss(id);
     }

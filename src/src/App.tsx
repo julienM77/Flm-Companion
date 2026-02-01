@@ -1,4 +1,5 @@
 import "./App.css";
+import { useState, useEffect } from "react";
 import { Sidebar } from "./components/layout/Sidebar";
 import { StatusBar } from "./components/layout/StatusBar";
 import { ChatView } from "./components/views/ChatView";
@@ -10,6 +11,8 @@ import { ConfigService } from "./services/config";
 import { AppProvider, useAppContext } from "./contexts";
 import { TooltipProvider } from "./components/ui/tooltip";
 import { Toaster } from "sonner";
+import { FlmInstallDialog } from "./components/dialogs/FlmInstallDialog";
+import { UpdateAvailableDialog } from "./components/dialogs/UpdateAvailableDialog";
 
 // Wrappers
 function ChatViewWrapper() {
@@ -94,27 +97,68 @@ const TAB_COMPONENTS: Record<string, React.ComponentType> = {
 };
 
 function AppContent() {
-  const { activeTab, setActiveTab, serverStatus, selectedModel } = useAppContext();
+  const { activeTab, setActiveTab, serverStatus, selectedModel, startupChecks, isCheckingStartup, reloadStartupChecks } = useAppContext();
+  const [showUpdateDialog, setShowUpdateDialog] = useState(false);
 
   const renderContent = () => {
     const Component = TAB_COMPONENTS[activeTab] || ChatViewWrapper;
     return <Component />;
   };
 
+  // Show FLM install dialog if FLM is not installed (non-closable)
+  const showFlmInstallDialog = !isCheckingStartup && startupChecks && !startupChecks.flmInstalled;
+
+  // Show update dialog if there are updates available (closable)
+  const hasUpdates = startupChecks && (startupChecks.companionUpdateAvailable || startupChecks.flmUpdateAvailable);
+
+  // Auto-show update dialog once when updates are detected
+  useEffect(() => {
+    if (hasUpdates && !showFlmInstallDialog) {
+      setShowUpdateDialog(true);
+    }
+  }, [hasUpdates, showFlmInstallDialog]);
+
   return (
-    <div className="flex flex-col h-screen bg-background text-foreground font-sans overflow-hidden selection:bg-blue-500/30">
-      <div className="flex flex-1 overflow-hidden">
-        <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
-        <div className="flex-1 flex flex-col min-w-0 bg-background/50">
-          <main className="flex-1 overflow-hidden p-6">
-            <div className="max-w-5xl mx-auto w-full h-full">
-              {renderContent()}
-            </div>
-          </main>
+    <>
+      <div className="flex flex-col h-screen bg-background text-foreground font-sans overflow-hidden selection:bg-blue-500/30">
+        <div className="flex flex-1 overflow-hidden">
+          <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+          <div className="flex-1 flex flex-col min-w-0 bg-background/50">
+            <main className="flex-1 overflow-hidden p-6">
+              <div className="max-w-5xl mx-auto w-full h-full">
+                {renderContent()}
+              </div>
+            </main>
+          </div>
         </div>
+        <StatusBar serverStatus={serverStatus} selectedModel={selectedModel} version={ConfigService.getAppVersion()} />
       </div>
-      <StatusBar serverStatus={serverStatus} selectedModel={selectedModel} version={ConfigService.getAppVersion()} />
-    </div>
+
+      {/* Startup Dialogs */}
+      <FlmInstallDialog
+        open={showFlmInstallDialog || false}
+        flmRelease={startupChecks?.flmLatestRelease || null}
+        onInstallComplete={reloadStartupChecks}
+      />
+
+      {hasUpdates && (
+        <UpdateAvailableDialog
+          open={showUpdateDialog}
+          onOpenChange={setShowUpdateDialog}
+          onInstallComplete={reloadStartupChecks}
+          companionUpdate={startupChecks?.companionUpdateAvailable ? {
+            available: true,
+            release: startupChecks.companionLatestRelease,
+            currentVersion: startupChecks.companionVersion
+          } : null}
+          flmUpdate={startupChecks?.flmUpdateAvailable ? {
+            available: true,
+            release: startupChecks.flmLatestRelease,
+            currentVersion: startupChecks.flmVersion
+          } : null}
+        />
+      )}
+    </>
   );
 }
 

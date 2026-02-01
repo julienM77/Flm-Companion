@@ -14,7 +14,7 @@ export function getAvailableMemory(hardwareInfo: HardwareInfo | null): number {
     const totalRam = hardwareInfo.ramTotalBytes;
     const sharedNpuMem = hardwareInfo.sharedMemoryBytes || 0;
 
-    // Mémoire système réservée (environ 2GB pour l'OS Windows)
+    // System reserved memory (approximately 2GB for Windows OS)
     const systemReserved = 2 * 1024 * 1024 * 1024;
 
     // RAM disponible = Total - Shared NPU - System Reserved
@@ -40,14 +40,14 @@ export function getPerformanceWarning(
 
     const modelSize = model.realSize;
 
-    // Critical: Le modèle ne pourra probablement pas se lancer
-    // Modèle > 90% de la mémoire disponible
+    // Critical: The model will probably not be able to launch
+    // Model > 90% of available memory
     if (modelSize > availableMemory * 0.9) {
         return "critical";
     }
 
-    // Warning: Performances potentiellement dégradées
-    // Modèle entre 70% et 90% de la mémoire disponible
+    // Warning: Potentially degraded performance
+    // Model between 70% and 90% of available memory
     if (modelSize > availableMemory * 0.7) {
         return "warning";
     }

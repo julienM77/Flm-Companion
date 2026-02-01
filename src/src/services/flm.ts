@@ -4,7 +4,7 @@ import { ConfigService } from "./config";
 import type { FlmModel, FlmStatus, HardwareInfo, ServerOptions } from "../types";
 import { MODEL_LIST_FILENAME } from "../types";
 
-// Ré-export des types pour la compatibilité
+// Re-export types for compatibility
 export type { FlmModel, FlmStatus, HardwareInfo, ServerOptions };
 
 interface ModelListJson {
@@ -33,6 +33,30 @@ let metadataCache: Record<string, FlmModel> | null = null;
 let installedModelsCache: FlmModel[] | null = null;
 let availableModelsCache: FlmModel[] | null = null;
 let hardwareInfoCache: HardwareInfo | null = null;
+
+// Global flag to indicate if FLM is available
+let isFlmAvailable = true;
+
+/**
+ * Met à jour le flag de disponibilité de FLM
+ * Appelé par le système de startup checks
+ */
+export function setFlmAvailability(available: boolean): void {
+    isFlmAvailable = available;
+    if (!available) {
+        console.warn('[FLM] FLM is not available - operations will be blocked');
+    }
+}
+
+/**
+ * Vérifie si une opération FLM peut être exécutée
+ * Lance une erreur si FLM n'est pas disponible
+ */
+function ensureFlmAvailable(operation: string): void {
+    if (!isFlmAvailable) {
+        throw new Error(`Cannot ${operation}: FLM is not installed or version is too old`);
+    }
+}
 
 function getDirectory(path: string): string {
     const lastSlash = Math.max(path.lastIndexOf("/"), path.lastIndexOf("\\"));
@@ -119,6 +143,13 @@ export const FlmService = {
      * Check if FLM is installed and get version
      */
     async getVersion(): Promise<string> {
+        // Check if debug version is set
+        const debugVersion = import.meta.env.VITE_DEBUG_FLM_VERSION;
+        if (debugVersion) {
+            console.warn(`[DEBUG] Using FLM version: ${debugVersion}`);
+            return debugVersion;
+        }
+
         try {
             const command = Command.create("flm", ["--version"]);
 
@@ -129,7 +160,7 @@ export const FlmService = {
             return "Unknown";
         } catch (error) {
             console.error("Failed to get FLM version:", error);
-            return "Not Found";
+            return "Unknown";
         }
     },
 
@@ -201,6 +232,8 @@ export const FlmService = {
      * @param forceRefresh Force refresh of the cache
      */
     async listModels(filter: 'all' | 'installed' | 'not-installed' = 'installed', forceRefresh = false): Promise<FlmModel[]> {
+        ensureFlmAvailable('list models');
+
         if (filter === 'installed' && installedModelsCache && !forceRefresh) {
             return installedModelsCache;
         }
@@ -276,6 +309,8 @@ export const FlmService = {
      * Start the FLM server
      */
     async startServer(modelName: string, options: ServerOptions, onLog: (log: string) => void): Promise<void> {
+        ensureFlmAvailable('start server');
+
         if (serverProcess) {
             throw new Error("Server is already running");
         }
@@ -378,6 +413,8 @@ export const FlmService = {
      * Pull a new model
      */
     pullModel(modelName: string, onProgress: (data: string) => void): Promise<void> {
+        ensureFlmAvailable('pull model');
+
         installedModelsCache = null;
         availableModelsCache = null;
         return new Promise((resolve, reject) => {
@@ -419,6 +456,8 @@ export const FlmService = {
      * Remove a model
      */
     async removeModel(modelName: string): Promise<void> {
+        ensureFlmAvailable('remove model');
+
         installedModelsCache = null;
         availableModelsCache = null;
         const command = Command.create("flm", ["remove", modelName]);
@@ -432,6 +471,8 @@ export const FlmService = {
      * Start interactive chat session
      */
     async startChat(modelName: string, options: ServerOptions, onData: (data: { type: 'stdout' | 'stderr' | 'exit', content?: string, code?: number }) => void): Promise<void> {
+        ensureFlmAvailable('start chat');
+
         if (serverProcess) {
             throw new Error("A process is already running");
         }

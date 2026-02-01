@@ -128,6 +128,7 @@
     "check": "Check",
     "release_notes": "Release Notes",
     "error_check_updates": "Unable to check for updates",
+    "error_rate_limit": "GitHub API rate limit reached. Please try again later.",
     "error_installer_not_found": "Installer not found in release",
     "error_download_install": "Error during download or installation",
     "status_installing_full": "Installation in progress..."
@@ -210,6 +211,7 @@
     "presets_group": "Configurations",
     "models_group": "Models",
     "models_menu": "Models",
+    "no_models_available": "No models available",
     "installed": "Installed",
     "catalog": "Catalog",
     "start_with_model": "Start Server",
@@ -223,5 +225,24 @@
     "copy": "Copy",
     "copied": "Copied!",
     "clear": "Clear"
+  },
+  "startup": {
+    "flm_required": "FLM is Required",
+    "flm_not_installed_desc": "FLM is not installed or not detected on your system. The application requires FLM version {{minVersion}} or higher to function properly.",
+    "download_install_flm": "Download and Install FLM",
+    "downloading": "Downloading...",
+    "visit_github": "Visit GitHub",
+    "install_instruction": "After installation, restart the application to detect FLM.",
+    "error_installer_not_found": "Installer not found in the release",
+    "error_download_install": "Error during download or installation",
+    "updates_available": "Updates Available",
+    "updates_available_desc": "New versions are available for your software.",
+    "companion_update": "Flm Companion Update",
+    "flm_update": "FLM Update",
+    "new_version_available": "New version available: {{version}}",
+    "current_version": "Current version",
+    "update_companion": "Update Companion",
+    "update_flm": "Update FLM",
+    "remind_later": "Remind Me Later"
   }
 }

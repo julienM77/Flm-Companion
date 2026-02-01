@@ -1,4 +1,4 @@
-// Types centralisés pour l'application FLM Companion
+// Centralized types for FLM Companion application
 
 export type Theme = "dark" | "light" | "system";
 
