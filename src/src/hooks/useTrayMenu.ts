@@ -1,13 +1,13 @@
 import { useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useTranslation } from "react-i18next";
-import type { ServerStatus, ServerOptions, FlmModel } from "../types";
-import { DEFAULT_PRESETS_CONFIG } from "../types";
-import { getAllPresets, getPresetDisplayName } from "../lib/presets";
+import type { ServerStatus, ServerOptions, FlmModel, PresetsConfig } from "../types";
+import { getPresetDisplayName } from "../lib/presets";
 
 interface TrayPreset {
     id: string;
     name: string;
+    isSystem: boolean;
 }
 
 interface UseTrayMenuProps {
@@ -19,6 +19,7 @@ interface UseTrayMenuProps {
     serverOptions: ServerOptions;
     flmVersion: string;
     isFlmAvailable: boolean;
+    presetsConfig: PresetsConfig;
 }
 
 export function useTrayMenu({
@@ -30,15 +31,25 @@ export function useTrayMenu({
     serverOptions,
     flmVersion,
     isFlmAvailable,
+    presetsConfig,
 }: UseTrayMenuProps): void {
     const { t } = useTranslation();
 
     useEffect(() => {
         // Build presets list with translated names
-        const presets: TrayPreset[] = getAllPresets(DEFAULT_PRESETS_CONFIG).map(preset => ({
+        const systemPresets: TrayPreset[] = presetsConfig.system.map(preset => ({
             id: preset.id,
             name: getPresetDisplayName(preset, t),
+            isSystem: true,
         }));
+        
+        const userPresets: TrayPreset[] = presetsConfig.user.map(preset => ({
+            id: preset.id,
+            name: getPresetDisplayName(preset, t),
+            isSystem: false,
+        }));
+        
+        const presets: TrayPreset[] = [...systemPresets, ...userPresets];
 
         invoke("update_tray_menu", {
             params: {
@@ -73,5 +84,5 @@ export function useTrayMenu({
                 },
             },
         });
-    }, [serverStatus, selectedModel, installedModels, availableModels, runnableModels, serverOptions, flmVersion, isFlmAvailable, t]);
+    }, [serverStatus, selectedModel, installedModels, availableModels, runnableModels, serverOptions, flmVersion, isFlmAvailable, presetsConfig, t]);
 }

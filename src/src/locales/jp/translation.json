@@ -48,7 +48,23 @@
     "lines": "行",
     "waiting_logs": "サーバー起動待ち…",
     "no_logs": "表示できるログがありません",
-    "no_model_selected": "モデルなし（音声のみ利用できます）"
+    "no_model_selected": "モデルなし（音声のみ利用できます）",
+    "presets": "プリセット",
+    "save_preset": "プリセットを保存",
+    "save_preset_description": "現在のサーバー設定をプリセットとして保存します。",
+    "preset_name": "プリセット名",
+    "preset_name_placeholder": "カスタム設定",
+    "configuration_summary": "設定の概要",
+    "no_model": "モデルなし",
+    "performance_mode": "パフォーマンスモード",
+    "asr_enabled": "ASR有効",
+    "embed_enabled": "埋め込み有効",
+    "cors_enabled": "CORS有効",
+    "manage_presets": "プリセット管理",
+    "manage_presets_description": "保存したプリセットの表示と管理。システムプリセットは削除できません。",
+    "system_presets": "システムプリセット",
+    "user_presets": "マイプリセット",
+    "no_user_presets": "ユーザープリセットはまだありません。サーバービューから最初のプリセットを保存しましょう！"
   },
   "models": {
     "title": "モデル管理",
@@ -147,7 +163,10 @@
   "common": {
     "cancel": "Cancel",
     "alert": "アラート",
-    "ok": "OK"
+    "ok": "OK",
+    "loading": "読み込み中...",
+    "save": "保存",
+    "saving": "保存中..."
   },
   "app": {
     "alert_select_model": "モデルを選択してください",

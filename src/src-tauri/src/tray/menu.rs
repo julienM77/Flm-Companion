@@ -140,12 +140,37 @@ pub fn build_tray_menu(
     let presets_submenu = Submenu::new(app, &texts.presets_group, true)?;
     let _ = presets_submenu.set_icon(Some(icons.cog.clone()));
 
-    for preset in &params.presets {
+    // Separate system and user presets
+    let system_presets: Vec<_> = params.presets.iter().filter(|p| p.is_system).collect();
+    let user_presets: Vec<_> = params.presets.iter().filter(|p| !p.is_system).collect();
+
+    // Add system presets
+    for preset in &system_presets {
         let is_selected = preset.id == params.selected_model;
         let preset_item = CheckMenuItem::with_id(
             app,
             format!("model_{}", preset.id),
             &preset.name,
+            true,
+            is_selected,
+            None::<&str>,
+        )?;
+        let _ = presets_submenu.append(&preset_item);
+    }
+
+    // Add separator if there are both system and user presets
+    if !system_presets.is_empty() && !user_presets.is_empty() {
+        let _ = presets_submenu.append(&PredefinedMenuItem::separator(app)?);
+    }
+
+    // Add user presets (prefixed with "→ " for visual distinction)
+    for preset in &user_presets {
+        let is_selected = preset.id == params.selected_model;
+        let preset_name = format!("{}", preset.name);
+        let preset_item = CheckMenuItem::with_id(
+            app,
+            format!("model_{}", preset.id),
+            &preset_name,
             true,
             is_selected,
             None::<&str>,

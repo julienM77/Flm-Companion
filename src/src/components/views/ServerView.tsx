@@ -1,16 +1,21 @@
-import { Play, Square, Activity, Cpu, Sliders, Cog, FileText } from "lucide-react";
+import { useState } from "react";
+import { Play, Square, Activity, Cpu, Sliders, Cog, FileText, Save, Settings2, Bookmark, ChevronDown } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "../ui/select";
 import { Switch } from "../ui/switch";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { useTranslation } from "react-i18next";
 import { LogsViewer } from "../shared/LogsViewer";
 import { InfoTooltip } from "../shared/InfoTooltip";
+import { SavePresetDialog, ManagePresetsDialog } from "../dialogs";
 import { getAllPresets, isPresetId, findPresetById, getPresetDisplayName } from "../../lib/presets";
-import { DEFAULT_PRESETS_CONFIG } from "../../types";
+import { ServerPreset } from "../../types";
+import { useAppContext } from "../../contexts";
 import type { FlmModel, ServerOptions, ServerStatus, PerformanceMode } from "../../types";
+import { toast } from "sonner";
 
 interface ServerViewProps {
     serverStatus: ServerStatus;
@@ -36,6 +41,32 @@ export const ServerView = ({
     setOptions
 }: ServerViewProps) => {
     const { t } = useTranslation();
+    const { presetsConfig, saveUserPreset, reloadPresets } = useAppContext();
+    const [savePresetDialogOpen, setSavePresetDialogOpen] = useState(false);
+    const [managePresetsDialogOpen, setManagePresetsDialogOpen] = useState(false);
+
+    const handleSavePreset = async (name: string) => {
+        try {
+            // Generate a unique ID from the name
+            const presetId = `preset:user-${name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
+
+            const newPreset: ServerPreset = {
+                id: presetId,
+                name,
+                model: selectedModel,
+                options: { ...options },
+            };
+
+            await saveUserPreset(newPreset);
+
+            toast.success(t('server.preset_saved') || 'Preset saved successfully!', {
+                description: name,
+            });
+        } catch (error) {
+            console.error('Failed to save preset:', error);
+            toast.error(t('server.preset_save_error') || 'Failed to save preset');
+        }
+    };
 
     const handleOptionChange = (key: keyof ServerOptions, value: ServerOptions[keyof ServerOptions]) => {
         setOptions(prev => ({ ...prev, [key]: value }));
@@ -48,7 +79,33 @@ export const ServerView = ({
                     <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">{t('server.title')}</h2>
                     <p className="text-muted-foreground text-sm">{t('server.subtitle')}</p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="flex items-center gap-2"
+                            >
+                                <Bookmark size={16} />
+                                {t('server.presets')}
+                                <ChevronDown size={14} className="ml-1" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                                onClick={() => setSavePresetDialogOpen(true)}
+                                disabled={serverStatus === "running" || serverStatus === "starting"}
+                            >
+                                <Save size={16} className="mr-2" />
+                                {t('server.save_preset')}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setManagePresetsDialogOpen(true)}>
+                                <Settings2 size={16} className="mr-2" />
+                                {t('server.manage_presets')}
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                     {serverStatus === "stopped" ? (
                         <Button
                             onClick={() => onToggleServer(options)}
@@ -96,7 +153,7 @@ export const ServerView = ({
                                     onValueChange={(val) => {
                                         if (isPresetId(val)) {
                                             // Apply preset configuration
-                                            const preset = findPresetById(val, DEFAULT_PRESETS_CONFIG);
+                                            const preset = findPresetById(val, presetsConfig);
                                             if (preset) {
                                                 onSelectModel(val);
                                                 setOptions(prev => ({
@@ -122,7 +179,7 @@ export const ServerView = ({
                                         <SelectValue placeholder={t('server.select_model_placeholder')}>
                                             {(() => {
                                                 if (isPresetId(selectedModel)) {
-                                                    const preset = findPresetById(selectedModel, DEFAULT_PRESETS_CONFIG);
+                                                    const preset = findPresetById(selectedModel, presetsConfig);
                                                     return preset ? getPresetDisplayName(preset, t) : selectedModel;
                                                 }
                                                 return selectedModel || t('server.select_model_placeholder');
@@ -133,7 +190,7 @@ export const ServerView = ({
                                         {/* Presets Group */}
                                         <SelectGroup>
                                             <SelectLabel>{t('tray.presets_group')}</SelectLabel>
-                                            {getAllPresets(DEFAULT_PRESETS_CONFIG).map(preset => (
+                                            {getAllPresets(presetsConfig).map(preset => (
                                                 <SelectItem key={preset.id} value={preset.id}>
                                                     {getPresetDisplayName(preset, t)}
                                                 </SelectItem>
@@ -375,6 +432,20 @@ export const ServerView = ({
                     </div>
                 </div>
             </div>
+
+            <SavePresetDialog
+                open={savePresetDialogOpen}
+                onOpenChange={setSavePresetDialogOpen}
+                selectedModel={selectedModel}
+                options={options}
+                onSave={handleSavePreset}
+            />
+
+            <ManagePresetsDialog
+                open={managePresetsDialogOpen}
+                onOpenChange={setManagePresetsDialogOpen}
+                onPresetDeleted={() => reloadPresets()}
+            />
         </div>
     );
 };

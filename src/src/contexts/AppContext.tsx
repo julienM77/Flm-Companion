@@ -7,7 +7,8 @@ import { ConfigService } from "../services/config";
 import { FlmService, setFlmAvailability } from "../services/flm";
 import { NotificationService } from "../services/notification";
 import { StartupService, type StartupCheckResult } from "../services/startup";
-import type { Theme, ServerStatus, ServerOptions, FlmModel, HardwareInfo } from "../types";
+import { DEFAULT_PRESETS_CONFIG } from "../types";
+import type { Theme, ServerStatus, ServerOptions, FlmModel, HardwareInfo, PresetsConfig, ServerPreset } from "../types";
 
 export interface AppContextType {
     // Config
@@ -50,6 +51,12 @@ export interface AppContextType {
     isCheckingStartup: boolean;
     isFlmAvailable: boolean;
     reloadStartupChecks: () => Promise<void>;
+
+    // Presets
+    presetsConfig: PresetsConfig;
+    saveUserPreset: (preset: ServerPreset) => Promise<void>;
+    deleteUserPreset: (presetId: string) => Promise<void>;
+    reloadPresets: () => Promise<void>;
 }
 
 export const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -74,9 +81,37 @@ export function AppProvider({ children }: AppProviderProps) {
     const [startupChecks, setStartupChecks] = useState<StartupCheckResult | null>(null);
     const [isCheckingStartup, setIsCheckingStartup] = useState(false);
     const [isFlmAvailable, setIsFlmAvailable] = useState(false);
+    const [presetsConfig, setPresetsConfig] = useState<PresetsConfig>(DEFAULT_PRESETS_CONFIG);
 
     // Config manager
     const config = useConfigManager();
+
+    // Load presets from config
+    const reloadPresets = useCallback(async () => {
+        try {
+            const loadedConfig = await ConfigService.getPresetsConfig();
+            setPresetsConfig(loadedConfig);
+        } catch (error) {
+            console.error("Failed to load presets:", error);
+        }
+    }, []);
+
+    // Save a user preset
+    const saveUserPreset = useCallback(async (preset: ServerPreset) => {
+        await ConfigService.saveUserPreset(preset);
+        await reloadPresets();
+    }, [reloadPresets]);
+
+    // Delete a user preset
+    const deleteUserPreset = useCallback(async (presetId: string) => {
+        await ConfigService.deleteUserPreset(presetId);
+        await reloadPresets();
+    }, [reloadPresets]);
+
+    // Load presets on mount
+    useEffect(() => {
+        reloadPresets();
+    }, [reloadPresets]);
 
     // Load FLM version
     const loadFlmVersion = useCallback(async (force = false) => {
@@ -166,6 +201,7 @@ export function AppProvider({ children }: AppProviderProps) {
         serverOptions: server.serverOptions,
         flmVersion: flmVersion,
         isFlmAvailable: isFlmAvailable,
+        presetsConfig: presetsConfig,
     });
 
     // Save config when external values change
@@ -217,6 +253,12 @@ export function AppProvider({ children }: AppProviderProps) {
         isCheckingStartup,
         isFlmAvailable,
         reloadStartupChecks: performChecks,
+
+        // Presets
+        presetsConfig,
+        saveUserPreset,
+        deleteUserPreset,
+        reloadPresets,
     };
 
     return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

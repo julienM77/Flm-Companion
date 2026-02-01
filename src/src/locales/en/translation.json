@@ -49,7 +49,25 @@
     "lines": "lines",
     "waiting_logs": "Waiting for server to start...",
     "no_logs": "No logs to display",
-    "no_model_selected": "No Model (Audio Only)"
+    "no_model_selected": "No Model (Audio Only)",
+    "presets": "Presets",
+    "save_preset": "Save Preset",
+    "save_preset_description": "Save the current server configuration as a preset for quick access later.",
+    "preset_name": "Preset Name",
+    "preset_name_placeholder": "My custom configuration",
+    "configuration_summary": "Configuration Summary",
+    "no_model": "No model",
+    "performance_mode": "Performance Mode",
+    "asr_enabled": "ASR enabled",
+    "embed_enabled": "Embeddings enabled",
+    "cors_enabled": "CORS enabled",
+    "manage_presets": "Manage Presets",
+    "manage_presets_description": "View and manage your saved presets. System presets cannot be deleted.",
+    "system_presets": "System Presets",
+    "user_presets": "My Presets",
+    "no_user_presets": "No user presets yet. Save your first preset from the Server view!",
+    "preset_saved": "Preset saved",
+    "preset_save_error": "Failed to save preset"
   },
   "models": {
     "title": "Model Management",
@@ -148,6 +166,9 @@
   "common": {
     "cancel": "Cancel",
     "alert": "Alert",
+    "loading": "Loading...",
+    "save": "Save",
+    "saving": "Saving...",
     "ok": "OK"
   },
   "app": {
@@ -208,7 +229,7 @@
     "features": "Features",
     "asr": "ASR (Audio)",
     "embed": "Embeddings",
-    "presets_group": "Configurations",
+    "presets_group": "Presets",
     "models_group": "Models",
     "models_menu": "Models",
     "no_models_available": "No models available",

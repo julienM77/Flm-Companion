@@ -53,6 +53,7 @@ export interface AppConfig {
     flmPath: string;
     lastSelectedModel: string;
     serverOptions: ServerOptions;
+    presetsConfig?: PresetsConfig;
 }
 
 export interface FlmStatus {
@@ -116,6 +117,7 @@ export const DEFAULT_APP_CONFIG: AppConfig = {
     flmPath: "flm",
     lastSelectedModel: "",
     serverOptions: DEFAULT_SERVER_OPTIONS,
+    presetsConfig: DEFAULT_PRESETS_CONFIG,
 };
 
 export const CONFIG_FILENAME = "config.json";

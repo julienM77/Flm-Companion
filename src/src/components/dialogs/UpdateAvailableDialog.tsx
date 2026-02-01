@@ -114,8 +114,6 @@ export const UpdateAvailableDialog = ({ open, onOpenChange, onInstallComplete, c
         );
     };
 
-    const hasUpdates = (companionUpdate?.available || flmUpdate?.available);
-
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-2xl max-h-[80vh]">

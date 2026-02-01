@@ -48,7 +48,25 @@
     "lines": "lignes",
     "waiting_logs": "En attente de démarrage du serveur...",
     "no_logs": "Aucun log à afficher",
-    "no_model_selected": "Aucun Modèle (Audio Seulement)"
+    "no_model_selected": "Aucun Modèle (Audio Seulement)",
+    "presets": "Presets",
+    "save_preset": "Sauvegarder le Preset",
+    "save_preset_description": "Sauvegarder la configuration actuelle du serveur comme preset pour un accès rapide ultérieur.",
+    "preset_name": "Nom du Preset",
+    "preset_name_placeholder": "Ma configuration personnalisée",
+    "configuration_summary": "Résumé de la Configuration",
+    "no_model": "Aucun modèle",
+    "performance_mode": "Mode de Performance",
+    "asr_enabled": "ASR activé",
+    "embed_enabled": "Embeddings activés",
+    "cors_enabled": "CORS activé",
+    "manage_presets": "Gérer les Presets",
+    "manage_presets_description": "Voir et gérer vos presets sauvegardés. Les presets système ne peuvent pas être supprimés.",
+    "system_presets": "Presets Système",
+    "user_presets": "Mes Presets",
+    "no_user_presets": "Aucun preset utilisateur pour le moment. Sauvegardez votre premier preset depuis la vue Serveur !",
+    "preset_saved": "Preset sauvegardé",
+    "preset_save_error": "Échec de la sauvegarde du preset"
   },
   "models": {
     "title": "Gestion des Modèles",
@@ -145,7 +163,10 @@
   "common": {
     "cancel": "Annuler",
     "alert": "Alerte",
-    "ok": "OK"
+    "ok": "OK",
+    "loading": "Chargement...",
+    "save": "Sauvegarder",
+    "saving": "Sauvegarde..."
   },
   "app": {
     "alert_select_model": "Veuillez sélectionner un modèle.",
@@ -205,7 +226,7 @@
     "features": "Fonctionnalités",
     "asr": "ASR (Audio)",
     "embed": "Embeddings",
-    "presets_group": "Configurations",
+    "presets_group": "Presets",
     "models_group": "Modèles",
     "models_menu": "Modèles",
     "no_models_available": "Aucun modèle disponible",

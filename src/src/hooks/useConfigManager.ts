@@ -75,12 +75,16 @@ export function useConfigManager(): UseConfigManagerReturn {
         if (!isConfigLoaded) return;
 
         const saveSettings = async () => {
+            // Load current config to preserve presetsConfig
+            const currentConfig = await ConfigService.loadConfig();
+            
             const config: AppConfig = {
                 theme,
                 startMinimized,
                 flmPath,
                 lastSelectedModel: externalSelectedModel,
                 serverOptions: externalServerOptions,
+                presetsConfig: currentConfig.presetsConfig, // Preserve presets
             };
             await ConfigService.saveConfig(config);
         };

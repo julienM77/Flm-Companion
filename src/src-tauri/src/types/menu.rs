@@ -6,6 +6,7 @@ use serde::Deserialize;
 pub struct TrayPreset {
     pub id: String,
     pub name: String,
+    pub is_system: bool,
 }
 
 /// Parameters for tray menu update
