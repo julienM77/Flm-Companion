@@ -1,5 +1,4 @@
-// @refresh reset
-import { useState, useEffect, useCallback, ReactNode } from "react";
+import { createContext, useState, useEffect, useCallback, useContext, ReactNode } from "react";
 import { useConfigManager } from "../hooks/useConfigManager";
 import { useModelsManager } from "../hooks/useModelsManager";
 import { useServerManager } from "../hooks/useServerManager";
@@ -8,8 +7,60 @@ import { ConfigService } from "../services/config";
 import { FlmService, setFlmAvailability } from "../services/flm";
 import { NotificationService } from "../services/notification";
 import { StartupService, type StartupCheckResult } from "../services/startup";
-import type { ServerOptions } from "../types";
-import { AppContext, type AppContextType } from "./AppContextDefinition";
+import type { Theme, ServerStatus, ServerOptions, FlmModel, HardwareInfo } from "../types";
+
+export interface AppContextType {
+    // Config
+    theme: Theme;
+    setTheme: (theme: Theme) => void;
+    startMinimized: boolean;
+    setStartMinimized: (value: boolean) => void;
+    flmPath: string;
+    setFlmPath: (path: string) => void;
+    isConfigLoaded: boolean;
+
+    // Models
+    installedModels: FlmModel[];
+    runnableModels: FlmModel[];
+    selectedModel: string;
+    setSelectedModel: (model: string) => void;
+    hardwareInfo: HardwareInfo | null;
+    loadInstalledModels: (force?: boolean) => void;
+    loadHardwareInfo: (force?: boolean) => Promise<void>;
+
+    // FLM Version
+    flmVersion: string;
+    loadFlmVersion: (force?: boolean) => Promise<void>;
+
+    // Server
+    serverStatus: ServerStatus;
+    logs: string[];
+    serverOptions: ServerOptions;
+    setServerOptions: (options: ServerOptions | ((prev: ServerOptions) => ServerOptions)) => void;
+    handleToggleServer: (options?: ServerOptions) => Promise<void>;
+    addLog: (log: string) => void;
+    clearLogs: () => void;
+
+    // Navigation
+    activeTab: string;
+    setActiveTab: (tab: string) => void;
+
+    // Startup checks
+    startupChecks: StartupCheckResult | null;
+    isCheckingStartup: boolean;
+    isFlmAvailable: boolean;
+    reloadStartupChecks: () => Promise<void>;
+}
+
+export const AppContext = createContext<AppContextType | undefined>(undefined);
+
+export function useAppContext(): AppContextType {
+    const context = useContext(AppContext);
+    if (context === undefined) {
+        throw new Error("useAppContext must be used within an AppProvider");
+    }
+    return context;
+}
 
 interface AppProviderProps {
     children: ReactNode;
