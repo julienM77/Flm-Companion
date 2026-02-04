@@ -35,39 +35,15 @@ Flm Compagnon is a modern GUI designed to accompany and manage the **FastFlowLM 
 * **Multilingual**: Interface management in **English, French, and Japanese**.
 * **Theme**: Management of light and dark themes.
 
-## 📸 Screens
+## 📸 Videos
 
-### 🗂️ Models Management
-
-| Models List | Model Information |
-|:---:|:---:|
-| [![Models](screen/gestion_models.png)](screen/gestion_models.png) | [![Model Info](screen/gestion_models_informations.png)](screen/gestion_models_informations.png) |
-| *Browse and manage your local AI models* | *View detailed model information (family, size, quantization)* |
-
-### ⚙️ Server Management
-
-| Server Configuration | Custom Parameters | Server Running |
-|:---:|:---:|:---:|
-| [![Server](screen/serveur.png)](screen/serveur.png) | [![Custom Parameters](screen/serveur_customparameters.png)](screen/serveur_customparameters.png) | [![Server Started](screen/serveur_started_log.png)](screen/serveur_started_log.png) |
-| *Select model and configure server options* | *Advanced settings (port, context, CORS...)* | *Real-time server logs and status* |
-
-### 🎨 Settings & About
-
-| Settings | About (Light) | About (Dark) |
-|:---:|:---:|:---:|
-| [![Settings](screen/settings.png)](screen/settings.png) | [![About](screen/about.png)](screen/about.png) | [![About Dark](screen/about_dark.png)](screen/about_dark.png) |
-| *Language, theme and application preferences* | *Hardware info and update checker* | *Dark theme support* |
+### 🗂️ Interface
+![gif demo interface](screen/demo_interface.gif)]
 
 ### 🔔 System Tray
-
-| Server gestion | Models gestion |
-|:---:|:---:|
-| <img src="screen/notification.png" height="400"> | <img src="screen/notification_models.png" height="400"> |
-| *Quick access to server controls from system tray* | *Quick access to models controls from system tray* |
+![gif demo systreay](screen/demo_notif.gif)]
 
 ## 📋 To do
-
-* [ ] Add an in-app memory / resource calculator for chosen model + server configuration
 
 <details>
 
@@ -90,7 +66,8 @@ Flm Compagnon is a modern GUI designed to accompany and manage the **FastFlowLM 
 * [X] Display FLM changelog in About view
 * [X] GitHub API rate limiting with caching to prevent 403 errors
 * [X] Ensure "Run at startup" setting is preserved across updates and installer actions
-
+* [X] Add an in-app memory / resource calculator for chosen model + server configuration
+  
 </details>
 
 ## 🤝 Contribution
