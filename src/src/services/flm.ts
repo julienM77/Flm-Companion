@@ -152,11 +152,10 @@ export const FlmService = {
 
         try {
             const command = Command.create("flm", ["--version"]);
-
             const output = await command.execute();
-            if (output.code === 0) {
-                return output.stdout.trim().replace(/^FLM\s+/i, '');
-            }
+            // flm --version may exit with code != 0 but still write to stdout
+            const version = output.stdout.trim().replace(/^FLM\s+/i, '');
+            if (version) return version;
             return "Unknown";
         } catch (error) {
             console.error("Failed to get FLM version:", error);
@@ -270,6 +269,7 @@ export const FlmService = {
                 const name = parts[0];
 
                 if (name === "NAME" || name.startsWith("---") || name.startsWith("Model")) continue;
+                if (!name.includes(':')) continue;
 
                 if (metadata[name]) {
                     results.push(metadata[name]);
