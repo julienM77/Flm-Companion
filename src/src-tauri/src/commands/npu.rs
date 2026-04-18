@@ -44,7 +44,7 @@ pub fn get_npu_stats() -> Result<NpuStats, String> {
     let parts: Vec<&str> = output_str.trim().split(';').collect();
 
     if parts.len() >= 3 {
-        let usage = parts[0].parse::<f64>().unwrap_or(0.0).min(100.0).max(0.0);
+        let usage = parts[0].parse::<f64>().unwrap_or(0.0).clamp(0.0, 100.0);
         let memory_used = parts[1].parse::<f64>().unwrap_or(0.0).max(0.0);
         let memory_total = parts[2].parse::<f64>().unwrap_or(0.0).max(0.0);
 

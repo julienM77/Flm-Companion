@@ -167,7 +167,7 @@ pub fn build_tray_menu(
     // Add user presets (prefixed with "→ " for visual distinction)
     for preset in &user_presets {
         let is_selected = preset.id == params.selected_model;
-        let preset_name = format!("{}", preset.name);
+        let preset_name = preset.name.to_string();
         let preset_item = CheckMenuItem::with_id(
             app,
             format!("model_{}", preset.id),
