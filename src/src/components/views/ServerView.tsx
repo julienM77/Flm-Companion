@@ -101,7 +101,7 @@ export const ServerView = ({
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                     onClick={() => setSavePresetDialogOpen(true)}
-                                    disabled={serverStatus === "running" || serverStatus === "starting"}
+                                    disabled={false}
                                 >
                                     <Save size={16} className="mr-2" />
                                     {t('server.save_preset')}

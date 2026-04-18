@@ -33,13 +33,12 @@ export default defineConfig(async () => ({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          // Vendor chunks
-          react: ["react", "react-dom"],
-          "react-i18n": ["react-i18next", "i18next"],
-          ui: ["@radix-ui/react-accordion", "@radix-ui/react-dialog", "@radix-ui/react-select", "@radix-ui/react-scroll-area"],
-          charts: ["recharts"],
-          markdown: ["react-markdown"],
+        manualChunks: (id: string) => {
+          if (id.includes("react-dom") || (id.includes("node_modules/react/") && !id.includes("react-i18next") && !id.includes("react-markdown"))) return "react";
+          if (id.includes("react-i18next") || id.includes("node_modules/i18next")) return "react-i18n";
+          if (id.includes("@radix-ui/react-accordion") || id.includes("@radix-ui/react-dialog") || id.includes("@radix-ui/react-select") || id.includes("@radix-ui/react-scroll-area")) return "ui";
+          if (id.includes("recharts")) return "charts";
+          if (id.includes("react-markdown")) return "markdown";
         },
       },
     },
