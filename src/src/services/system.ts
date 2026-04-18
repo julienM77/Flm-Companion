@@ -1,8 +1,15 @@
 import { Command } from "@tauri-apps/plugin-shell";
 import { type } from "@tauri-apps/plugin-os";
+import { invoke } from "@tauri-apps/api/core";
 
 export interface SystemInfo {
     npuDriverVersion: string;
+}
+
+interface NpuStats {
+    usage: number;
+    memory_used: number;
+    memory_total: number;
 }
 
 export const SystemService = {
@@ -46,15 +53,17 @@ export const SystemService = {
         return "Not Implemented";
     },
 
-    async getSystemStats(): Promise<{ memory: { used: number, total: number, percentage: number }, cpu: { usage: number }, npu: { usage: number, temperature: number, power: number } }> {
+    async getSystemStats(): Promise<{ memory: { used: number, total: number, percentage: number }, cpu: { usage: number }, npu: { usage: number, memory: number } }> {
         try {
             const script = `
+                # Memory stats
                 $os = Get-CimInstance Win32_OperatingSystem
                 $total = $os.TotalVisibleMemorySize / 1024
                 $free = $os.FreePhysicalMemory / 1024
                 $used = $total - $free
                 $memPercent = ($used / $total) * 100
                 
+                # CPU usage
                 $cpu = Get-WmiObject Win32_Processor | Measure-Object -Property LoadPercentage -Average | Select-Object -ExpandProperty Average
                 
                 "$([math]::Round($used, 2));$([math]::Round($total, 2));$([math]::Round($memPercent, 2));$cpu"
@@ -65,6 +74,7 @@ export const SystemService = {
 
             let memory = { used: 0, total: 0, percentage: 0 };
             let cpu = { usage: 0 };
+            let npu = { usage: 0, memory: 0 };
 
             if (output.code === 0) {
                 const parts = output.stdout.trim().split(';');
@@ -80,11 +90,16 @@ export const SystemService = {
                 }
             }
 
-            const npu = {
-                usage: 0,
-                temperature: 0,
-                power: 0
-            };
+            // Get NPU stats from Rust command
+            try {
+                const npuStats = await invoke<NpuStats>("get_npu_info");
+                npu = {
+                    usage: npuStats.usage,
+                    memory: npuStats.memory_used
+                };
+            } catch (error) {
+                console.error("Failed to get NPU stats:", error);
+            }
 
             return { memory, cpu, npu };
         } catch (error) {
@@ -92,7 +107,7 @@ export const SystemService = {
             return {
                 memory: { used: 0, total: 0, percentage: 0 },
                 cpu: { usage: 0 },
-                npu: { usage: 0, temperature: 0, power: 0 }
+                npu: { usage: 0, memory: 0 }
             };
         }
     }

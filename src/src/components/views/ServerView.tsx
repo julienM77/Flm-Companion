@@ -1,16 +1,22 @@
-import { Play, Square, Activity, Cpu, Sliders, Cog, FileText } from "lucide-react";
+import { useState } from "react";
+import { Play, Square, Activity, Cpu, Sliders, Cog, FileText, Save, Settings2, Bookmark, ChevronDown } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "../ui/select";
 import { Switch } from "../ui/switch";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { useTranslation } from "react-i18next";
 import { LogsViewer } from "../shared/LogsViewer";
 import { InfoTooltip } from "../shared/InfoTooltip";
+import { ResourceMonitor } from "../shared/ResourceMonitor";
+import { SavePresetDialog, ManagePresetsDialog } from "../dialogs";
 import { getAllPresets, isPresetId, findPresetById, getPresetDisplayName } from "../../lib/presets";
-import { DEFAULT_PRESETS_CONFIG } from "../../types";
+import { ServerPreset } from "../../types";
+import { useAppContext } from "../../contexts";
 import type { FlmModel, ServerOptions, ServerStatus, PerformanceMode } from "../../types";
+import { toast } from "sonner";
 
 interface ServerViewProps {
     serverStatus: ServerStatus;
@@ -36,6 +42,32 @@ export const ServerView = ({
     setOptions
 }: ServerViewProps) => {
     const { t } = useTranslation();
+    const { presetsConfig, saveUserPreset, reloadPresets } = useAppContext();
+    const [savePresetDialogOpen, setSavePresetDialogOpen] = useState(false);
+    const [managePresetsDialogOpen, setManagePresetsDialogOpen] = useState(false);
+
+    const handleSavePreset = async (name: string) => {
+        try {
+            // Generate a unique ID from the name
+            const presetId = `preset:user-${name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
+
+            const newPreset: ServerPreset = {
+                id: presetId,
+                name,
+                model: selectedModel,
+                options: { ...options },
+            };
+
+            await saveUserPreset(newPreset);
+
+            toast.success(t('server.preset_saved') || 'Preset saved successfully!', {
+                description: name,
+            });
+        } catch (error) {
+            console.error('Failed to save preset:', error);
+            toast.error(t('server.preset_save_error') || 'Failed to save preset');
+        }
+    };
 
     const handleOptionChange = (key: keyof ServerOptions, value: ServerOptions[keyof ServerOptions]) => {
         setOptions(prev => ({ ...prev, [key]: value }));
@@ -48,7 +80,35 @@ export const ServerView = ({
                     <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">{t('server.title')}</h2>
                     <p className="text-muted-foreground text-sm">{t('server.subtitle')}</p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                    {serverStatus === "stopped" && (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="flex items-center gap-2"
+                                >
+                                    <Bookmark size={16} />
+                                    {t('server.presets')}
+                                    <ChevronDown size={14} className="ml-1" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => setManagePresetsDialogOpen(true)}>
+                                    <Settings2 size={16} className="mr-2" />
+                                    {t('server.manage_presets')}
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    onClick={() => setSavePresetDialogOpen(true)}
+                                    disabled={false}
+                                >
+                                    <Save size={16} className="mr-2" />
+                                    {t('server.save_preset')}
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    )}
                     {serverStatus === "stopped" ? (
                         <Button
                             onClick={() => onToggleServer(options)}
@@ -79,261 +139,269 @@ export const ServerView = ({
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 m-2 lg:gap-6 lg:flex-1 lg:min-h-0">
-                {/* Configuration Panel */}
+                {/* Configuration Panel or Resource Monitor */}
                 <div className="lg:col-span-1 space-y-4 lg:space-y-6 lg:overflow-y-auto lg:pr-2">
-                    {/* Model Selection */}
-                    <Card className="bg-card border-border shadow-sm">
-                        <CardHeader className="pb-3">
-                            <CardTitle className="text-sm font-medium text-foreground flex items-center gap-2">
-                                <Cpu size={16} className="text-muted-foreground" />
-                                {t('server.model')}
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div>
-                                <Select
-                                    value={selectedModel}
-                                    onValueChange={(val) => {
-                                        if (isPresetId(val)) {
-                                            // Apply preset configuration
-                                            const preset = findPresetById(val, DEFAULT_PRESETS_CONFIG);
-                                            if (preset) {
-                                                onSelectModel(val);
-                                                setOptions(prev => ({
-                                                    ...prev,
-                                                    ...preset.options,
-                                                }));
-                                            }
-                                        } else {
-                                            // Regular model selection - reset features to defaults
-                                            onSelectModel(val);
-                                            const model = models.find(m => m.name === val);
-                                            setOptions(prev => ({
-                                                ...prev,
-                                                ctxLen: model?.contextLength || 0,
-                                                asr: false,
-                                                embed: false,
-                                            }));
-                                        }
-                                    }}
-                                    disabled={serverStatus !== "stopped"}
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder={t('server.select_model_placeholder')}>
-                                            {(() => {
-                                                if (isPresetId(selectedModel)) {
-                                                    const preset = findPresetById(selectedModel, DEFAULT_PRESETS_CONFIG);
-                                                    return preset ? getPresetDisplayName(preset, t) : selectedModel;
+                    {serverStatus === "running" || serverStatus === "starting" ? (
+                        /* Show Resource Monitor when server is running or starting */
+                        <ResourceMonitor refreshInterval={2000} />
+                    ) : (
+                        /* Show Configuration when server is stopped */
+                        <>
+                            {/* Model Selection */}
+                            <Card className="bg-card border-border shadow-sm">
+                                <CardHeader className="pb-3">
+                                    <CardTitle className="text-sm font-medium text-foreground flex items-center gap-2">
+                                        <Cpu size={16} className="text-muted-foreground" />
+                                        {t('server.model')}
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                    <div>
+                                        <Select
+                                            value={selectedModel}
+                                            onValueChange={(val) => {
+                                                if (isPresetId(val)) {
+                                                    // Apply preset configuration
+                                                    const preset = findPresetById(val, presetsConfig);
+                                                    if (preset) {
+                                                        onSelectModel(val);
+                                                        setOptions(prev => ({
+                                                            ...prev,
+                                                            ...preset.options,
+                                                        }));
+                                                    }
+                                                } else {
+                                                    // Regular model selection - reset features to defaults
+                                                    onSelectModel(val);
+                                                    const model = models.find(m => m.name === val);
+                                                    setOptions(prev => ({
+                                                        ...prev,
+                                                        ctxLen: model?.contextLength || 0,
+                                                        asr: false,
+                                                        embed: false,
+                                                    }));
                                                 }
-                                                return selectedModel || t('server.select_model_placeholder');
-                                            })()}
-                                        </SelectValue>
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {/* Presets Group */}
-                                        <SelectGroup>
-                                            <SelectLabel>{t('tray.presets_group')}</SelectLabel>
-                                            {getAllPresets(DEFAULT_PRESETS_CONFIG).map(preset => (
-                                                <SelectItem key={preset.id} value={preset.id}>
-                                                    {getPresetDisplayName(preset, t)}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectGroup>
-                                        {/* Models Group */}
-                                        <SelectGroup>
-                                            <SelectLabel>{t('tray.models_group')}</SelectLabel>
-                                            {models.length === 0 ? (
-                                                <SelectItem value="none" disabled>{t('server.no_model_installed')}</SelectItem>
-                                            ) : (
-                                                models.map(m => (
-                                                    <SelectItem key={m.name} value={m.name}>
-                                                        {m.name} ({m.size})
-                                                    </SelectItem>
-                                                ))
-                                            )}
-                                        </SelectGroup>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    {/* Features Accordion */}
-                    <Accordion type="single" collapsible className="w-full">
-                        <AccordionItem value="features" className="border-none">
-                            <Card className="bg-card border-border shadow-sm">
-                                <AccordionTrigger className="px-6 py-4 hover:no-underline">
-                                    <CardTitle className="text-sm font-medium text-foreground flex items-center gap-2">
-                                        <Cog size={16} className="text-muted-foreground" />
-                                        {t('server.features')}
-                                    </CardTitle>
-                                </AccordionTrigger>
-                                <AccordionContent>
-                                    <CardContent className="space-y-4 pt-0">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-sm text-foreground">{t('server.enable_asr')}</span>
-                                                <InfoTooltip text={t('server.asr_desc')} />
-                                            </div>
-                                            <Switch
-                                                checked={options.asr}
-                                                onCheckedChange={(checked) => handleOptionChange('asr', checked)}
-                                                disabled={serverStatus !== "stopped"}
-                                            />
-                                        </div>
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-sm text-foreground">{t('server.enable_embeddings')}</span>
-                                                <InfoTooltip text={t('server.embeddings_desc')} />
-                                            </div>
-                                            <Switch
-                                                checked={options.embed}
-                                                onCheckedChange={(checked) => handleOptionChange('embed', checked)}
-                                                disabled={serverStatus !== "stopped"}
-                                            />
-                                        </div>
-                                    </CardContent>
-                                </AccordionContent>
+                                            }}
+                                            disabled={serverStatus !== "stopped"}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue placeholder={t('server.select_model_placeholder')}>
+                                                    {(() => {
+                                                        if (isPresetId(selectedModel)) {
+                                                            const preset = findPresetById(selectedModel, presetsConfig);
+                                                            return preset ? getPresetDisplayName(preset, t) : selectedModel;
+                                                        }
+                                                        return selectedModel || t('server.select_model_placeholder');
+                                                    })()}
+                                                </SelectValue>
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {/* Presets Group */}
+                                                <SelectGroup>
+                                                    <SelectLabel>{t('tray.presets_group')}</SelectLabel>
+                                                    {getAllPresets(presetsConfig).map(preset => (
+                                                        <SelectItem key={preset.id} value={preset.id}>
+                                                            {getPresetDisplayName(preset, t)}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectGroup>
+                                                {/* Models Group */}
+                                                <SelectGroup>
+                                                    <SelectLabel>{t('tray.models_group')}</SelectLabel>
+                                                    {models.length === 0 ? (
+                                                        <SelectItem value="none" disabled>{t('server.no_model_installed')}</SelectItem>
+                                                    ) : (
+                                                        models.map(m => (
+                                                            <SelectItem key={m.name} value={m.name}>
+                                                                {m.name} ({m.size})
+                                                            </SelectItem>
+                                                        ))
+                                                    )}
+                                                </SelectGroup>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                </CardContent>
                             </Card>
-                        </AccordionItem>
-                    </Accordion>
 
-                    {/* Advanced Settings Accordion */}
-                    <Accordion type="single" collapsible className="w-full">
-                        <AccordionItem value="advanced" className="border-none">
-                            <Card className="bg-card border-border shadow-sm">
-                                <AccordionTrigger className="px-6 py-4 hover:no-underline">
-                                    <CardTitle className="text-sm font-medium text-foreground flex items-center gap-2">
-                                        <Sliders size={16} className="text-muted-foreground" />
-                                        {t('server.advanced_settings')}
-                                    </CardTitle>
-                                </AccordionTrigger>
-                                <AccordionContent>
-                                    <CardContent className="space-y-4 pt-0">
-                                        <div>
-                                            <div className="flex items-center gap-2 mb-1.5">
-                                                <label className="block text-xs font-medium text-muted-foreground">{t('server.power_mode')}</label>
-                                                <InfoTooltip text={t('server.power_mode_desc')} />
-                                            </div>
-                                            <Select
-                                                value={options.pmode}
-                                                onValueChange={(value) => handleOptionChange('pmode', value as PerformanceMode)}
-                                                disabled={serverStatus !== "stopped"}
-                                            >
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder={t('server.power_mode')} />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="powersaver">{t('chat.power_modes.powersaver')}</SelectItem>
-                                                    <SelectItem value="balanced">{t('chat.power_modes.balanced')}</SelectItem>
-                                                    <SelectItem value="performance">{t('chat.power_modes.performance')}</SelectItem>
-                                                    <SelectItem value="turbo">{t('chat.power_modes.turbo')}</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
+                            {/* Features Accordion */}
+                            <Accordion type="single" collapsible className="w-full">
+                                <AccordionItem value="features" className="border-none">
+                                    <Card className="bg-card border-border shadow-sm">
+                                        <AccordionTrigger className="px-6 py-4 hover:no-underline">
+                                            <CardTitle className="text-sm font-medium text-foreground flex items-center gap-2">
+                                                <Cog size={16} className="text-muted-foreground" />
+                                                {t('server.features')}
+                                            </CardTitle>
+                                        </AccordionTrigger>
+                                        <AccordionContent>
+                                            <CardContent className="space-y-4 pt-0">
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-sm text-foreground">{t('server.enable_asr')}</span>
+                                                        <InfoTooltip text={t('server.asr_desc')} />
+                                                    </div>
+                                                    <Switch
+                                                        checked={options.asr}
+                                                        onCheckedChange={(checked) => handleOptionChange('asr', checked)}
+                                                        disabled={serverStatus !== "stopped"}
+                                                    />
+                                                </div>
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-sm text-foreground">{t('server.enable_embeddings')}</span>
+                                                        <InfoTooltip text={t('server.embeddings_desc')} />
+                                                    </div>
+                                                    <Switch
+                                                        checked={options.embed}
+                                                        onCheckedChange={(checked) => handleOptionChange('embed', checked)}
+                                                        disabled={serverStatus !== "stopped"}
+                                                    />
+                                                </div>
+                                            </CardContent>
+                                        </AccordionContent>
+                                    </Card>
+                                </AccordionItem>
+                            </Accordion>
 
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div>
-                                                <div className="flex items-center gap-2 mb-1.5">
-                                                    <label className="block text-xs font-medium text-muted-foreground">{t('server.host')}</label>
-                                                    <InfoTooltip text={t('server.host_desc')} />
+                            {/* Advanced Settings Accordion */}
+                            <Accordion type="single" collapsible className="w-full">
+                                <AccordionItem value="advanced" className="border-none">
+                                    <Card className="bg-card border-border shadow-sm">
+                                        <AccordionTrigger className="px-6 py-4 hover:no-underline">
+                                            <CardTitle className="text-sm font-medium text-foreground flex items-center gap-2">
+                                                <Sliders size={16} className="text-muted-foreground" />
+                                                {t('server.advanced_settings')}
+                                            </CardTitle>
+                                        </AccordionTrigger>
+                                        <AccordionContent>
+                                            <CardContent className="space-y-4 pt-0">
+                                                <div>
+                                                    <div className="flex items-center gap-2 mb-1.5">
+                                                        <label className="block text-xs font-medium text-muted-foreground">{t('server.power_mode')}</label>
+                                                        <InfoTooltip text={t('server.power_mode_desc')} />
+                                                    </div>
+                                                    <Select
+                                                        value={options.pmode}
+                                                        onValueChange={(value) => handleOptionChange('pmode', value as PerformanceMode)}
+                                                        disabled={serverStatus !== "stopped"}
+                                                    >
+                                                        <SelectTrigger>
+                                                            <SelectValue placeholder={t('server.power_mode')} />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="powersaver">{t('chat.power_modes.powersaver')}</SelectItem>
+                                                            <SelectItem value="balanced">{t('chat.power_modes.balanced')}</SelectItem>
+                                                            <SelectItem value="performance">{t('chat.power_modes.performance')}</SelectItem>
+                                                            <SelectItem value="turbo">{t('chat.power_modes.turbo')}</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
                                                 </div>
-                                                <Input
-                                                    type="text"
-                                                    value={options.host || "127.0.0.1"}
-                                                    onChange={(e) => handleOptionChange('host', e.target.value)}
-                                                    disabled={serverStatus !== "stopped"}
-                                                    className="bg-input border-input text-foreground h-9"
-                                                    placeholder="127.0.0.1"
-                                                />
-                                            </div>
-                                            <div>
-                                                <div className="flex items-center gap-2 mb-1.5">
-                                                    <label className="block text-xs font-medium text-muted-foreground">{t('server.port')}</label>
-                                                    <InfoTooltip text={t('server.port_desc')} />
-                                                </div>
-                                                <Input
-                                                    type="number"
-                                                    value={options.port}
-                                                    onChange={(e) => handleOptionChange('port', parseInt(e.target.value))}
-                                                    disabled={serverStatus !== "stopped"}
-                                                    className="bg-input border-input text-foreground h-9"
-                                                />
-                                            </div>
-                                        </div>
 
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div>
-                                                <div className="flex items-center gap-2 mb-1.5">
-                                                    <label className="block text-xs font-medium text-muted-foreground">{t('server.socket_conn')}</label>
-                                                    <InfoTooltip text={t('server.socket_conn_desc')} />
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div>
+                                                        <div className="flex items-center gap-2 mb-1.5">
+                                                            <label className="block text-xs font-medium text-muted-foreground">{t('server.host')}</label>
+                                                            <InfoTooltip text={t('server.host_desc')} />
+                                                        </div>
+                                                        <Input
+                                                            type="text"
+                                                            value={options.host || "127.0.0.1"}
+                                                            onChange={(e) => handleOptionChange('host', e.target.value)}
+                                                            disabled={serverStatus !== "stopped"}
+                                                            className="bg-input border-input text-foreground h-9"
+                                                            placeholder="127.0.0.1"
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <div className="flex items-center gap-2 mb-1.5">
+                                                            <label className="block text-xs font-medium text-muted-foreground">{t('server.port')}</label>
+                                                            <InfoTooltip text={t('server.port_desc')} />
+                                                        </div>
+                                                        <Input
+                                                            type="number"
+                                                            value={options.port}
+                                                            onChange={(e) => handleOptionChange('port', parseInt(e.target.value))}
+                                                            disabled={serverStatus !== "stopped"}
+                                                            className="bg-input border-input text-foreground h-9"
+                                                        />
+                                                    </div>
                                                 </div>
-                                                <Input
-                                                    type="number"
-                                                    value={options.socket}
-                                                    onChange={(e) => handleOptionChange('socket', parseInt(e.target.value))}
-                                                    disabled={serverStatus !== "stopped"}
-                                                    className="bg-input border-input text-foreground h-9"
-                                                />
-                                            </div>
-                                            <div>
-                                                <div className="flex items-center gap-2 mb-1.5">
-                                                    <label className="block text-xs font-medium text-muted-foreground">{t('server.queue_len')}</label>
-                                                    <InfoTooltip text={t('server.queue_len_desc')} />
-                                                </div>
-                                                <Input
-                                                    type="number"
-                                                    value={options.qLen}
-                                                    onChange={(e) => handleOptionChange('qLen', parseInt(e.target.value))}
-                                                    disabled={serverStatus !== "stopped"}
-                                                    className="bg-input border-input text-foreground h-9"
-                                                />
-                                            </div>
-                                        </div>
 
-                                        <div>
-                                            <div className="flex items-center gap-2 mb-1.5">
-                                                <label className="block text-xs font-medium text-muted-foreground">{t('server.context_tokens')}</label>
-                                                <InfoTooltip text={t('server.context_tokens_desc')} />
-                                            </div>
-                                            <Input
-                                                type="number"
-                                                value={options.ctxLen || ""}
-                                                onChange={(e) => handleOptionChange('ctxLen', parseInt(e.target.value) || 0)}
-                                                disabled={serverStatus !== "stopped"}
-                                                className="bg-input border-input text-foreground h-9"
-                                            />
-                                        </div>
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div>
+                                                        <div className="flex items-center gap-2 mb-1.5">
+                                                            <label className="block text-xs font-medium text-muted-foreground">{t('server.socket_conn')}</label>
+                                                            <InfoTooltip text={t('server.socket_conn_desc')} />
+                                                        </div>
+                                                        <Input
+                                                            type="number"
+                                                            value={options.socket}
+                                                            onChange={(e) => handleOptionChange('socket', parseInt(e.target.value))}
+                                                            disabled={serverStatus !== "stopped"}
+                                                            className="bg-input border-input text-foreground h-9"
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <div className="flex items-center gap-2 mb-1.5">
+                                                            <label className="block text-xs font-medium text-muted-foreground">{t('server.queue_len')}</label>
+                                                            <InfoTooltip text={t('server.queue_len_desc')} />
+                                                        </div>
+                                                        <Input
+                                                            type="number"
+                                                            value={options.qLen}
+                                                            onChange={(e) => handleOptionChange('qLen', parseInt(e.target.value))}
+                                                            disabled={serverStatus !== "stopped"}
+                                                            className="bg-input border-input text-foreground h-9"
+                                                        />
+                                                    </div>
+                                                </div>
 
-                                        <div className="space-y-4 pt-2">
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-sm text-foreground">{t('server.enable_cors')}</span>
-                                                    <InfoTooltip text={t('server.enable_cors_desc')} />
+                                                <div>
+                                                    <div className="flex items-center gap-2 mb-1.5">
+                                                        <label className="block text-xs font-medium text-muted-foreground">{t('server.context_tokens')}</label>
+                                                        <InfoTooltip text={t('server.context_tokens_desc')} />
+                                                    </div>
+                                                    <Input
+                                                        type="number"
+                                                        value={options.ctxLen || ""}
+                                                        onChange={(e) => handleOptionChange('ctxLen', parseInt(e.target.value) || 0)}
+                                                        disabled={serverStatus !== "stopped"}
+                                                        className="bg-input border-input text-foreground h-9"
+                                                    />
                                                 </div>
-                                                <Switch
-                                                    checked={options.cors}
-                                                    onCheckedChange={(checked) => handleOptionChange('cors', checked)}
-                                                    disabled={serverStatus !== "stopped"}
-                                                />
-                                            </div>
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-sm text-foreground">{t('server.enable_preemption')}</span>
-                                                    <InfoTooltip text={t('server.enable_preemption_desc')} />
+
+                                                <div className="space-y-4 pt-2">
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-sm text-foreground">{t('server.enable_cors')}</span>
+                                                            <InfoTooltip text={t('server.enable_cors_desc')} />
+                                                        </div>
+                                                        <Switch
+                                                            checked={options.cors}
+                                                            onCheckedChange={(checked) => handleOptionChange('cors', checked)}
+                                                            disabled={serverStatus !== "stopped"}
+                                                        />
+                                                    </div>
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-sm text-foreground">{t('server.enable_preemption')}</span>
+                                                            <InfoTooltip text={t('server.enable_preemption_desc')} />
+                                                        </div>
+                                                        <Switch
+                                                            checked={options.preemption}
+                                                            onCheckedChange={(checked) => handleOptionChange('preemption', checked)}
+                                                            disabled={serverStatus !== "stopped"}
+                                                        />
+                                                    </div>
                                                 </div>
-                                                <Switch
-                                                    checked={options.preemption}
-                                                    onCheckedChange={(checked) => handleOptionChange('preemption', checked)}
-                                                    disabled={serverStatus !== "stopped"}
-                                                />
-                                            </div>
-                                        </div>
-                                    </CardContent>
-                                </AccordionContent>
-                            </Card>
-                        </AccordionItem>
-                    </Accordion>
+                                            </CardContent>
+                                        </AccordionContent>
+                                    </Card>
+                                </AccordionItem>
+                            </Accordion>
+                        </>
+                    )}
                 </div>
 
                 {/* Logs Panel - Accordion on mobile, normal on desktop */}
@@ -375,6 +443,20 @@ export const ServerView = ({
                     </div>
                 </div>
             </div>
+
+            <SavePresetDialog
+                open={savePresetDialogOpen}
+                onOpenChange={setSavePresetDialogOpen}
+                selectedModel={selectedModel}
+                options={options}
+                onSave={handleSavePreset}
+            />
+
+            <ManagePresetsDialog
+                open={managePresetsDialogOpen}
+                onOpenChange={setManagePresetsDialogOpen}
+                onPresetDeleted={() => reloadPresets()}
+            />
         </div>
     );
 };

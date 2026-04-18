@@ -48,7 +48,24 @@
     "lines": "lignes",
     "waiting_logs": "En attente de démarrage du serveur...",
     "no_logs": "Aucun log à afficher",
-    "no_model_selected": "Aucun Modèle (Audio Seulement)"
+    "no_model_selected": "Aucun Modèle (Audio Seulement)",
+    "presets": "Presets",
+    "save_preset": "Sauvegarder le Preset",
+    "save_preset_description": "Sauvegarder la configuration actuelle du serveur comme preset pour un accès rapide ultérieur.",
+    "preset_name": "Nom du Preset",
+    "preset_name_placeholder": "Ma configuration personnalisée",
+    "configuration_summary": "Résumé de la Configuration",
+    "no_model": "Aucun modèle",
+    "performance_mode": "Mode de Performance",
+    "asr_enabled": "ASR activé",
+    "embed_enabled": "Embeddings activés",
+    "cors_enabled": "CORS activé",
+    "manage_presets": "Gérer les Presets",
+    "manage_presets_description": "Voir et gérer vos presets sauvegardés. Les presets système ne peuvent pas être supprimés.",    "manage_user_presets_description": "Afficher et gérer vos presets personnalisés.",    "system_presets": "Presets Système",
+    "user_presets": "Mes Presets",
+    "no_user_presets": "Aucun preset utilisateur pour le moment. Sauvegardez votre premier preset depuis la vue Serveur !",
+    "preset_saved": "Preset sauvegardé",
+    "preset_save_error": "Échec de la sauvegarde du preset"
   },
   "models": {
     "title": "Gestion des Modèles",
@@ -61,6 +78,12 @@
     "badge_vlm": "VLM",
     "badge_embed": "EMBED",
     "badge_audio": "AUDIO",
+    "badge_think_tooltip": "Modèle de raisonnement - Utilise la chaîne de pensée pour les tâches complexes",
+    "badge_vlm_tooltip": "Modèle Vision-Langage - Peut traiter des images et du texte",
+    "badge_embed_tooltip": "Modèle d'embedding - Pour la recherche sémantique et RAG",
+    "badge_audio_tooltip": "Modèle audio - Reconnaissance vocale et transcription",
+    "badge_performance_warning_tooltip": "Modèle lourd - Peut fonctionner lentement sur votre système (70-90% de RAM disponible)",
+    "badge_performance_critical_tooltip": "Trop volumineux - Ce modèle risque de ne pas fonctionner sur votre système (>90% de RAM disponible)",
     "dialog_info_desc": "Informations détaillées sur le modèle",
     "info_family": "Famille",
     "info_unknown": "Inconnue",
@@ -120,8 +143,7 @@
     "installing": "Installation...",
     "check": "Vérifier",
     "release_notes": "Notes de version",
-    "error_check_updates": "Impossible de vérifier les mises à jour",
-    "error_installer_not_found": "Installeur non trouvé dans la release",
+    "error_check_updates": "Impossible de vérifier les mises à jour",    "error_rate_limit": "Limite de l'API GitHub atteinte. Réessayez plus tard.",    "error_installer_not_found": "Installeur non trouvé dans la release",
     "error_download_install": "Erreur lors du téléchargement ou de l'installation",
     "status_installing_full": "Installation en cours..."
   },
@@ -140,7 +162,10 @@
   "common": {
     "cancel": "Annuler",
     "alert": "Alerte",
-    "ok": "OK"
+    "ok": "OK",
+    "loading": "Chargement...",
+    "save": "Sauvegarder",
+    "saving": "Sauvegarde..."
   },
   "app": {
     "alert_select_model": "Veuillez sélectionner un modèle.",
@@ -189,6 +214,23 @@
     "system_process_exited": "Le processus s'est terminé avec le code {{code}}",
     "system_error": "Erreur : {{error}}"
   },
+  "performance": {
+    "resource_monitor": "Moniteur de Ressources",
+    "live": "En direct",
+    "ram_usage": "Utilisation RAM",
+    "npu_usage": "Utilisation NPU",
+    "used": "utilisé",
+    "total": "total",
+    "idle": "Inactif",
+    "compute": "Calcul",
+    "shared_memory": "Mémoire partagée",
+    "not_detected": "Non détecté",
+    "last_update": "Dernière mise à jour",
+    "start_monitoring": "Démarrer le moniteur",
+    "stop_monitoring": "Arrêter le moniteur",
+    "monitoring_info": "La surveillance des ressources peut consommer du CPU. Arrêtez-la si vous n'en avez pas besoin.",
+    "monitoring_stopped": "Surveillance arrêtée"
+  },
   "tray": {
     "start": "Démarrer",
     "stop": "Arrêter",
@@ -200,9 +242,10 @@
     "features": "Fonctionnalités",
     "asr": "ASR (Audio)",
     "embed": "Embeddings",
-    "presets_group": "Configurations",
+    "presets_group": "Presets",
     "models_group": "Modèles",
     "models_menu": "Modèles",
+    "no_models_available": "Aucun modèle disponible",
     "installed": "Installés",
     "catalog": "Catalogue",
     "start_with_model": "Démarrer le serveur",
@@ -216,5 +259,24 @@
     "copy": "Copier",
     "copied": "Copié !",
     "clear": "Effacer"
+  },
+  "startup": {
+    "flm_required": "FLM est requis",
+    "flm_not_installed_desc": "FLM n'est pas installé ou n'est pas détecté sur votre système. L'application nécessite FLM version {{minVersion}} ou supérieure pour fonctionner correctement.",
+    "download_install_flm": "Télécharger et installer FLM",
+    "downloading": "Téléchargement...",
+    "visit_github": "Visiter GitHub",
+    "install_instruction": "Après l'installation, redémarrez l'application pour détecter FLM.",
+    "error_installer_not_found": "Installeur non trouvé dans la release",
+    "error_download_install": "Erreur lors du téléchargement ou de l'installation",
+    "updates_available": "Mises à jour disponibles",
+    "updates_available_desc": "De nouvelles versions sont disponibles pour vos logiciels.",
+    "companion_update": "Mise à jour de Flm Companion",
+    "flm_update": "Mise à jour de FLM",
+    "new_version_available": "Nouvelle version disponible : {{version}}",
+    "current_version": "Version actuelle",
+    "update_companion": "Mettre à jour Companion",
+    "update_flm": "Mettre à jour FLM",
+    "remind_later": "Me le rappeler plus tard"
   }
 }

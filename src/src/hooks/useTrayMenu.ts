@@ -1,14 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useTranslation } from "react-i18next";
-import type { ServerStatus, ServerOptions, FlmModel } from "../types";
-import { DEFAULT_PRESETS_CONFIG } from "../types";
-import { getAllPresets, getPresetDisplayName } from "../lib/presets";
-import { FlmService } from "../services/flm";
+import type { ServerStatus, ServerOptions, FlmModel, PresetsConfig } from "../types";
+import { getPresetDisplayName } from "../lib/presets";
 
 interface TrayPreset {
     id: string;
     name: string;
+    isSystem: boolean;
 }
 
 interface UseTrayMenuProps {
@@ -18,6 +17,9 @@ interface UseTrayMenuProps {
     availableModels: FlmModel[];
     runnableModels: FlmModel[];
     serverOptions: ServerOptions;
+    flmVersion: string;
+    isFlmAvailable: boolean;
+    presetsConfig: PresetsConfig;
 }
 
 export function useTrayMenu({
@@ -27,25 +29,27 @@ export function useTrayMenu({
     availableModels,
     runnableModels,
     serverOptions,
+    flmVersion,
+    isFlmAvailable,
+    presetsConfig,
 }: UseTrayMenuProps): void {
     const { t } = useTranslation();
-    const [flmVersion, setFlmVersion] = useState<string>("");
-
-    // Load FLM version once on mount
-    useEffect(() => {
-        FlmService.getVersion().then(ver => {
-            if (ver && ver !== "Not Found" && ver !== "Unknown") {
-                setFlmVersion(ver);
-            }
-        });
-    }, []);
 
     useEffect(() => {
         // Build presets list with translated names
-        const presets: TrayPreset[] = getAllPresets(DEFAULT_PRESETS_CONFIG).map(preset => ({
+        const systemPresets: TrayPreset[] = presetsConfig.system.map(preset => ({
             id: preset.id,
             name: getPresetDisplayName(preset, t),
+            isSystem: true,
         }));
+        
+        const userPresets: TrayPreset[] = presetsConfig.user.map(preset => ({
+            id: preset.id,
+            name: getPresetDisplayName(preset, t),
+            isSystem: false,
+        }));
+        
+        const presets: TrayPreset[] = [...systemPresets, ...userPresets];
 
         invoke("update_tray_menu", {
             params: {
@@ -58,6 +62,7 @@ export function useTrayMenu({
                 asrEnabled: serverOptions.asr,
                 embedEnabled: serverOptions.embed,
                 flmVersion: flmVersion,
+                isFlmAvailable: isFlmAvailable,
                 texts: {
                     start: t("tray.start"),
                     stop: t("tray.stop"),
@@ -72,13 +77,12 @@ export function useTrayMenu({
                     presetsGroup: t("tray.presets_group"),
                     modelsGroup: t("tray.models_group"),
                     modelsMenu: t("tray.models_menu"),
-                    installed: t("tray.installed"),
-                    catalog: t("tray.catalog"),
+                    noModelsAvailable: t("tray.no_models_available"),
                     startWithModel: t("tray.start_with_model"),
                     deleteModel: t("tray.delete_model"),
                     downloadModel: t("tray.download_model"),
                 },
             },
         });
-    }, [serverStatus, selectedModel, installedModels, availableModels, runnableModels, serverOptions, flmVersion, t]);
+    }, [serverStatus, selectedModel, installedModels, availableModels, runnableModels, serverOptions, flmVersion, isFlmAvailable, presetsConfig, t]);
 }

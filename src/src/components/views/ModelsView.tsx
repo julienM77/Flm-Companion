@@ -9,6 +9,7 @@ import { ScrollArea } from "../ui/scroll-area";
 import { useTranslation } from "react-i18next";
 import { GenericAlertDialog } from "../shared/GenericAlertDialog";
 import { ModelCard } from "../shared/ModelCard";
+import { getPerformanceWarning } from "../../lib/performance";
 
 interface ModelsViewProps {
     installedModels: FlmModel[];
@@ -148,12 +149,6 @@ export const ModelsView = ({ installedModels, onRefresh, hardwareInfo }: ModelsV
 
     const isInstalled = (name: string) => installedModels.some((m) => m.name === name);
 
-    const isTooLarge = (model: FlmModel) => {
-        const totalMemory = hardwareInfo?.ramTotalBytes || 0;
-        if (!totalMemory || !model.realSize) return false;
-        return model.realSize > totalMemory * 0.9;
-    };
-
     return (
         <div className="h-full flex flex-col space-y-6">
             {/* Header */}
@@ -189,7 +184,7 @@ export const ModelsView = ({ installedModels, onRefresh, hardwareInfo }: ModelsV
                         <ModelCard
                             key={model.name}
                             model={model}
-                            isTooLarge={isTooLarge(model)}
+                            performanceWarning={getPerformanceWarning(model, hardwareInfo)}
                             onDelete={handleDelete}
                             disabled={!!downloadingModel}
                         />
@@ -206,7 +201,7 @@ export const ModelsView = ({ installedModels, onRefresh, hardwareInfo }: ModelsV
                         <ModelCard
                             key={model.name}
                             model={model}
-                            isTooLarge={isTooLarge(model)}
+                            performanceWarning={getPerformanceWarning(model, hardwareInfo)}
                             isInstalled={isInstalled(model.name)}
                             isDownloading={downloadingModel === model.name}
                             downloadProgress={downloadProgress}

@@ -25,13 +25,13 @@ export const DashboardView = ({
     const [npuVersion, setNpuVersion] = useState("Détection...");
     const [stats, setStats] = useState<{
         history: { time: string; cpu: number; memory: number }[];
-        current: { memory: { used: number; total: number; percentage: number }; cpu: { usage: number }; npu: { usage: number; temperature: number; power: number } };
+        current: { memory: { used: number; total: number; percentage: number }; cpu: { usage: number }; npu: { usage: number; memory: number } };
     }>({
         history: Array(20).fill({ time: '', cpu: 0, memory: 0 }),
         current: {
             memory: { used: 0, total: 0, percentage: 0 },
             cpu: { usage: 0 },
-            npu: { usage: 0, temperature: 0, power: 0 }
+            npu: { usage: 0, memory: 0 }
         }
     });
 

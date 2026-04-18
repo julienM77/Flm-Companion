@@ -4,7 +4,7 @@ import { ConfigService } from "./config";
 import type { FlmModel, FlmStatus, HardwareInfo, ServerOptions } from "../types";
 import { MODEL_LIST_FILENAME } from "../types";
 
-// Ré-export des types pour la compatibilité
+// Re-export types for compatibility
 export type { FlmModel, FlmStatus, HardwareInfo, ServerOptions };
 
 interface ModelListJson {
@@ -34,6 +34,30 @@ let installedModelsCache: FlmModel[] | null = null;
 let availableModelsCache: FlmModel[] | null = null;
 let hardwareInfoCache: HardwareInfo | null = null;
 
+// Global flag to indicate if FLM is available
+let isFlmAvailable = true;
+
+/**
+ * Met à jour le flag de disponibilité de FLM
+ * Appelé par le système de startup checks
+ */
+export function setFlmAvailability(available: boolean): void {
+    isFlmAvailable = available;
+    if (!available) {
+        console.warn('[FLM] FLM is not available - operations will be blocked');
+    }
+}
+
+/**
+ * Vérifie si une opération FLM peut être exécutée
+ * Lance une erreur si FLM n'est pas disponible
+ */
+function ensureFlmAvailable(operation: string): void {
+    if (!isFlmAvailable) {
+        throw new Error(`Cannot ${operation}: FLM is not installed or version is too old`);
+    }
+}
+
 function getDirectory(path: string): string {
     const lastSlash = Math.max(path.lastIndexOf("/"), path.lastIndexOf("\\"));
     if (lastSlash === -1) return ".";
@@ -61,54 +85,70 @@ export const FlmService = {
                 }
             }
 
-            // flmPath is the directory containing model_list.json
-            let modelListPath;
+            // Build ordered list of candidate paths for model_list.json
+            const pathsToTry: string[] = [];
+
             if (flmPath && flmPath !== "flm") {
                 const cleanPath = flmPath.replace(/[\\/]+$/, '');
                 const separator = cleanPath.includes('\\') ? '\\' : '/';
-                modelListPath = `${cleanPath}${separator}${MODEL_LIST_FILENAME}`;
-            } else {
-                // Fallback to default install location if just "flm" is configured
-                modelListPath = `C:\\Program Files\\flm\\${MODEL_LIST_FILENAME}`;
+                pathsToTry.push(`${cleanPath}${separator}${MODEL_LIST_FILENAME}`);
             }
 
-            const content = await readTextFile(modelListPath);
-            const data: ModelListJson = JSON.parse(content);
-            const metadata: Record<string, FlmModel> = {};
-
-            for (const [family, variants] of Object.entries(data.models)) {
-                for (const [tag, details] of Object.entries(variants)) {
-                    const fullName = `${family}:${tag}`;
-
-                    // Format size to GB/MB
-                    const sizeBytes = details.size;
-                    let sizeStr = "";
-                    if (sizeBytes > 1024 * 1024 * 1024) {
-                        sizeStr = `${(sizeBytes / (1024 * 1024 * 1024)).toFixed(1)}GB`;
-                    } else {
-                        sizeStr = `${(sizeBytes / (1024 * 1024)).toFixed(0)}MB`;
-                    }
-
-                    metadata[fullName] = {
-                        name: fullName,
-                        size: sizeStr,
-                        modified: details.modified_at,
-                        realSize: details.size,
-                        description: details.name,
-                        family: details.details.family,
-                        isThink: details.details.think,
-                        isVlm: details.vlm || false,
-                        isEmbed: fullName.toLowerCase().includes("embed"),
-                        isAudio: fullName.toLowerCase().includes("whisper"),
-                        contextLength: details.default_context_length,
-                        quantization: details.details.quantization_level,
-                        url: details.url,
-                        parameterSize: details.details.parameter_size
-                    };
+            // New default since FLM 0.9.37: %USERPROFILE%\.flm
+            try {
+                const psCmd = Command.create("powershell", ["-Command", "$env:USERPROFILE"]);
+                const psResult = await psCmd.execute();
+                if (psResult.code === 0 && psResult.stdout.trim()) {
+                    pathsToTry.push(`${psResult.stdout.trim()}\\.flm\\${MODEL_LIST_FILENAME}`);
                 }
+            } catch { /* ignore */ }
+
+            // Old default (pre-0.9.37)
+            pathsToTry.push(`C:\\Program Files\\flm\\${MODEL_LIST_FILENAME}`);
+
+            for (const modelListPath of pathsToTry) {
+                try {
+                    const content = await readTextFile(modelListPath);
+                    const data: ModelListJson = JSON.parse(content);
+                    const metadata: Record<string, FlmModel> = {};
+
+                    for (const [family, variants] of Object.entries(data.models)) {
+                        for (const [tag, details] of Object.entries(variants)) {
+                            const fullName = `${family}:${tag}`;
+
+                            const sizeBytes = details.size;
+                            let sizeStr = "";
+                            if (sizeBytes > 1024 * 1024 * 1024) {
+                                sizeStr = `${(sizeBytes / (1024 * 1024 * 1024)).toFixed(1)}GB`;
+                            } else {
+                                sizeStr = `${(sizeBytes / (1024 * 1024)).toFixed(0)}MB`;
+                            }
+
+                            metadata[fullName] = {
+                                name: fullName,
+                                size: sizeStr,
+                                modified: details.modified_at,
+                                realSize: details.size,
+                                description: details.name,
+                                family: details.details.family,
+                                isThink: details.details.think,
+                                isVlm: details.vlm || false,
+                                isEmbed: fullName.toLowerCase().includes("embed"),
+                                isAudio: fullName.toLowerCase().includes("whisper"),
+                                contextLength: details.default_context_length,
+                                quantization: details.details.quantization_level,
+                                url: details.url,
+                                parameterSize: details.details.parameter_size
+                            };
+                        }
+                    }
+                    metadataCache = metadata;
+                    return metadata;
+                } catch { /* try next path */ }
             }
-            metadataCache = metadata;
-            return metadata;
+
+            console.warn(`[FLM] Could not read ${MODEL_LIST_FILENAME} from any candidate path`);
+            return {};
         } catch (error) {
             console.warn(`Could not read ${MODEL_LIST_FILENAME}:`, error);
             return {};
@@ -119,17 +159,23 @@ export const FlmService = {
      * Check if FLM is installed and get version
      */
     async getVersion(): Promise<string> {
+        // Check if debug version is set
+        const debugVersion = import.meta.env.VITE_DEBUG_FLM_VERSION;
+        if (debugVersion) {
+            console.warn(`[DEBUG] Using FLM version: ${debugVersion}`);
+            return debugVersion;
+        }
+
         try {
             const command = Command.create("flm", ["--version"]);
-
             const output = await command.execute();
-            if (output.code === 0) {
-                return output.stdout.trim().replace(/^FLM\s+/i, '');
-            }
+            // flm --version may exit with code != 0 but still write to stdout
+            const version = output.stdout.trim().replace(/^FLM\s+/i, '');
+            if (version) return version;
             return "Unknown";
         } catch (error) {
             console.error("Failed to get FLM version:", error);
-            return "Not Found";
+            return "Unknown";
         }
     },
 
@@ -201,6 +247,8 @@ export const FlmService = {
      * @param forceRefresh Force refresh of the cache
      */
     async listModels(filter: 'all' | 'installed' | 'not-installed' = 'installed', forceRefresh = false): Promise<FlmModel[]> {
+        ensureFlmAvailable('list models');
+
         if (filter === 'installed' && installedModelsCache && !forceRefresh) {
             return installedModelsCache;
         }
@@ -237,6 +285,7 @@ export const FlmService = {
                 const name = parts[0];
 
                 if (name === "NAME" || name.startsWith("---") || name.startsWith("Model")) continue;
+                if (!name.includes(':')) continue;
 
                 if (metadata[name]) {
                     results.push(metadata[name]);
@@ -276,6 +325,8 @@ export const FlmService = {
      * Start the FLM server
      */
     async startServer(modelName: string, options: ServerOptions, onLog: (log: string) => void): Promise<void> {
+        ensureFlmAvailable('start server');
+
         if (serverProcess) {
             throw new Error("Server is already running");
         }
@@ -338,38 +389,11 @@ export const FlmService = {
     async stopServer(onLog?: (log: string) => void): Promise<void> {
         if (serverProcess) {
             try {
-                if (onLog) onLog("[SYSTEM] Sending 'exit' command to server...");
-
-                const encoder = new TextEncoder();
-                await serverProcess.write(encoder.encode("exit\r\n"));
-
-                if (onLog) onLog("[SYSTEM] Exit command sent. Waiting for graceful shutdown...");
-
-                await new Promise<void>((resolve) => {
-                    const timeoutId = setTimeout(() => {
-                        if (serverProcess) {
-                            if (onLog) onLog("[SYSTEM] Server did not exit gracefully, forcing kill...");
-                            console.log("Server did not exit gracefully, forcing kill...");
-                            serverProcess.kill().catch((e) => {
-                                console.error("Error killing process:", e);
-                            });
-                        }
-                        resolve();
-                    }, 5000);
-
-                    const intervalId = setInterval(() => {
-                        if (!serverProcess) {
-                            clearTimeout(timeoutId);
-                            clearInterval(intervalId);
-                            resolve();
-                        }
-                    }, 100);
-                });
-
-            } catch (e) {
-                console.error("Failed to write exit command, forcing kill", e);
-                if (onLog) onLog(`[ERROR] Failed to write exit command: ${e}. Forcing kill...`);
+                if (onLog) onLog("[SYSTEM] Stopping server...");
                 await serverProcess.kill();
+            } catch (e) {
+                console.error("Error stopping server process:", e);
+                if (onLog) onLog(`[ERROR] Failed to stop server: ${e}`);
             }
         }
     },
@@ -378,6 +402,8 @@ export const FlmService = {
      * Pull a new model
      */
     pullModel(modelName: string, onProgress: (data: string) => void): Promise<void> {
+        ensureFlmAvailable('pull model');
+
         installedModelsCache = null;
         availableModelsCache = null;
         return new Promise((resolve, reject) => {
@@ -419,6 +445,8 @@ export const FlmService = {
      * Remove a model
      */
     async removeModel(modelName: string): Promise<void> {
+        ensureFlmAvailable('remove model');
+
         installedModelsCache = null;
         availableModelsCache = null;
         const command = Command.create("flm", ["remove", modelName]);
@@ -432,6 +460,8 @@ export const FlmService = {
      * Start interactive chat session
      */
     async startChat(modelName: string, options: ServerOptions, onData: (data: { type: 'stdout' | 'stderr' | 'exit', content?: string, code?: number }) => void): Promise<void> {
+        ensureFlmAvailable('start chat');
+
         if (serverProcess) {
             throw new Error("A process is already running");
         }

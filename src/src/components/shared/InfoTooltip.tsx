@@ -14,7 +14,7 @@ export function InfoTooltip({ text }: InfoTooltipProps) {
                 <Info size={14} className="text-muted-foreground cursor-help" />
             </TooltipTrigger>
             <TooltipContent>
-                <p className="max-w-xs">{text}</p>
+                <p className="max-w-xs whitespace-pre-line">{text}</p>
             </TooltipContent>
         </Tooltip>
     );

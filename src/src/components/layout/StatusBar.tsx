@@ -1,10 +1,8 @@
 import { useTranslation } from "react-i18next";
-import { useState, useEffect } from "react";
 import type { ServerStatus } from "../../types";
-import { DEFAULT_PRESETS_CONFIG } from "../../types";
 import { ServerStatusIndicator } from "../shared/ServerStatusBadge";
 import { isPresetId, findPresetById, getPresetDisplayName } from "../../lib/presets";
-import { FlmService } from "../../services/flm";
+import { useAppContext } from "../../contexts/AppContext";
 
 interface StatusBarProps {
     serverStatus: ServerStatus;
@@ -14,21 +12,13 @@ interface StatusBarProps {
 
 export const StatusBar = ({ serverStatus, selectedModel, version }: StatusBarProps) => {
     const { t } = useTranslation();
-    const [flmVersion, setFlmVersion] = useState<string>("");
-
-    useEffect(() => {
-        FlmService.getVersion().then(ver => {
-            if (ver && ver !== "Not Found" && ver !== "Unknown") {
-                setFlmVersion(ver);
-            }
-        });
-    }, []);
+    const { flmVersion, presetsConfig } = useAppContext();
 
     // Get display name for the selected model/preset
     const getSelectionDisplayName = (): string => {
         if (!selectedModel) return "";
         if (isPresetId(selectedModel)) {
-            const preset = findPresetById(selectedModel, DEFAULT_PRESETS_CONFIG);
+            const preset = findPresetById(selectedModel, presetsConfig);
             return preset ? getPresetDisplayName(preset, t) : selectedModel;
         }
         return selectedModel;

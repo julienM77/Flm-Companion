@@ -43,11 +43,12 @@ export function useServerManager({
     });
     const [pendingRestart, setPendingRestart] = useState<ServerOptions | null>(null);
 
-    // Refs pour les closures dans les event listeners
+    // Refs for closures in event listeners
     const serverStatusRef = useRef(serverStatus);
     const selectedModelRef = useRef(selectedModel);
     const serverOptionsRef = useRef(serverOptions);
     const installedModelsRef = useRef(installedModels);
+    const intentionalStopRef = useRef(false);
 
     useEffect(() => {
         serverStatusRef.current = serverStatus;
@@ -102,9 +103,11 @@ export function useServerManager({
     const handleToggleServer = useCallback(
         async (options?: ServerOptions) => {
             if (serverStatusRef.current === "running") {
+                intentionalStopRef.current = true;
                 try {
                     await FlmService.stopServer(addLog);
                 } catch (error) {
+                    intentionalStopRef.current = false;
                     addLog(t("app.log_stop_error", { error }));
                 }
             } else {
@@ -134,7 +137,7 @@ export function useServerManager({
                         optionsToUse,
                         (log) => {
                             addLog(log);
-                            if (log.includes("Enter 'exit' to stop the server:")) {
+                            if (log.includes("Enter 'exit' to stop the server:") || log.includes("WebServer started on port")) {
                                 setServerStatus("running");
                                 NotificationService.send(
                                     t("app.notification_server_started_title"),
@@ -145,10 +148,13 @@ export function useServerManager({
                             }
                             if (log.includes("[SYSTEM] Server stopped with code")) {
                                 setServerStatus("stopped");
-                                if (!log.includes("code 0")) {
+                                const wasIntentional = intentionalStopRef.current;
+                                intentionalStopRef.current = false;
+                                if (!wasIntentional && !log.includes("code 0")) {
                                     NotificationService.send(
                                         t("app.notification_server_error_title"),
-                                        t("app.notification_server_error_body")
+                                        t("app.notification_server_error_body"),
+                                        "error"
                                     );
                                 } else {
                                     NotificationService.send(

@@ -2,25 +2,25 @@ import { useState, useEffect } from 'react';
 import { RefreshCw, Download } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
-import { FlmService } from '../../services/flm';
 import type { HardwareInfo } from '../../types';
 import { GithubService, ReleaseInfo } from '../../services/github';
-import { openUrl, openPath } from '@tauri-apps/plugin-opener';
-import { fetch } from '@tauri-apps/plugin-http';
-import { writeFile, BaseDirectory } from '@tauri-apps/plugin-fs';
-import { tempDir } from '@tauri-apps/api/path';
+import { openUrl } from '@tauri-apps/plugin-opener';
 import { exit } from '@tauri-apps/plugin-process';
 import ReactMarkdown from 'react-markdown';
 import { ScrollArea } from "../ui/scroll-area";
 import { useTranslation } from "react-i18next";
 import { ConfigService } from "../../services/config";
 import { GithubIcon } from "../icons";
+import { useAppContext } from "../../contexts/AppContext";
+import { UpdateService } from "../../services/update";
 
 const APP_REPO_NAME = import.meta.env.VITE_GIT_PROJECT_COMPANION || "julienM77/flm-companion";
 const FLM_REPO_NAME = import.meta.env.VITE_GIT_PROJECT_FLM || "FastFlowLM/FastFlowLM";
 const APP_REPO_URL = `https://github.com/${APP_REPO_NAME}`;
 const FLM_REPO_URL = `https://github.com/${FLM_REPO_NAME}`;
 const AMD_URL = import.meta.env.VITE_AMD_URL ?? 'https://ryzenai.docs.amd.com/en/latest/inst.html#install-npu-drivers';
+const COMPANION_EXE_NAME = import.meta.env.VITE_COMPANION_EXE || "flm-manager.exe";
+const FLM_EXE_NAME = import.meta.env.VITE_FLM_EXE || "flm-setup.exe";
 
 interface AboutViewProps {
     hardwareInfo: HardwareInfo | null;
@@ -28,8 +28,9 @@ interface AboutViewProps {
 }
 
 export const AboutView = ({ hardwareInfo, onRefreshHardware }: AboutViewProps) => {
+    const { flmVersion, loadFlmVersion } = useAppContext();
+
     // FLM State
-    const [flmVersion, setFlmVersion] = useState<string>("Loading...");
     const [latestFlmRelease, setLatestFlmRelease] = useState<ReleaseInfo | null>(null);
     const [flmChangelog, setFlmChangelog] = useState<string | null>(null);
     const [loadingFlmUpdate, setLoadingFlmUpdate] = useState(false);
@@ -40,7 +41,7 @@ export const AboutView = ({ hardwareInfo, onRefreshHardware }: AboutViewProps) =
     const [isRefreshingHardware, setIsRefreshingHardware] = useState(false);
 
     // Companion State
-    const [companionVersion] = useState<string>(ConfigService.getAppVersion());
+    const companionVersion = import.meta.env.VITE_DEBUG_COMPANION_VERSION || ConfigService.getAppVersion();
     const [latestCompanionRelease, setLatestCompanionRelease] = useState<ReleaseInfo | null>(null);
     const [companionChangelog, setCompanionChangelog] = useState<string | null>(null);
     const [loadingCompanionUpdate, setLoadingCompanionUpdate] = useState(false);
@@ -49,44 +50,6 @@ export const AboutView = ({ hardwareInfo, onRefreshHardware }: AboutViewProps) =
     const [companionDownloadProgress, setCompanionDownloadProgress] = useState<number | null>(null);
 
     const { t } = useTranslation();
-
-    useEffect(() => {
-        loadFlmVersion();
-        // Load changelog for current companion version
-        fetchCompanionChangelog(companionVersion);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    useEffect(() => {
-        if (flmVersion && flmVersion !== "Loading..." && flmVersion !== "Unknown") {
-            fetchFlmChangelog(flmVersion);
-        }
-    }, [flmVersion]);
-
-    const loadFlmVersion = async () => {
-        try {
-            const ver = await FlmService.getVersion();
-            setFlmVersion(ver);
-        } catch {
-            setFlmVersion("Unknown");
-        }
-    };
-
-    // --- Companion Logic ---
-
-    const checkCompanionUpdates = async () => {
-        setLoadingCompanionUpdate(true);
-        setCompanionUpdateError(null);
-        try {
-            const release = await GithubService.getLatestRelease(APP_REPO_NAME);
-            setLatestCompanionRelease(release);
-        } catch (e) {
-            setCompanionUpdateError(t('about.error_check_updates'));
-            console.error(e);
-        } finally {
-            setLoadingCompanionUpdate(false);
-        }
-    };
 
     const fetchCompanionChangelog = async (version: string) => {
         try {
@@ -97,71 +60,94 @@ export const AboutView = ({ hardwareInfo, onRefreshHardware }: AboutViewProps) =
         }
     };
 
+    const fetchFlmChangelog = async (version: string) => {
+        try {
+            console.log('[AboutView] Fetching FLM changelog for version:', version);
+            const release = await GithubService.getReleaseByTag(FLM_REPO_NAME, version);
+            if (release && release.body) {
+                console.log('[AboutView] FLM changelog loaded successfully');
+                setFlmChangelog(release.body);
+            } else {
+                console.warn('[AboutView] FLM release found but no body content');
+                setFlmChangelog(null);
+            }
+        } catch (error) {
+            console.error('[AboutView] FLM release note not found for version:', version, error);
+            setFlmChangelog(null);
+        }
+    };
+
+    useEffect(() => {
+        loadFlmVersion();
+        // Load changelog for current companion version
+        fetchCompanionChangelog(companionVersion);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    useEffect(() => {
+        if (flmVersion &&
+            flmVersion !== "Loading..." &&
+            flmVersion !== "Unknown" &&
+            flmVersion !== "Not Found" &&
+            flmVersion.match(/^v?\d+\.\d+/)) { // Accept versions with or without "v" prefix
+            console.log('[AboutView] Triggering FLM changelog fetch for version:', flmVersion);
+            fetchFlmChangelog(flmVersion);
+        } else {
+            console.log('[AboutView] Skipping FLM changelog fetch, invalid version:', flmVersion);
+        }
+    }, [flmVersion]);
+
+    // --- Companion Logic ---
+
+    const checkCompanionUpdates = async () => {
+        setLoadingCompanionUpdate(true);
+        setCompanionUpdateError(null);
+        try {
+            console.log('[AboutView] Checking Companion updates...');
+            const release = await GithubService.getLatestRelease(APP_REPO_NAME);
+            console.log('[AboutView] Latest Companion release:', release.tag_name);
+            setLatestCompanionRelease(release);
+        } catch (e) {
+            console.error('[AboutView] Error checking Companion updates:', e);
+            const errorMessage = e instanceof Error ? e.message : String(e);
+            // Check if it's a rate limit error
+            if (errorMessage.includes('403') || errorMessage.includes('rate limit')) {
+                setCompanionUpdateError(t('about.error_rate_limit'));
+            } else {
+                setCompanionUpdateError(t('about.error_check_updates'));
+            }
+        } finally {
+            setLoadingCompanionUpdate(false);
+        }
+    };
+
     const handleCompanionUpdate = async () => {
         if (!latestCompanionRelease) return;
-
-        // Find asset starting with "Flm Companion" or "Flm Manager" and ending with ".exe"
-        // This handles version numbers in the filename automatically
-        const asset = latestCompanionRelease.assets.find(a =>
-            a.name.startsWith("Flm Companion") &&
-            a.name.endsWith(".exe")
-        );
-        if (!asset) {
-            setCompanionUpdateError(t('about.error_installer_not_found'));
-            return;
-        }
 
         setIsCompanionDownloading(true);
         setCompanionDownloadProgress(0);
         setCompanionUpdateError(null);
 
-        try {
-            const response = await fetch(asset.browser_download_url);
-            if (!response.ok) throw new Error("Download failed");
-            if (!response.body) throw new Error("No response body");
-
-            const contentLength = +response.headers.get('Content-Length')!;
-            const reader = response.body.getReader();
-            let receivedLength = 0;
-            const chunks = [];
-
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-
-                chunks.push(value);
-                receivedLength += value.length;
-                if (contentLength) {
-                    setCompanionDownloadProgress(Math.round((receivedLength / contentLength) * 100));
+        await UpdateService.downloadAndInstall(
+            latestCompanionRelease,
+            COMPANION_EXE_NAME,
+            {
+                onProgress: (progress) => setCompanionDownloadProgress(progress),
+                onSuccess: async () => {
+                    // Close the application to allow update
+                    await exit(0);
+                },
+                onError: (error) => {
+                    setIsCompanionDownloading(false);
+                    setCompanionDownloadProgress(null);
+                    setCompanionUpdateError(error === 'Installer not found in release assets'
+                        ? t('about.error_installer_not_found')
+                        : t('about.error_download_install')
+                    );
                 }
-            }
-
-            const allChunks = new Uint8Array(receivedLength);
-            let position = 0;
-            for (const chunk of chunks) {
-                allChunks.set(chunk, position);
-                position += chunk.length;
-            }
-
-            // Save to temp directory
-            const filename = asset.name;
-            await writeFile(filename, allChunks, { baseDir: BaseDirectory.Temp });
-
-            // Launch the installer
-            const tempDirPath = await tempDir();
-            const absolutePath = `${tempDirPath}${filename}`;
-            await openPath(absolutePath);
-
-            // Close the application to allow update
-            await exit(0);
-
-        } catch (e) {
-            console.error(e);
-            setCompanionUpdateError(t('about.error_download_install'));
-        } finally {
-            setIsCompanionDownloading(false);
-            setCompanionDownloadProgress(null);
-        }
+            },
+            false // No monitoring for Companion (app will exit)
+        );
     };
 
     // --- FLM Logic ---
@@ -170,115 +156,61 @@ export const AboutView = ({ hardwareInfo, onRefreshHardware }: AboutViewProps) =
         setLoadingFlmUpdate(true);
         setFlmUpdateError(null);
         try {
+            console.log('[AboutView] Checking FLM updates...');
             const release = await GithubService.getLatestRelease(FLM_REPO_NAME);
+            console.log('[AboutView] Latest FLM release:', release.tag_name);
             setLatestFlmRelease(release);
         } catch (e) {
-            setFlmUpdateError(t('about.error_check_updates'));
-            console.error(e);
+            console.error('[AboutView] Error checking FLM updates:', e);
+            const errorMessage = e instanceof Error ? e.message : String(e);
+            // Check if it's a rate limit error
+            if (errorMessage.includes('403') || errorMessage.includes('rate limit')) {
+                setFlmUpdateError(t('about.error_rate_limit'));
+            } else {
+                setFlmUpdateError(t('about.error_check_updates'));
+            }
         } finally {
             setLoadingFlmUpdate(false);
-        }
-    };
-
-    const fetchFlmChangelog = async (version: string) => {
-        try {
-            const release = await GithubService.getReleaseByTag(FLM_REPO_NAME, version);
-            setFlmChangelog(release.body);
-        } catch {
-            console.log("FLM release note not found for this version");
         }
     };
 
     const handleFlmUpdate = async () => {
         if (!latestFlmRelease) return;
 
-        const asset = latestFlmRelease.assets.find(a => a.name === "flm-setup.exe" || a.name.endsWith(".exe"));
-        if (!asset) {
-            setFlmUpdateError(t('about.error_installer_not_found'));
-            return;
-        }
-
         setIsDownloading(true);
         setDownloadProgress(0);
         setFlmUpdateError(null);
 
-        try {
-            const response = await fetch(asset.browser_download_url);
-            if (!response.ok) throw new Error("Download failed");
-            if (!response.body) throw new Error("No response body");
-
-            const contentLength = +response.headers.get('Content-Length')!;
-            const reader = response.body.getReader();
-            let receivedLength = 0;
-            const chunks = [];
-
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-
-                chunks.push(value);
-                receivedLength += value.length;
-                if (contentLength) {
-                    setDownloadProgress(Math.round((receivedLength / contentLength) * 100));
-                }
-            }
-
-            const allChunks = new Uint8Array(receivedLength);
-            let position = 0;
-            for (const chunk of chunks) {
-                allChunks.set(chunk, position);
-                position += chunk.length;
-            }
-
-            // Save to temp directory
-            const filename = asset.name;
-
-            await writeFile(filename, allChunks, { baseDir: BaseDirectory.Temp });
-
-            // Now launch it
-            const tempDirPath = await tempDir();
-            const absolutePath = `${tempDirPath}${filename}`;
-
-            await openPath(absolutePath);
-
-            // Start monitoring installation
-            setIsInstalling(true);
-            setFlmUpdateError(t('about.status_installing_full'));
-
-            const startVersion = flmVersion;
-            const maxAttempts = 60; // 2 minutes
-            let attempts = 0;
-
-            const interval = setInterval(async () => {
-                attempts++;
-                try {
-                    const currentVer = await FlmService.getVersion();
-                    // Check if version changed and is valid
-                    if (currentVer !== startVersion && currentVer !== "Unknown" && currentVer !== "Loading...") {
-                        setFlmVersion(currentVer);
-                        setIsInstalling(false);
-                        setFlmUpdateError(null);
-                        clearInterval(interval);
-                        // Refresh update status
-                        checkFlmUpdates();
-                    }
-                } catch (e) { console.error(e); }
-
-                if (attempts >= maxAttempts) {
+        await UpdateService.downloadAndInstall(
+            latestFlmRelease,
+            FLM_EXE_NAME,
+            {
+                onProgress: (progress) => setDownloadProgress(progress),
+                onInstalling: () => {
+                    setIsDownloading(false);
+                    setIsInstalling(true);
+                    setFlmUpdateError(t('about.status_installing_full'));
+                },
+                onSuccess: async () => {
                     setIsInstalling(false);
+                    setDownloadProgress(null);
                     setFlmUpdateError(null);
-                    clearInterval(interval);
+                    await loadFlmVersion(true);
+                    // Refresh update status
+                    checkFlmUpdates();
+                },
+                onError: (error) => {
+                    setIsDownloading(false);
+                    setIsInstalling(false);
+                    setDownloadProgress(null);
+                    setFlmUpdateError(error === 'Installer not found in release assets'
+                        ? t('about.error_installer_not_found')
+                        : t('about.error_download_install')
+                    );
                 }
-            }, 2000);
-
-        } catch (e) {
-            console.error(e);
-            setFlmUpdateError(t('about.error_download_install'));
-            setIsInstalling(false);
-        } finally {
-            setIsDownloading(false);
-            setDownloadProgress(null);
-        }
+            },
+            true // Monitor FLM version change
+        );
     };
 
     const handleRefreshHardware = async () => {

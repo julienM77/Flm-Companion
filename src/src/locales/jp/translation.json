@@ -48,7 +48,26 @@
     "lines": "行",
     "waiting_logs": "サーバー起動待ち…",
     "no_logs": "表示できるログがありません",
-    "no_model_selected": "モデルなし（音声のみ利用できます）"
+    "no_model_selected": "モデルなし（音声のみ利用できます）",
+    "presets": "プリセット",
+    "save_preset": "プリセットを保存",
+    "save_preset_description": "現在のサーバー設定をプリセットとして保存します。",
+    "preset_name": "プリセット名",
+    "preset_name_placeholder": "カスタム設定",
+    "configuration_summary": "設定の概要",
+    "no_model": "モデルなし",
+    "performance_mode": "パフォーマンスモード",
+    "asr_enabled": "ASR有効",
+    "embed_enabled": "埋め込み有効",
+    "cors_enabled": "CORS有効",
+    "manage_presets": "プリセット管理",
+    "manage_presets_description": "保存したプリセットの表示と管理。システムプリセットは削除できません。",
+    "manage_user_presets_description": "カスタムサーバープリセットを表示および管理します。",
+    "system_presets": "システムプリセット",
+    "user_presets": "マイプリセット",
+    "no_user_presets": "ユーザープリセットはまだありません。サーバービューから最初のプリセットを保存しましょう！",
+    "preset_saved": "プリセットを保存しました",
+    "preset_save_error": "プリセットの保存に失敗しました"
   },
   "models": {
     "title": "モデル管理",
@@ -61,6 +80,12 @@
     "badge_vlm": "VLM",
     "badge_embed": "EMBED",
     "badge_audio": "AUDIO",
+    "badge_think_tooltip": "推論モデル - 複雑なタスクのために思考の連鎖を使用",
+    "badge_vlm_tooltip": "ビジョン言語モデル - 画像とテキストを処理できます",
+    "badge_embed_tooltip": "埋め込みモデル - セマンティック検索とRAG用",
+    "badge_audio_tooltip": "音声モデル - 音声認識と文字起こし",
+    "badge_performance_warning_tooltip": "重いモデル - システムで動作が遅い可能性があります（利用可能RAM の70-90%）",
+    "badge_performance_critical_tooltip": "大きすぎます - このモデルはシステムで実行できない可能性があります（利用可能RAMの90%以上）",
     "dialog_info_desc": "モデルの詳細情報を表示します",
     "info_family": "ファミリー",
     "info_unknown": "不明",
@@ -121,6 +146,7 @@
     "check": "確認",
     "release_notes": "リリースノート",
     "error_check_updates": "アップデートを確認できませんでした",
+    "error_rate_limit": "GitHub APIの制限に達しました。しばらくしてから再試行してください。",
     "error_installer_not_found": "インストーラが見つかりませんでした",
     "error_download_install": "ダウンロードまたはインストール中にエラーが発生しました",
     "status_installing_full": "インストールを実行しています…"
@@ -140,7 +166,10 @@
   "common": {
     "cancel": "Cancel",
     "alert": "アラート",
-    "ok": "OK"
+    "ok": "OK",
+    "loading": "読み込み中...",
+    "save": "保存",
+    "saving": "保存中..."
   },
   "app": {
     "alert_select_model": "モデルを選択してください",
@@ -189,6 +218,23 @@
     "system_process_exited": "プロセスがコード {{code}} で終了しました",
     "system_error": "エラー: {{error}}"
   },
+  "performance": {
+    "resource_monitor": "リソースモニター",
+    "live": "ライブ",
+    "ram_usage": "RAM使用量",
+    "npu_usage": "NPU使用量",
+    "used": "使用中",
+    "total": "合計",
+    "idle": "アイドル",
+    "compute": "演算",
+    "shared_memory": "共有メモリ",
+    "not_detected": "検出されません",
+    "last_update": "最終更新",
+    "start_monitoring": "モニター開始",
+    "stop_monitoring": "モニター停止",
+    "monitoring_info": "リソースの監視はCPUリソースを消費する可能性があります。必要ない場合は停止してください。",
+    "monitoring_stopped": "監視停止中"
+  },
   "tray": {
     "start": "開始",
     "stop": "停止",
@@ -202,8 +248,7 @@
     "embed": "Embeddings",
     "presets_group": "プリセット",
     "models_group": "モデル",
-    "models_menu": "モデル",
-    "installed": "インストール済み",
+    "models_menu": "モデル",    "no_models_available": "利用可能なモデルがありません",    "installed": "インストール済み",
     "catalog": "カタログ",
     "start_with_model": "モデルでサーバーを開始",
     "delete_model": "削除",
@@ -216,5 +261,24 @@
     "copy": "コピー",
     "copied": "コピーしました",
     "clear": "クリア"
+  },
+  "startup": {
+    "flm_required": "FLMが必要です",
+    "flm_not_installed_desc": "FLMがインストールされていないか、システムで検出されません。アプリケーションが正常に動作するには、FLMバージョン{{minVersion}}以上が必要です。",
+    "download_install_flm": "FLMをダウンロードしてインストール",
+    "downloading": "ダウンロード中...",
+    "visit_github": "GitHubにアクセス",
+    "install_instruction": "インストール後、アプリケーションを再起動してFLMを検出してください。",
+    "error_installer_not_found": "リリースにインストーラーが見つかりません",
+    "error_download_install": "ダウンロードまたはインストール中にエラーが発生しました",
+    "updates_available": "更新が利用可能です",
+    "updates_available_desc": "ソフトウェアの新しいバージョンが利用可能です。",
+    "companion_update": "Flm Companionの更新",
+    "flm_update": "FLMの更新",
+    "new_version_available": "新しいバージョンが利用可能：{{version}}",
+    "current_version": "現在のバージョン",
+    "update_companion": "Companionを更新",
+    "update_flm": "FLMを更新",
+    "remind_later": "後で通知"
   }
 }

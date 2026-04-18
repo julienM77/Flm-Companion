@@ -4,6 +4,12 @@ use tauri::AppHandle;
 use crate::tray::icons::ThemeIcons;
 use crate::types::TrayMenuParams;
 
+struct UnifiedModel {
+    name: String,
+    is_installed: bool,
+    is_startable: bool,
+}
+
 fn build_models_menu(
     app: &AppHandle,
     params: &TrayMenuParams,
@@ -11,68 +17,86 @@ fn build_models_menu(
 ) -> tauri::Result<Submenu<tauri::Wry>> {
     let texts = &params.texts;
 
-    // Sous-menu Installed
-    let installed_submenu = Submenu::new(app, &texts.installed, true)?;
-    let _ = installed_submenu.set_icon(Some(icons.hard_drive.clone()));
+    // Create a unified list of all models
+    let mut unified_models = Vec::new();
 
+    // Add installed models
     for model_name in &params.installed_models {
-        // Sous-menu pour chaque modèle installé
-        let model_submenu = Submenu::new(app, model_name, true)?;
-
-        if params.startable_models.contains(model_name) {
-            // Action: Start Server
-            let start_item = IconMenuItem::with_id(
-                app,
-                format!("start_model_{}", model_name),
-                &texts.start_with_model,
-                true,
-                Some(icons.play.clone()),
-                None::<&str>,
-            )?;
-            let _ = model_submenu.append(&start_item);
-        }
-
-        // Action: Delete
-        let delete_item = IconMenuItem::with_id(
-            app,
-            format!("delete_model_{}", model_name),
-            &texts.delete_model,
-            true,
-            Some(icons.trash.clone()),
-            None::<&str>,
-        )?;
-        let _ = model_submenu.append(&delete_item);
-
-        let _ = installed_submenu.append(&model_submenu);
+        unified_models.push(UnifiedModel {
+            name: model_name.clone(),
+            is_installed: true,
+            is_startable: params.startable_models.contains(model_name),
+        });
     }
 
-    // Sous-menu Catalog
-    let catalog_submenu = Submenu::new(app, &texts.catalog, true)?;
-    let _ = catalog_submenu.set_icon(Some(icons.download.clone()));
-
+    // Add available models (not installed)
+    // Exclude those already in installed_models to avoid duplicates
     for model_name in &params.available_models {
-        // Sous-menu pour chaque modèle disponible
-        let model_submenu = Submenu::new(app, model_name, true)?;
-
-        // Action: Download
-        let download_item = IconMenuItem::with_id(
-            app,
-            format!("download_model_{}", model_name),
-            &texts.download_model,
-            true,
-            Some(icons.download.clone()),
-            None::<&str>,
-        )?;
-        let _ = model_submenu.append(&download_item);
-
-        let _ = catalog_submenu.append(&model_submenu);
+        if !params.installed_models.contains(model_name) {
+            unified_models.push(UnifiedModel {
+                name: model_name.clone(),
+                is_installed: false,
+                is_startable: false,
+            });
+        }
     }
 
-    // Menu principal Models
+    // Sort alphabetically by name
+    unified_models.sort_by(|a, b| a.name.cmp(&b.name));
+
+    // Main Models menu
     let models_menu = Submenu::new(app, &texts.models_menu, true)?;
     let _ = models_menu.set_icon(Some(icons.cpu.clone()));
-    let _ = models_menu.append(&installed_submenu);
-    let _ = models_menu.append(&catalog_submenu);
+
+    // Create a submenu for each model
+    for model in unified_models {
+        let model_submenu = Submenu::new(app, &model.name, true)?;
+
+        if model.is_installed {
+            // Installed model: hard drive icon
+            let _ = model_submenu.set_icon(Some(icons.hard_drive.clone()));
+
+            if model.is_startable {
+                // Action: Start Server
+                let start_item = IconMenuItem::with_id(
+                    app,
+                    format!("start_model_{}", model.name),
+                    &texts.start_with_model,
+                    true,
+                    Some(icons.play.clone()),
+                    None::<&str>,
+                )?;
+                let _ = model_submenu.append(&start_item);
+            }
+
+            // Action: Delete
+            let delete_item = IconMenuItem::with_id(
+                app,
+                format!("delete_model_{}", model.name),
+                &texts.delete_model,
+                true,
+                Some(icons.trash.clone()),
+                None::<&str>,
+            )?;
+            let _ = model_submenu.append(&delete_item);
+        } else {
+            // Available model: download icon
+            let _ = model_submenu.set_icon(Some(icons.download.clone()));
+
+            // Action: Download
+            let download_item = IconMenuItem::with_id(
+                app,
+                format!("download_model_{}", model.name),
+                &texts.download_model,
+                true,
+                Some(icons.download.clone()),
+                None::<&str>,
+            )?;
+            let _ = model_submenu.append(&download_item);
+        }
+
+        let _ = models_menu.append(&model_submenu);
+    }
 
     Ok(models_menu)
 }
@@ -115,8 +139,14 @@ pub fn build_tray_menu(
     // Presets submenu
     let presets_submenu = Submenu::new(app, &texts.presets_group, true)?;
     let _ = presets_submenu.set_icon(Some(icons.cog.clone()));
+    let _ = presets_submenu.set_enabled(!params.is_running); // Disable when server is running
 
-    for preset in &params.presets {
+    // Separate system and user presets
+    let system_presets: Vec<_> = params.presets.iter().filter(|p| p.is_system).collect();
+    let user_presets: Vec<_> = params.presets.iter().filter(|p| !p.is_system).collect();
+
+    // Add system presets
+    for preset in &system_presets {
         let is_selected = preset.id == params.selected_model;
         let preset_item = CheckMenuItem::with_id(
             app,
@@ -129,21 +159,55 @@ pub fn build_tray_menu(
         let _ = presets_submenu.append(&preset_item);
     }
 
-    // Models submenu
-    let models_submenu = Submenu::new(app, &texts.models_group, true)?;
-    let _ = models_submenu.set_icon(Some(icons.cpu.clone()));
+    // Add separator if there are both system and user presets
+    if !system_presets.is_empty() && !user_presets.is_empty() {
+        let _ = presets_submenu.append(&PredefinedMenuItem::separator(app)?);
+    }
 
-    for model_name in &params.installed_models {
-        let is_selected = model_name == &params.selected_model;
-        let model_item = CheckMenuItem::with_id(
+    // Add user presets (prefixed with "→ " for visual distinction)
+    for preset in &user_presets {
+        let is_selected = preset.id == params.selected_model;
+        let preset_name = preset.name.to_string();
+        let preset_item = CheckMenuItem::with_id(
             app,
-            format!("model_{}", model_name),
-            model_name,
+            format!("model_{}", preset.id),
+            &preset_name,
             true,
             is_selected,
             None::<&str>,
         )?;
-        let _ = models_submenu.append(&model_item);
+        let _ = presets_submenu.append(&preset_item);
+    }
+
+    // Models submenu
+    let models_submenu = Submenu::new(app, &texts.models_group, true)?;
+    let _ = models_submenu.set_icon(Some(icons.cpu.clone()));
+    let _ = models_submenu.set_enabled(!params.is_running); // Disable when server is running
+
+    if params.startable_models.is_empty() {
+        // No models available, add disabled item
+        let no_models_item = MenuItem::with_id(
+            app,
+            "no_models",
+            &texts.no_models_available,
+            false,
+            None::<&str>,
+        )?;
+        let _ = models_submenu.append(&no_models_item);
+    } else {
+        // Add model items
+        for model_name in &params.startable_models {
+            let is_selected = model_name == &params.selected_model;
+            let model_item = CheckMenuItem::with_id(
+                app,
+                format!("model_{}", model_name),
+                model_name,
+                true,
+                is_selected,
+                None::<&str>,
+            )?;
+            let _ = models_submenu.append(&model_item);
+        }
     }
 
     // Display current selection (preset name or model name)
@@ -196,6 +260,7 @@ pub fn build_tray_menu(
     let features_submenu =
         Submenu::with_items(app, &texts.features, true, &[&asr_item, &embed_item])?;
     let _ = features_submenu.set_icon(Some(icons.cog.clone()));
+    let _ = features_submenu.set_enabled(!params.is_running); // Disable when server is running
 
     let server_sep1 = PredefinedMenuItem::separator(app)?;
     let server_sep2 = PredefinedMenuItem::separator(app)?;
@@ -255,6 +320,12 @@ pub fn build_tray_menu(
 
     // Build Models menu
     let models_menu = build_models_menu(app, params, icons)?;
+
+    // Disable Models and Server menus if FLM is not available
+    if !params.is_flm_available {
+        let _ = models_menu.set_enabled(false);
+        let _ = server_submenu.set_enabled(false);
+    }
 
     let menu = Menu::new(app)?;
     menu.append(&app_info_i)?;

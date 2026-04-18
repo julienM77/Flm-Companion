@@ -6,9 +6,10 @@ use serde::Deserialize;
 pub struct TrayPreset {
     pub id: String,
     pub name: String,
+    pub is_system: bool,
 }
 
-/// Paramètres pour la mise à jour du menu tray
+/// Parameters for tray menu update
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TrayMenuParams {
@@ -21,10 +22,11 @@ pub struct TrayMenuParams {
     pub asr_enabled: bool,
     pub embed_enabled: bool,
     pub flm_version: String,
+    pub is_flm_available: bool,
     pub texts: TrayMenuTexts,
 }
 
-/// Textes localisés pour le menu tray
+/// Localized texts for tray menu
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TrayMenuTexts {
@@ -41,8 +43,7 @@ pub struct TrayMenuTexts {
     pub presets_group: String,
     pub models_group: String,
     pub models_menu: String,
-    pub installed: String,
-    pub catalog: String,
+    pub no_models_available: String,
     pub start_with_model: String,
     pub delete_model: String,
     pub download_model: String,
