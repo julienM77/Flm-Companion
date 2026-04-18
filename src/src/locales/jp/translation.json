@@ -65,7 +65,9 @@
     "manage_user_presets_description": "カスタムサーバープリセットを表示および管理します。",
     "system_presets": "システムプリセット",
     "user_presets": "マイプリセット",
-    "no_user_presets": "ユーザープリセットはまだありません。サーバービューから最初のプリセットを保存しましょう！"
+    "no_user_presets": "ユーザープリセットはまだありません。サーバービューから最初のプリセットを保存しましょう！",
+    "preset_saved": "プリセットを保存しました",
+    "preset_save_error": "プリセットの保存に失敗しました"
   },
   "models": {
     "title": "モデル管理",

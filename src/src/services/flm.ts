@@ -85,54 +85,70 @@ export const FlmService = {
                 }
             }
 
-            // flmPath is the directory containing model_list.json
-            let modelListPath;
+            // Build ordered list of candidate paths for model_list.json
+            const pathsToTry: string[] = [];
+
             if (flmPath && flmPath !== "flm") {
                 const cleanPath = flmPath.replace(/[\\/]+$/, '');
                 const separator = cleanPath.includes('\\') ? '\\' : '/';
-                modelListPath = `${cleanPath}${separator}${MODEL_LIST_FILENAME}`;
-            } else {
-                // Fallback to default install location if just "flm" is configured
-                modelListPath = `C:\\Program Files\\flm\\${MODEL_LIST_FILENAME}`;
+                pathsToTry.push(`${cleanPath}${separator}${MODEL_LIST_FILENAME}`);
             }
 
-            const content = await readTextFile(modelListPath);
-            const data: ModelListJson = JSON.parse(content);
-            const metadata: Record<string, FlmModel> = {};
-
-            for (const [family, variants] of Object.entries(data.models)) {
-                for (const [tag, details] of Object.entries(variants)) {
-                    const fullName = `${family}:${tag}`;
-
-                    // Format size to GB/MB
-                    const sizeBytes = details.size;
-                    let sizeStr = "";
-                    if (sizeBytes > 1024 * 1024 * 1024) {
-                        sizeStr = `${(sizeBytes / (1024 * 1024 * 1024)).toFixed(1)}GB`;
-                    } else {
-                        sizeStr = `${(sizeBytes / (1024 * 1024)).toFixed(0)}MB`;
-                    }
-
-                    metadata[fullName] = {
-                        name: fullName,
-                        size: sizeStr,
-                        modified: details.modified_at,
-                        realSize: details.size,
-                        description: details.name,
-                        family: details.details.family,
-                        isThink: details.details.think,
-                        isVlm: details.vlm || false,
-                        isEmbed: fullName.toLowerCase().includes("embed"),
-                        isAudio: fullName.toLowerCase().includes("whisper"),
-                        contextLength: details.default_context_length,
-                        quantization: details.details.quantization_level,
-                        url: details.url,
-                        parameterSize: details.details.parameter_size
-                    };
+            // New default since FLM 0.9.37: %USERPROFILE%\.flm
+            try {
+                const psCmd = Command.create("powershell", ["-Command", "$env:USERPROFILE"]);
+                const psResult = await psCmd.execute();
+                if (psResult.code === 0 && psResult.stdout.trim()) {
+                    pathsToTry.push(`${psResult.stdout.trim()}\\.flm\\${MODEL_LIST_FILENAME}`);
                 }
+            } catch { /* ignore */ }
+
+            // Old default (pre-0.9.37)
+            pathsToTry.push(`C:\\Program Files\\flm\\${MODEL_LIST_FILENAME}`);
+
+            for (const modelListPath of pathsToTry) {
+                try {
+                    const content = await readTextFile(modelListPath);
+                    const data: ModelListJson = JSON.parse(content);
+                    const metadata: Record<string, FlmModel> = {};
+
+                    for (const [family, variants] of Object.entries(data.models)) {
+                        for (const [tag, details] of Object.entries(variants)) {
+                            const fullName = `${family}:${tag}`;
+
+                            const sizeBytes = details.size;
+                            let sizeStr = "";
+                            if (sizeBytes > 1024 * 1024 * 1024) {
+                                sizeStr = `${(sizeBytes / (1024 * 1024 * 1024)).toFixed(1)}GB`;
+                            } else {
+                                sizeStr = `${(sizeBytes / (1024 * 1024)).toFixed(0)}MB`;
+                            }
+
+                            metadata[fullName] = {
+                                name: fullName,
+                                size: sizeStr,
+                                modified: details.modified_at,
+                                realSize: details.size,
+                                description: details.name,
+                                family: details.details.family,
+                                isThink: details.details.think,
+                                isVlm: details.vlm || false,
+                                isEmbed: fullName.toLowerCase().includes("embed"),
+                                isAudio: fullName.toLowerCase().includes("whisper"),
+                                contextLength: details.default_context_length,
+                                quantization: details.details.quantization_level,
+                                url: details.url,
+                                parameterSize: details.details.parameter_size
+                            };
+                        }
+                    }
+                    metadataCache = metadata;
+                    return metadata;
+                } catch { /* try next path */ }
             }
-            metadataCache = metadata;
-            return metadata;
+
+            console.warn(`[FLM] Could not read ${MODEL_LIST_FILENAME} from any candidate path`);
+            return {};
         } catch (error) {
             console.warn(`Could not read ${MODEL_LIST_FILENAME}:`, error);
             return {};
@@ -373,38 +389,11 @@ export const FlmService = {
     async stopServer(onLog?: (log: string) => void): Promise<void> {
         if (serverProcess) {
             try {
-                if (onLog) onLog("[SYSTEM] Sending 'exit' command to server...");
-
-                const encoder = new TextEncoder();
-                await serverProcess.write(encoder.encode("exit\r\n"));
-
-                if (onLog) onLog("[SYSTEM] Exit command sent. Waiting for graceful shutdown...");
-
-                await new Promise<void>((resolve) => {
-                    const timeoutId = setTimeout(() => {
-                        if (serverProcess) {
-                            if (onLog) onLog("[SYSTEM] Server did not exit gracefully, forcing kill...");
-                            console.log("Server did not exit gracefully, forcing kill...");
-                            serverProcess.kill().catch((e) => {
-                                console.error("Error killing process:", e);
-                            });
-                        }
-                        resolve();
-                    }, 5000);
-
-                    const intervalId = setInterval(() => {
-                        if (!serverProcess) {
-                            clearTimeout(timeoutId);
-                            clearInterval(intervalId);
-                            resolve();
-                        }
-                    }, 100);
-                });
-
-            } catch (e) {
-                console.error("Failed to write exit command, forcing kill", e);
-                if (onLog) onLog(`[ERROR] Failed to write exit command: ${e}. Forcing kill...`);
+                if (onLog) onLog("[SYSTEM] Stopping server...");
                 await serverProcess.kill();
+            } catch (e) {
+                console.error("Error stopping server process:", e);
+                if (onLog) onLog(`[ERROR] Failed to stop server: ${e}`);
             }
         }
     },
