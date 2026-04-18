@@ -36,7 +36,14 @@ pub fn get_npu_stats() -> Result<NpuStats, String> {
     const CREATE_NO_WINDOW: u32 = 0x08000000;
 
     let output = Command::new("powershell")
-        .args(["-NonInteractive", "-NoProfile", "-WindowStyle", "Hidden", "-Command", script])
+        .args([
+            "-NonInteractive",
+            "-NoProfile",
+            "-WindowStyle",
+            "Hidden",
+            "-Command",
+            script,
+        ])
         .creation_flags(CREATE_NO_WINDOW)
         .output()
         .map_err(|e| format!("Failed to execute PowerShell: {}", e))?;
