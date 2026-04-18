@@ -25,12 +25,6 @@ export const ManagePresetsDialog = ({
     const [isLoading, setIsLoading] = useState(false);
     const [deletingId, setDeletingId] = useState<string | null>(null);
 
-    useEffect(() => {
-        if (open) {
-            loadPresets();
-        }
-    }, [open]);
-
     const loadPresets = async () => {
         setIsLoading(true);
         try {
@@ -42,6 +36,12 @@ export const ManagePresetsDialog = ({
             setIsLoading(false);
         }
     };
+
+    useEffect(() => {
+        if (open) {
+            loadPresets();
+        }
+    }, [open]);
 
     const handleDelete = async (presetId: string) => {
         setDeletingId(presetId);

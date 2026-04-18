@@ -51,6 +51,32 @@ export const AboutView = ({ hardwareInfo, onRefreshHardware }: AboutViewProps) =
 
     const { t } = useTranslation();
 
+    const fetchCompanionChangelog = async (version: string) => {
+        try {
+            const release = await GithubService.getReleaseByTag(APP_REPO_NAME, version);
+            setCompanionChangelog(release.body);
+        } catch {
+            console.log("Companion release note not found for this version");
+        }
+    };
+
+    const fetchFlmChangelog = async (version: string) => {
+        try {
+            console.log('[AboutView] Fetching FLM changelog for version:', version);
+            const release = await GithubService.getReleaseByTag(FLM_REPO_NAME, version);
+            if (release && release.body) {
+                console.log('[AboutView] FLM changelog loaded successfully');
+                setFlmChangelog(release.body);
+            } else {
+                console.warn('[AboutView] FLM release found but no body content');
+                setFlmChangelog(null);
+            }
+        } catch (error) {
+            console.error('[AboutView] FLM release note not found for version:', version, error);
+            setFlmChangelog(null);
+        }
+    };
+
     useEffect(() => {
         loadFlmVersion();
         // Load changelog for current companion version
@@ -92,15 +118,6 @@ export const AboutView = ({ hardwareInfo, onRefreshHardware }: AboutViewProps) =
             }
         } finally {
             setLoadingCompanionUpdate(false);
-        }
-    };
-
-    const fetchCompanionChangelog = async (version: string) => {
-        try {
-            const release = await GithubService.getReleaseByTag(APP_REPO_NAME, version);
-            setCompanionChangelog(release.body);
-        } catch {
-            console.log("Companion release note not found for this version");
         }
     };
 
@@ -154,23 +171,6 @@ export const AboutView = ({ hardwareInfo, onRefreshHardware }: AboutViewProps) =
             }
         } finally {
             setLoadingFlmUpdate(false);
-        }
-    };
-
-    const fetchFlmChangelog = async (version: string) => {
-        try {
-            console.log('[AboutView] Fetching FLM changelog for version:', version);
-            const release = await GithubService.getReleaseByTag(FLM_REPO_NAME, version);
-            if (release && release.body) {
-                console.log('[AboutView] FLM changelog loaded successfully');
-                setFlmChangelog(release.body);
-            } else {
-                console.warn('[AboutView] FLM release found but no body content');
-                setFlmChangelog(null);
-            }
-        } catch (error) {
-            console.error('[AboutView] FLM release note not found for version:', version, error);
-            setFlmChangelog(null);
         }
     };
 

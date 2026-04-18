@@ -59,8 +59,10 @@ export interface AppContextType {
     reloadPresets: () => Promise<void>;
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const AppContext = createContext<AppContextType | undefined>(undefined);
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAppContext(): AppContextType {
     const context = useContext(AppContext);
     if (context === undefined) {
