@@ -31,8 +31,13 @@ pub fn get_npu_stats() -> Result<NpuStats, String> {
         }
     "#;
 
+    #[cfg(windows)]
+    use std::os::windows::process::CommandExt;
+    const CREATE_NO_WINDOW: u32 = 0x08000000;
+
     let output = Command::new("powershell")
-        .args(["-NoProfile", "-Command", script])
+        .args(["-NonInteractive", "-NoProfile", "-WindowStyle", "Hidden", "-Command", script])
+        .creation_flags(CREATE_NO_WINDOW)
         .output()
         .map_err(|e| format!("Failed to execute PowerShell: {}", e))?;
 
