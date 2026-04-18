@@ -38,10 +38,10 @@ Flm Compagnon is a modern GUI designed to accompany and manage the **FastFlowLM 
 ## 📸 Videos
 
 ### 🗂️ Interface
-![gif demo interface](screen/demo_interface.gif)]
+![gif demo interface](screen/demo_interface.gif)
 
 ### 🔔 System Tray
-![gif demo systreay](screen/demo_notif.gif)]
+![gif demo systreay](screen/demo_notif.gif)
 
 ## 📋 To do
 

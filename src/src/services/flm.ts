@@ -96,7 +96,7 @@ export const FlmService = {
 
             // New default since FLM 0.9.37: %USERPROFILE%\.flm
             try {
-                const psCmd = Command.create("powershell", ["-Command", "$env:USERPROFILE"]);
+                const psCmd = Command.create("powershell", ["-NonInteractive", "-NoProfile", "-WindowStyle", "Hidden", "-Command", "$env:USERPROFILE"]);
                 const psResult = await psCmd.execute();
                 if (psResult.code === 0 && psResult.stdout.trim()) {
                     pathsToTry.push(`${psResult.stdout.trim()}\\.flm\\${MODEL_LIST_FILENAME}`);
@@ -217,7 +217,7 @@ export const FlmService = {
                 } | ConvertTo-Json -Compress
             `;
 
-            const command = Command.create("powershell", ["-Command", script]);
+            const command = Command.create("powershell", ["-NonInteractive", "-NoProfile", "-WindowStyle", "Hidden", "-Command", script]);
             const output = await command.execute();
 
             if (output.code === 0) {
@@ -526,7 +526,7 @@ export const FlmService = {
      */
     async findFlmPath(): Promise<string | null> {
         try {
-            const command = Command.create("powershell", ["-Command", "(Get-Command flm -ErrorAction SilentlyContinue).Source"]);
+            const command = Command.create("powershell", ["-NonInteractive", "-NoProfile", "-WindowStyle", "Hidden", "-Command", "(Get-Command flm -ErrorAction SilentlyContinue).Source"]);
             const output = await command.execute();
 
             if (output.code === 0 && output.stdout.trim()) {

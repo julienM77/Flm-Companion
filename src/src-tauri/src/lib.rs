@@ -32,7 +32,8 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             commands::update_tray_menu,
-            commands::get_npu_info
+            commands::get_npu_info,
+            commands::get_system_stats
         ])
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
