@@ -1,7 +1,7 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useTranslation } from "react-i18next";
-import type { ServerStatus, ServerOptions, FlmModel, PresetsConfig } from "../types";
+import type { ServerStatus, ServerOptions, FlmModel, PresetsConfig, Theme } from "../types";
 import { getPresetDisplayName } from "../lib/presets";
 
 interface TrayPreset {
@@ -20,6 +20,7 @@ interface UseTrayMenuProps {
     flmVersion: string;
     isFlmAvailable: boolean;
     presetsConfig: PresetsConfig;
+    theme: Theme;
 }
 
 export function useTrayMenu({
@@ -32,8 +33,19 @@ export function useTrayMenu({
     flmVersion,
     isFlmAvailable,
     presetsConfig,
+    theme,
 }: UseTrayMenuProps): void {
     const { t } = useTranslation();
+    const [systemIsDark, setSystemIsDark] = useState(() =>
+        window.matchMedia("(prefers-color-scheme: dark)").matches
+    );
+
+    useEffect(() => {
+        const media = window.matchMedia("(prefers-color-scheme: dark)");
+        const updateTheme = (event: MediaQueryListEvent) => setSystemIsDark(event.matches);
+        media.addEventListener("change", updateTheme);
+        return () => media.removeEventListener("change", updateTheme);
+    }, []);
 
     useEffect(() => {
         // Build presets list with translated names
@@ -54,6 +66,7 @@ export function useTrayMenu({
         invoke("update_tray_menu", {
             params: {
                 isRunning: serverStatus === "running",
+                isDarkTheme: theme === "dark" || (theme === "system" && systemIsDark),
                 selectedModel: selectedModel,
                 presets: presets,
                 installedModels: installedModels.map((m) => m.name),
@@ -84,5 +97,5 @@ export function useTrayMenu({
                 },
             },
         });
-    }, [serverStatus, selectedModel, installedModels, availableModels, runnableModels, serverOptions, flmVersion, isFlmAvailable, presetsConfig, t]);
+    }, [serverStatus, selectedModel, installedModels, availableModels, runnableModels, serverOptions, flmVersion, isFlmAvailable, presetsConfig, theme, systemIsDark, t]);
 }

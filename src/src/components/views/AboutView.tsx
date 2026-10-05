@@ -18,6 +18,8 @@ const APP_REPO_NAME = import.meta.env.VITE_GIT_PROJECT_COMPANION || "julienM77/f
 const FLM_REPO_NAME = import.meta.env.VITE_GIT_PROJECT_FLM || "FastFlowLM/FastFlowLM";
 const APP_REPO_URL = `https://github.com/${APP_REPO_NAME}`;
 const FLM_REPO_URL = `https://github.com/${FLM_REPO_NAME}`;
+const ORIGINAL_AUTHOR_URL = "https://github.com/julienM77";
+const LINUX_PORT_AUTHOR_URL = "https://github.com/keefeere";
 const AMD_URL = import.meta.env.VITE_AMD_URL ?? 'https://ryzenai.docs.amd.com/en/latest/inst.html#install-npu-drivers';
 const COMPANION_EXE_NAME = import.meta.env.VITE_COMPANION_EXE || "flm-manager.exe";
 const FLM_EXE_NAME = import.meta.env.VITE_FLM_EXE || "flm-setup.exe";
@@ -142,7 +144,7 @@ export const AboutView = ({ hardwareInfo, onRefreshHardware }: AboutViewProps) =
                     setCompanionDownloadProgress(null);
                     setCompanionUpdateError(error === 'Installer not found in release assets'
                         ? t('about.error_installer_not_found')
-                        : t('about.error_download_install')
+                        : `${t('about.error_download_install')}: ${error}`
                     );
                 }
             },
@@ -205,7 +207,7 @@ export const AboutView = ({ hardwareInfo, onRefreshHardware }: AboutViewProps) =
                     setDownloadProgress(null);
                     setFlmUpdateError(error === 'Installer not found in release assets'
                         ? t('about.error_installer_not_found')
-                        : t('about.error_download_install')
+                        : `${t('about.error_download_install')}: ${error}`
                     );
                 }
             },
@@ -247,6 +249,23 @@ export const AboutView = ({ hardwareInfo, onRefreshHardware }: AboutViewProps) =
                         >
                             <GithubIcon className="w-4 h-4 mr-2" />
                             {t('about.view_on_github')}
+                        </Button>
+                    </div>
+
+                    {/* Attribution Rows */}
+                    <div className="flex items-center justify-between p-4 border-b last:border-0">
+                        <span className="text-sm font-medium text-foreground">{t('about.original_author')}</span>
+                        <Button variant="ghost" size="sm" onClick={() => openUrl(ORIGINAL_AUTHOR_URL)}>
+                            <GithubIcon className="w-4 h-4 mr-2" />
+                            julienM77
+                        </Button>
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 border-b last:border-0">
+                        <span className="text-sm font-medium text-foreground">{t('about.linux_port')}</span>
+                        <Button variant="ghost" size="sm" onClick={() => openUrl(LINUX_PORT_AUTHOR_URL)}>
+                            <GithubIcon className="w-4 h-4 mr-2" />
+                            keefeere
                         </Button>
                     </div>
 

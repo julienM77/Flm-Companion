@@ -14,6 +14,7 @@ pub struct TrayPreset {
 #[serde(rename_all = "camelCase")]
 pub struct TrayMenuParams {
     pub is_running: bool,
+    pub is_dark_theme: bool,
     pub selected_model: String,
     pub presets: Vec<TrayPreset>,
     pub installed_models: Vec<String>,

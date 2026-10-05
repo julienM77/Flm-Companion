@@ -30,7 +30,7 @@ export interface AppContextType {
     logs: string[];
     serverOptions: ServerOptions;
     setServerOptions: (options: ServerOptions | ((prev: ServerOptions) => ServerOptions)) => void;
-    handleToggleServer: (options?: ServerOptions) => Promise<void>;
+    handleToggleServer: (options?: ServerOptions, modelOverride?: string) => Promise<void>;
     addLog: (log: string) => void;
     clearLogs: () => void;
 

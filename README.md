@@ -8,7 +8,7 @@
 [![Build](https://img.shields.io/github/actions/workflow/status/julienM77/flm-companion/main.yml?style=flat-square&label=Build)](https://github.com/julienM77/flm-companion/actions/workflows/main.yml)
 [![License](https://img.shields.io/github/license/julienM77/flm-companion?style=flat-square)](LICENSE)
 
-[![Platform](https://img.shields.io/badge/Platform-Windows-blue?style=flat-square)](https://github.com/julienM77/flm-companion/releases)
+[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-blue?style=flat-square)](https://github.com/julienM77/flm-companion/releases)
 [![Tauri](https://img.shields.io/badge/Built%20with-Tauri-blueviolet?style=flat-square&logo=tauri)](https://tauri.app)
 
 </div>
@@ -28,7 +28,7 @@ Flm Compagnon is a modern GUI designed to accompany and manage the **FastFlowLM 
 * **Presets**: Save and manage custom server configurations as presets for quick access.
 * **System Tray**: Quick access to server controls, **model selection**, **presets**, and status directly from the notification area.
 * **Auto-Updates**: Automatic update check at startup for both FLM Companion and FastFlowLM with integrated installer.
-* **Auto-start**: Option to launch the application automatically at Windows startup.
+* **Auto-start**: Option to launch the application automatically at system startup.
 * **Start Minimized**: Option to launch the application minimized to the system tray (configurable in settings).
 * **Settings**: Application customization.
 * **About**: View application version, hardware information, FLM changelog, and check for updates.
@@ -103,3 +103,9 @@ To build the project in release mode, you will need [Rust](https://www.rust-lang
     ```bash
     npm run tauri build
     ```
+
+### Linux
+
+The Linux build requires WebKitGTK 4.1 and AppIndicator development packages.
+Tagged releases build both AppImage and Debian packages in GitHub Actions.
+FastFlowLM itself must be installed separately and available as `flm` in `PATH`.

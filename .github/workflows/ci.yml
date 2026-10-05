@@ -1,6 +1,7 @@
 name: CI
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -10,19 +11,32 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-24.04]
+    runs-on: ${{ matrix.os }}
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 'lts/*'
 
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential curl wget file libssl-dev libxdo-dev \
+            libwebkit2gtk-4.1-dev libayatana-appindicator3-dev \
+            librsvg2-dev patchelf libfuse2
 
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
@@ -31,7 +45,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: src
-        run: npm install
+        run: npm ci
 
       - name: Lint TypeScript
         working-directory: src
@@ -45,10 +59,38 @@ jobs:
         working-directory: src/src-tauri
         run: cargo fmt --check
 
+      - name: Test Rust
+        working-directory: src/src-tauri
+        run: cargo test
+
       - name: Clippy (Rust linter)
         working-directory: src/src-tauri
         run: cargo clippy -- -D warnings
 
-      - name: Build Tauri app
+      - name: Build Tauri app (Windows)
+        if: runner.os == 'Windows'
         working-directory: src
         run: npm run tauri build
+
+      - name: Upload Windows installer
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v6
+        with:
+          name: flm-companion-windows
+          path: src/src-tauri/target/release/bundle/nsis/*.exe
+          if-no-files-found: error
+
+      - name: Build Tauri app (Linux)
+        if: runner.os == 'Linux'
+        working-directory: src
+        run: npm run tauri build -- --bundles appimage,deb
+
+      - name: Upload Linux packages
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v6
+        with:
+          name: flm-companion-linux
+          path: |
+            src/src-tauri/target/release/bundle/appimage/*.AppImage
+            src/src-tauri/target/release/bundle/deb/*.deb
+          if-no-files-found: error

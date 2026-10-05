@@ -67,13 +67,34 @@ function ModelsWrapper() {
 }
 
 function SettingsWrapper() {
-  const { theme, setTheme, startMinimized, setStartMinimized } = useAppContext();
+  const {
+    theme,
+    setTheme,
+    startMinimized,
+    setStartMinimized,
+    startServerOnLaunch,
+    setStartServerOnLaunch,
+    stopServerOnExit,
+    setStopServerOnExit,
+    serverStatus,
+    serverOptions,
+    runnableModels,
+    selectedModel,
+  } = useAppContext();
   return (
     <SettingsView
       theme={theme}
       setTheme={setTheme}
       startMinimized={startMinimized}
       setStartMinimized={setStartMinimized}
+      startServerOnLaunch={startServerOnLaunch}
+      setStartServerOnLaunch={setStartServerOnLaunch}
+      stopServerOnExit={stopServerOnExit}
+      setStopServerOnExit={setStopServerOnExit}
+      serverStatus={serverStatus}
+      serverOptions={serverOptions}
+      models={runnableModels}
+      selectedModel={selectedModel}
     />
   );
 }

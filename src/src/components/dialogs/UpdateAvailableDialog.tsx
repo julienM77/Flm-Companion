@@ -44,6 +44,7 @@ export const UpdateAvailableDialog = ({ open, onOpenChange, onInstallComplete, c
 
     // FLM update states
     const [isFlmDownloading, setIsFlmDownloading] = useState(false);
+    const [isFlmInstalling, setIsFlmInstalling] = useState(false);
     const [flmDownloadProgress, setFlmDownloadProgress] = useState<number | null>(null);
     const [flmDownloadError, setFlmDownloadError] = useState<string | null>(null);
 
@@ -68,7 +69,7 @@ export const UpdateAvailableDialog = ({ open, onOpenChange, onInstallComplete, c
                     setCompanionDownloadProgress(null);
                     setCompanionDownloadError(error === 'Installer not found in release assets'
                         ? t('startup.error_installer_not_found')
-                        : t('startup.error_download_install')
+                        : `${t('startup.error_download_install')}: ${error}`
                     );
                 }
             },
@@ -90,8 +91,10 @@ export const UpdateAvailableDialog = ({ open, onOpenChange, onInstallComplete, c
                 onProgress: (progress) => setFlmDownloadProgress(progress),
                 onInstalling: () => {
                     setIsFlmDownloading(false);
+                    setIsFlmInstalling(true);
                 },
                 onSuccess: async () => {
+                    setIsFlmInstalling(false);
                     setFlmDownloadProgress(null);
                     setFlmDownloadError(null);
                     // Reload version info before closing
@@ -103,10 +106,11 @@ export const UpdateAvailableDialog = ({ open, onOpenChange, onInstallComplete, c
                 },
                 onError: (error) => {
                     setIsFlmDownloading(false);
+                    setIsFlmInstalling(false);
                     setFlmDownloadProgress(null);
                     setFlmDownloadError(error === 'Installer not found in release assets'
                         ? t('startup.error_installer_not_found')
-                        : t('startup.error_download_install')
+                        : `${t('startup.error_download_install')}: ${error}`
                     );
                 }
             },
@@ -247,12 +251,16 @@ export const UpdateAvailableDialog = ({ open, onOpenChange, onInstallComplete, c
                                 <div className="flex gap-2 mt-3">
                                     <Button
                                         onClick={handleFlmUpdate}
-                                        disabled={isFlmDownloading}
+                                        disabled={isFlmDownloading || isFlmInstalling}
                                         className="flex-1"
                                         size="sm"
                                     >
                                         <Download className="w-4 h-4 mr-2" />
-                                        {isFlmDownloading ? t('startup.downloading') : t('startup.update_flm')}
+                                        {isFlmInstalling
+                                            ? t('startup.status_installing_full')
+                                            : isFlmDownloading
+                                                ? t('startup.downloading')
+                                                : t('startup.update_flm')}
                                     </Button>
                                     <Button
                                         variant="outline"
@@ -268,7 +276,11 @@ export const UpdateAvailableDialog = ({ open, onOpenChange, onInstallComplete, c
                 </ScrollArea>
 
                 <DialogFooter>
-                    <Button variant="outline" onClick={() => onOpenChange(false)}>
+                    <Button
+                        variant="outline"
+                        disabled={isFlmDownloading || isFlmInstalling}
+                        onClick={() => onOpenChange(false)}
+                    >
                         {t('startup.remind_later')}
                     </Button>
                 </DialogFooter>

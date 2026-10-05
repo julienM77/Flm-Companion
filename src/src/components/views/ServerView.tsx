@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Play, Square, Activity, Cpu, Sliders, Cog, FileText, Save, Settings2, Bookmark, ChevronDown } from "lucide-react";
+import { Play, Square, Activity, Cpu, Sliders, Cog, FileText, Save, Settings2, Bookmark, ChevronDown, Mic } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -20,7 +20,7 @@ import { toast } from "sonner";
 
 interface ServerViewProps {
     serverStatus: ServerStatus;
-    onToggleServer: (options: ServerOptions) => void;
+    onToggleServer: (options: ServerOptions, modelOverride?: string) => void;
     models: FlmModel[];
     selectedModel: string;
     onSelectModel: (model: string) => void;
@@ -110,13 +110,26 @@ export const ServerView = ({
                         </DropdownMenu>
                     )}
                     {serverStatus === "stopped" ? (
-                        <Button
-                            onClick={() => onToggleServer(options)}
-                            size="sm"
-                            className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
-                        >
-                            <Play size={16} /> {t('server.start_server')}
-                        </Button>
+                        <>
+                            <Button
+                                variant="outline"
+                                onClick={() => {
+                                    onToggleServer({ ...options, asr: false }, "");
+                                }}
+                                size="sm"
+                                title={t('server.start_without_model_desc')}
+                                className="flex items-center gap-2"
+                            >
+                                <Mic size={16} /> {t('server.start_without_model')}
+                            </Button>
+                            <Button
+                                onClick={() => onToggleServer(options)}
+                                size="sm"
+                                className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
+                            >
+                                <Play size={16} /> {t('server.start_server')}
+                            </Button>
+                        </>
                     ) : serverStatus === "starting" ? (
                         <Button
                             disabled

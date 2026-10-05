@@ -43,10 +43,7 @@ pub fn handle_menu_event(app: &AppHandle, event_id: &str) {
 }
 
 fn handle_quit(app: &AppHandle) {
-    if let Some(window) = app.get_webview_window("main") {
-        let _ = window.destroy();
-    }
-    app.exit(0);
+    let _ = app.emit("request-quit", ());
 }
 
 fn handle_show_window(app: &AppHandle) {

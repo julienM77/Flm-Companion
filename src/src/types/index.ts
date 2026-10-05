@@ -50,6 +50,8 @@ export interface HardwareInfo {
 export interface AppConfig {
     theme: Theme;
     startMinimized: boolean;
+    startServerOnLaunch: boolean;
+    stopServerOnExit: boolean;
     flmPath: string;
     lastSelectedModel: string;
     serverOptions: ServerOptions;
@@ -114,6 +116,8 @@ export const DEFAULT_PRESETS_CONFIG: PresetsConfig = {
 export const DEFAULT_APP_CONFIG: AppConfig = {
     theme: "dark",
     startMinimized: false,
+    startServerOnLaunch: false,
+    stopServerOnExit: true,
     flmPath: "flm",
     lastSelectedModel: "",
     serverOptions: DEFAULT_SERVER_OPTIONS,

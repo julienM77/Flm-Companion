@@ -1,5 +1,8 @@
 import { Command, Child, TerminatedPayload } from "@tauri-apps/plugin-shell";
 import { readTextFile } from "@tauri-apps/plugin-fs";
+import { homeDir, join } from "@tauri-apps/api/path";
+import { invoke } from "@tauri-apps/api/core";
+import { type as osType } from "@tauri-apps/plugin-os";
 import { ConfigService } from "./config";
 import type { FlmModel, FlmStatus, HardwareInfo, ServerOptions } from "../types";
 import { MODEL_LIST_FILENAME } from "../types";
@@ -94,17 +97,17 @@ export const FlmService = {
                 pathsToTry.push(`${cleanPath}${separator}${MODEL_LIST_FILENAME}`);
             }
 
-            // New default since FLM 0.9.37: %USERPROFILE%\.flm
-            try {
-                const psCmd = Command.create("powershell", ["-NonInteractive", "-NoProfile", "-WindowStyle", "Hidden", "-Command", "$env:USERPROFILE"]);
-                const psResult = await psCmd.execute();
-                if (psResult.code === 0 && psResult.stdout.trim()) {
-                    pathsToTry.push(`${psResult.stdout.trim()}\\.flm\\${MODEL_LIST_FILENAME}`);
-                }
-            } catch { /* ignore */ }
-
-            // Old default (pre-0.9.37)
-            pathsToTry.push(`C:\\Program Files\\flm\\${MODEL_LIST_FILENAME}`);
+            const platform = await osType();
+            const home = await homeDir();
+            if (platform === "windows") {
+                pathsToTry.push(await join(home, ".flm", MODEL_LIST_FILENAME));
+                // Old default (pre-0.9.37)
+                pathsToTry.push(`C:\\Program Files\\flm\\${MODEL_LIST_FILENAME}`);
+            } else if (platform === "linux") {
+                // FLM 1.x stores models and metadata below XDG config by default.
+                pathsToTry.push(await join(home, ".config", "flm", MODEL_LIST_FILENAME));
+                pathsToTry.push(await join(home, ".flm", MODEL_LIST_FILENAME));
+            }
 
             for (const modelListPath of pathsToTry) {
                 try {
@@ -188,6 +191,12 @@ export const FlmService = {
         }
 
         try {
+            if (await osType() === "linux") {
+                const info = await invoke<HardwareInfo>("get_hardware_info");
+                hardwareInfoCache = info;
+                return info;
+            }
+
             const script = `
                 $cpu = (Get-CimInstance Win32_Processor).Name
                 $mem = (Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory
@@ -526,6 +535,11 @@ export const FlmService = {
      */
     async findFlmPath(): Promise<string | null> {
         try {
+            if (await osType() === "linux") {
+                const home = await homeDir();
+                return await join(home, ".local", "bin");
+            }
+
             const command = Command.create("powershell", ["-NonInteractive", "-NoProfile", "-WindowStyle", "Hidden", "-Command", "(Get-Command flm -ErrorAction SilentlyContinue).Source"]);
             const output = await command.execute();
 

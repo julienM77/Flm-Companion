@@ -1,9 +1,11 @@
 import { fetch } from '@tauri-apps/plugin-http';
 import { writeFile, BaseDirectory } from '@tauri-apps/plugin-fs';
-import { tempDir } from '@tauri-apps/api/path';
+import { join, tempDir } from '@tauri-apps/api/path';
 import { openPath } from '@tauri-apps/plugin-opener';
 import { ReleaseInfo } from './github';
 import { FlmService } from './flm';
+import { type as osType } from '@tauri-apps/plugin-os';
+import { invoke } from '@tauri-apps/api/core';
 
 export interface UpdateCallbacks {
     onProgress?: (progress: number | null) => void;
@@ -32,9 +34,17 @@ export const UpdateService = {
             // Find the installer asset
             // For Companion: looks for files starting with "Flm.Companion" or "Flm Companion" and ending with .exe
             // For FLM: looks for the exact exeName or any .exe file
+            const platform = await osType();
+            const isCompanion = exeName.toLowerCase().includes('flm-manager') || exeName.toLowerCase().includes('companion');
             const asset = release.assets.find(a => {
                 if (a.name === exeName) return true; // Exact match
-                if (exeName.includes('flm-manager') || exeName.includes('companion')) {
+                if (platform === 'linux') {
+                    if (isCompanion) return a.name.toLowerCase().endsWith('.appimage');
+                    // The portable archive works on Fedora/Bazzite and does not
+                    // require a distribution package manager or root access.
+                    return a.name.toLowerCase().endsWith('_linux.tar.gz');
+                }
+                if (isCompanion) {
                     // Companion installer: flexible matching
                     return (a.name.startsWith('Flm.Companion') || a.name.startsWith('Flm Companion')) && a.name.endsWith('.exe');
                 }
@@ -83,7 +93,19 @@ export const UpdateService = {
 
             // Launch the installer
             const tempDirPath = await tempDir();
-            const absolutePath = `${tempDirPath}${filename}`;
+            const absolutePath = await join(tempDirPath, filename);
+
+            if (platform === 'linux' && !isCompanion) {
+                onInstalling?.();
+                await invoke('install_flm_linux', {
+                    archivePath: absolutePath,
+                    expectedVersion: release.tag_name
+                });
+                onProgress?.(null);
+                onSuccess?.();
+                return;
+            }
+
             await openPath(absolutePath);
 
             // Reset progress

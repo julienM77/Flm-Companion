@@ -16,6 +16,10 @@ export interface AppContextType {
     setTheme: (theme: Theme) => void;
     startMinimized: boolean;
     setStartMinimized: (value: boolean) => void;
+    startServerOnLaunch: boolean;
+    setStartServerOnLaunch: (value: boolean) => void;
+    stopServerOnExit: boolean;
+    setStopServerOnExit: (value: boolean) => void;
     flmPath: string;
     setFlmPath: (path: string) => void;
     isConfigLoaded: boolean;
@@ -38,7 +42,7 @@ export interface AppContextType {
     logs: string[];
     serverOptions: ServerOptions;
     setServerOptions: (options: ServerOptions | ((prev: ServerOptions) => ServerOptions)) => void;
-    handleToggleServer: (options?: ServerOptions) => Promise<void>;
+    handleToggleServer: (options?: ServerOptions, modelOverride?: string) => Promise<void>;
     addLog: (log: string) => void;
     clearLogs: () => void;
 
@@ -79,6 +83,7 @@ export function AppProvider({ children }: AppProviderProps) {
     const [activeTab, setActiveTab] = useState("models");
     const [initialServerOptions, setInitialServerOptions] = useState<ServerOptions>({});
     const [initialSelectedModel, setInitialSelectedModel] = useState<string>("");
+    const [startupConfigLoaded, setStartupConfigLoaded] = useState(false);
     const [flmVersion, setFlmVersion] = useState<string>("");
     const [startupChecks, setStartupChecks] = useState<StartupCheckResult | null>(null);
     const [isCheckingStartup, setIsCheckingStartup] = useState(false);
@@ -172,6 +177,7 @@ export function AppProvider({ children }: AppProviderProps) {
             ConfigService.loadConfig().then((loadedConfig) => {
                 setInitialServerOptions(loadedConfig.serverOptions || {});
                 setInitialSelectedModel(loadedConfig.lastSelectedModel || "");
+                setStartupConfigLoaded(true);
             });
         }
     }, [config.isConfigLoaded]);
@@ -188,8 +194,13 @@ export function AppProvider({ children }: AppProviderProps) {
         selectedModel: models.selectedModel,
         setSelectedModel: models.setSelectedModel,
         installedModels: models.runnableModels,
+        initialSelectedModel,
         initialServerOptions,
         isConfigLoaded: config.isConfigLoaded,
+        startupConfigLoaded,
+        isFlmAvailable,
+        startServerOnLaunch: config.startServerOnLaunch,
+        stopServerOnExit: config.stopServerOnExit,
         onNavigateToLogs: () => setActiveTab("server"),
     });
 
@@ -204,6 +215,7 @@ export function AppProvider({ children }: AppProviderProps) {
         flmVersion: flmVersion,
         isFlmAvailable: isFlmAvailable,
         presetsConfig: presetsConfig,
+        theme: config.theme,
     });
 
     // Save config when external values change
@@ -220,6 +232,10 @@ export function AppProvider({ children }: AppProviderProps) {
         setTheme: config.setTheme,
         startMinimized: config.startMinimized,
         setStartMinimized: config.setStartMinimized,
+        startServerOnLaunch: config.startServerOnLaunch,
+        setStartServerOnLaunch: config.setStartServerOnLaunch,
+        stopServerOnExit: config.stopServerOnExit,
+        setStopServerOnExit: config.setStopServerOnExit,
         flmPath: config.flmPath,
         setFlmPath: config.setFlmPath,
         isConfigLoaded: config.isConfigLoaded,

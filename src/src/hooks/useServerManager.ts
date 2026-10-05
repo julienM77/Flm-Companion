@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { listen } from "@tauri-apps/api/event";
+import { invoke } from "@tauri-apps/api/core";
 import { useTranslation } from "react-i18next";
 import { FlmService } from "../services/flm";
 import { NotificationService } from "../services/notification";
@@ -11,8 +12,13 @@ interface UseServerManagerProps {
     selectedModel: string;
     setSelectedModel: (model: string) => void;
     installedModels: FlmModel[];
+    initialSelectedModel: string;
     initialServerOptions: ServerOptions;
     isConfigLoaded: boolean;
+    startupConfigLoaded: boolean;
+    isFlmAvailable: boolean;
+    startServerOnLaunch: boolean;
+    stopServerOnExit: boolean;
     onNavigateToLogs?: () => void;
 }
 
@@ -21,7 +27,7 @@ interface UseServerManagerReturn {
     logs: string[];
     serverOptions: ServerOptions;
     setServerOptions: (options: ServerOptions | ((prev: ServerOptions) => ServerOptions)) => void;
-    handleToggleServer: (options?: ServerOptions) => Promise<void>;
+    handleToggleServer: (options?: ServerOptions, modelOverride?: string) => Promise<void>;
     addLog: (log: string) => void;
     clearLogs: () => void;
 }
@@ -30,8 +36,13 @@ export function useServerManager({
     selectedModel,
     setSelectedModel,
     installedModels,
+    initialSelectedModel,
     initialServerOptions,
     isConfigLoaded,
+    startupConfigLoaded,
+    isFlmAvailable,
+    startServerOnLaunch,
+    stopServerOnExit,
     onNavigateToLogs,
 }: UseServerManagerProps): UseServerManagerReturn {
     const { t } = useTranslation();
@@ -49,6 +60,8 @@ export function useServerManager({
     const serverOptionsRef = useRef(serverOptions);
     const installedModelsRef = useRef(installedModels);
     const intentionalStopRef = useRef(false);
+    const stopServerOnExitRef = useRef(stopServerOnExit);
+    const startupPreferenceHandledRef = useRef(false);
 
     useEffect(() => {
         serverStatusRef.current = serverStatus;
@@ -65,6 +78,10 @@ export function useServerManager({
     useEffect(() => {
         installedModelsRef.current = installedModels;
     }, [installedModels]);
+
+    useEffect(() => {
+        stopServerOnExitRef.current = stopServerOnExit;
+    }, [stopServerOnExit]);
 
     // Update options when config is loaded
     useEffect(() => {
@@ -101,7 +118,7 @@ export function useServerManager({
     }, []);
 
     const handleToggleServer = useCallback(
-        async (options?: ServerOptions) => {
+        async (options?: ServerOptions, modelOverride?: string) => {
             if (serverStatusRef.current === "running") {
                 intentionalStopRef.current = true;
                 try {
@@ -115,7 +132,7 @@ export function useServerManager({
                 setLogs([]);
 
                 // Get actual model name (extract from preset if needed)
-                let actualModel = selectedModelRef.current;
+                let actualModel = modelOverride ?? selectedModelRef.current;
                 if (isPresetId(actualModel)) {
                     const preset = findPresetById(actualModel, DEFAULT_PRESETS_CONFIG);
                     actualModel = preset?.model || "";
@@ -173,6 +190,30 @@ export function useServerManager({
         },
         [addLog, t]
     );
+
+    // Honor the launch preference once, after config, FLM checks, and the
+    // last selected model have had a chance to load.
+    useEffect(() => {
+        if (!isConfigLoaded || !startupConfigLoaded || startupPreferenceHandledRef.current) return;
+
+        if (!startServerOnLaunch) {
+            startupPreferenceHandledRef.current = true;
+            return;
+        }
+
+        if (!isFlmAvailable || serverStatusRef.current !== "stopped") return;
+
+        const startupModel = selectedModelRef.current || initialSelectedModel;
+        const startupOptions = { ...DEFAULT_SERVER_OPTIONS, ...initialServerOptions };
+        let modelOverride: string | undefined;
+        if (!startupModel) {
+            // Start an empty server; FLM can load a model later via its API.
+            startupOptions.asr = false;
+            modelOverride = "";
+        }
+        startupPreferenceHandledRef.current = true;
+        void handleToggleServer(startupOptions, modelOverride);
+    }, [isConfigLoaded, startupConfigLoaded, isFlmAvailable, startServerOnLaunch, selectedModel, initialSelectedModel, initialServerOptions, handleToggleServer]);
 
     // Handle pending restart after server stops
     useEffect(() => {
@@ -239,6 +280,17 @@ export function useServerManager({
             onNavigateToLogs?.();
         });
 
+        const unlistenQuit = listen("request-quit", async () => {
+            try {
+                if (stopServerOnExitRef.current && serverStatusRef.current !== "stopped") {
+                    intentionalStopRef.current = true;
+                    await FlmService.stopServer((log) => addLog(log));
+                }
+            } finally {
+                await invoke("quit_app");
+            }
+        });
+
         const unlistenToggleAsr = listen("toggle-asr", async () => {
             const newOptions = { ...serverOptionsRef.current, asr: !serverOptionsRef.current.asr };
             setServerOptions(newOptions);
@@ -264,6 +316,7 @@ export function useServerManager({
             unlistenStop.then((f) => f());
             unlistenSelectModel.then((f) => f());
             unlistenViewLogs.then((f) => f());
+            unlistenQuit.then((f) => f());
             unlistenToggleAsr.then((f) => f());
             unlistenToggleEmbed.then((f) => f());
         };

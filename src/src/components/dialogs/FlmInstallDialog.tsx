@@ -52,7 +52,7 @@ export const FlmInstallDialog = ({ open, flmRelease, onInstallComplete }: FlmIns
                     setDownloadProgress(null);
                     setDownloadError(error === 'Installer not found in release assets'
                         ? t('startup.error_installer_not_found')
-                        : t('startup.error_download_install')
+                        : `${t('startup.error_download_install')}: ${error}`
                     );
                 }
             },

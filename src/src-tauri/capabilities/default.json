@@ -85,6 +85,9 @@
       "identifier": "fs:allow-read-text-file",
       "allow": [
         {
+          "path": "**/model_list.json"
+        },
+        {
           "path": "**\\model_list.json"
         },
         {

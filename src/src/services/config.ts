@@ -1,14 +1,21 @@
-import { BaseDirectory, readTextFile, writeTextFile, exists, mkdir } from "@tauri-apps/plugin-fs";
+import { invoke } from "@tauri-apps/api/core";
 import packageJson from "../../package.json";
 import {
     AppConfig,
     ServerOptions,
     DEFAULT_APP_CONFIG,
-    CONFIG_FILENAME,
     ServerPreset,
     PresetsConfig,
     DEFAULT_PRESETS_CONFIG,
 } from "../types";
+
+let configWriteQueue: Promise<void> = Promise.resolve();
+
+function enqueueConfigWrite(write: () => Promise<void>): Promise<void> {
+    const nextWrite = configWriteQueue.then(write);
+    configWriteQueue = nextWrite.catch(() => undefined);
+    return nextWrite;
+}
 
 // Re-export types for compatibility
 export type { AppConfig, ServerOptions };
@@ -20,18 +27,10 @@ export const ConfigService = {
 
     async loadConfig(): Promise<AppConfig> {
         try {
-            const dirExists = await exists("", { baseDir: BaseDirectory.AppConfig });
-            if (!dirExists) {
-                await mkdir("", { baseDir: BaseDirectory.AppConfig, recursive: true });
-            }
-
-            const configExists = await exists(CONFIG_FILENAME, { baseDir: BaseDirectory.AppConfig });
-            if (!configExists) {
-                await this.saveConfig(DEFAULT_APP_CONFIG);
+            const content = await invoke<string | null>("load_app_config");
+            if (!content) {
                 return DEFAULT_APP_CONFIG;
             }
-
-            const content = await readTextFile(CONFIG_FILENAME, { baseDir: BaseDirectory.AppConfig });
             const config = JSON.parse(content);
 
             return {
@@ -50,18 +49,30 @@ export const ConfigService = {
     },
 
     async saveConfig(config: AppConfig): Promise<void> {
-        try {
-            const dirExists = await exists("", { baseDir: BaseDirectory.AppConfig });
-            if (!dirExists) {
-                await mkdir("", { baseDir: BaseDirectory.AppConfig, recursive: true });
+        return enqueueConfigWrite(async () => {
+            try {
+                await invoke("save_app_config", {
+                    contents: JSON.stringify(config, null, 2),
+                });
+            } catch (error) {
+                console.error("Failed to save config:", error);
+                throw error;
             }
+        });
+    },
 
-            await writeTextFile(CONFIG_FILENAME, JSON.stringify(config, null, 2), {
-                baseDir: BaseDirectory.AppConfig,
-            });
-        } catch (error) {
-            console.error("Failed to save config:", error);
-        }
+    async updateConfig(patch: Partial<AppConfig>): Promise<void> {
+        return enqueueConfigWrite(async () => {
+            const config = await this.loadConfig();
+            try {
+                await invoke("save_app_config", {
+                    contents: JSON.stringify({ ...config, ...patch }, null, 2),
+                });
+            } catch (error) {
+                console.error("Failed to update config:", error);
+                throw error;
+            }
+        });
     },
 
     async getPresetsConfig(): Promise<PresetsConfig> {

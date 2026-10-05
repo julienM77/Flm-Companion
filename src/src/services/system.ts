@@ -50,7 +50,13 @@ export const SystemService = {
     },
 
     async getLinuxNpuDriverVersion(): Promise<string> {
-        return "Not Implemented";
+        try {
+            const info = await invoke<{ npuDriver: string }>("get_hardware_info");
+            return info.npuDriver;
+        } catch (error) {
+            console.error("Failed to get Linux NPU driver:", error);
+            return "Not detected";
+        }
     },
 
     async getSystemStats(): Promise<{ memory: { used: number, total: number, percentage: number }, cpu: { usage: number }, npu: { usage: number, memory: number } }> {
