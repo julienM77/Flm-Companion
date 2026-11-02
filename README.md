@@ -13,17 +13,17 @@
 
 </div>
 
-## Fork additions
+## What this fork adds and fixes
 
-This fork keeps the upstream FLM workflow and adds a tighter serving experience:
+This fork keeps upstream FLM compatibility while making Companion a clearer local model launcher and serving client.
 
-* Server-first layout with chat, launch parameters, presets, and collapsible navigation.
-* Active-model API proxy: `/v1/models` exposes only the model currently loaded by Companion.
-* Copy-ready Developer API details for Base URL, cURL, and client examples.
-* Live free RAM, FLM process RAM, NPU usage, launch-context, TTFT, and context-use indicators.
-* Context-aware RAM estimates using model footprint, launch context, and runtime reserve.
-* Persistent model/settings selection and safer FLM process cleanup on stop, close, and restart.
-* Optional Caveman mode for short, high-density model replies.
+* **Serves only the active model**: Companion-owned API proxy presents a single active model at `/v1/models` instead of exposing every downloaded model.
+* **Fixes model size reporting**: downloaded and existing models use their actual on-disk sizes.
+* **Makes launch cost visible**: live free RAM, FLM process RAM, NPU usage, launch context versus model maximum, TTFT, context use, and context-aware RAM estimates.
+* **Prevents stale FLM processes**: owned FLM processes are cleaned up on stop, restart, window close, and application exit.
+* **Improves serving workflow**: server-first dashboard, chat connected to the active server, launch parameters in a modal, presets, collapsible navigation, and copy-ready Developer API examples.
+* **Preserves working state**: selected model and launch settings persist between sessions.
+* **Adds Caveman mode**: optional short, high-density replies for chat.
 
 Built artifacts are published on the [fork releases page](https://github.com/plushycat/Flm-Companion/releases).
 
