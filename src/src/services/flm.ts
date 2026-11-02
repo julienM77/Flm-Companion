@@ -1,4 +1,5 @@
 import { Command, Child, TerminatedPayload } from "@tauri-apps/plugin-shell";
+import { invoke } from "@tauri-apps/api/core";
 import { readTextFile } from "@tauri-apps/plugin-fs";
 import { ConfigService } from "./config";
 import type { FlmModel, FlmStatus, HardwareInfo, ServerOptions } from "../types";
@@ -19,6 +20,8 @@ interface ModelJsonEntry {
     size: number;
     footprint?: number;
     default_context_length: number;
+    max_context_length?: number;
+    max_prefill_len?: number;
     vlm?: boolean;
     details: {
         format: string;
@@ -27,6 +30,21 @@ interface ModelJsonEntry {
         parameter_size: string;
         quantization_level: string;
     };
+}
+
+function getModelMaxContextLength(modelName: string, defaultLength: number, declaredMax?: number): number {
+    if (declaredMax) return declaredMax;
+
+    const name = modelName.toLowerCase();
+    if (name.includes("-flash")) return 1024;
+    if (name.startsWith("nanbeige") || name.startsWith("minicpm-v-4.7")) return 262144;
+    if (name.startsWith("nemotron3.5-bolt")) return 65536;
+    if (name.startsWith("lfm3")) return 32768;
+    if (name.startsWith("llama3") || name.startsWith("phi4-mini-it") || name.startsWith("gpt-oss")) return 131072;
+    if (name.startsWith("gemma3") || name.startsWith("gemma4") || name.startsWith("medgemma") || name.startsWith("translategemma")) return 131072;
+    if (name.startsWith("qwen3-tk")) return 262144;
+    if (name.startsWith("d3:")) return 32768;
+    return defaultLength;
 }
 
 let serverProcess: Child | null = null;
@@ -118,6 +136,9 @@ export const FlmService = {
                             const fullName = `${family}:${tag}`;
 
                             const sizeBytes = details.size;
+                            const downloadSizeBytes = details.footprint != null
+                                ? details.footprint * 1024 * 1024 * 1024
+                                : sizeBytes;
                             const sizeStr = details.footprint != null
                                 ? `${details.footprint.toFixed(1)}GB`
                                 : sizeBytes > 1024 * 1024 * 1024
@@ -128,7 +149,7 @@ export const FlmService = {
                                 name: fullName,
                                 size: sizeStr,
                                 modified: details.modified_at,
-                                realSize: details.size,
+                                realSize: downloadSizeBytes,
                                 description: details.name,
                                 family: details.details.family,
                                 isThink: details.details.think,
@@ -136,6 +157,8 @@ export const FlmService = {
                                 isEmbed: fullName.toLowerCase().includes("embed"),
                                 isAudio: fullName.toLowerCase().includes("whisper"),
                                 contextLength: details.default_context_length,
+                                maxContextLength: getModelMaxContextLength(fullName, details.default_context_length, details.max_context_length),
+                                maxPrefillLength: details.max_prefill_len,
                                 quantization: details.details.quantization_level,
                                 url: details.url,
                                 parameterSize: details.details.parameter_size
@@ -284,7 +307,7 @@ export const FlmService = {
 
                 const name = parts[0];
 
-                if (name === "NAME" || name.startsWith("---") || name.startsWith("Model")) continue;
+                if (name === "NAME" || name === "Models:" || name.startsWith("---") || name.startsWith("Model")) continue;
                 if (!name.includes(':')) continue;
 
                 if (metadata[name]) {
@@ -339,6 +362,13 @@ export const FlmService = {
 
             if (options.pmode) args.push("--pmode", options.pmode);
             if (options.ctxLen && options.ctxLen > 0) args.push("--ctx-len", options.ctxLen.toString());
+            if (options.backend) args.push("--backend", options.backend);
+            if (options.decision) args.push("--decision", options.decision);
+            if (options.prefillChunkLen && options.prefillChunkLen > 0) args.push("--prefill-chunk-len", options.prefillChunkLen.toString());
+            if (options.prefixCacheMb !== undefined) args.push("--prefix-cache-mb", options.prefixCacheMb.toString());
+            if (options.prefixSlots !== undefined) args.push("--prefix-slots", options.prefixSlots.toString());
+            if (options.prefixMinGain !== undefined) args.push("--prefix-min-gain", options.prefixMinGain.toString());
+            if (options.imgPreResize !== undefined) args.push("--img-pre-resize", options.imgPreResize.toString());
             if (options.port && options.port > 0) args.push("--port", options.port.toString());
             if (options.host) args.push("--host", options.host);
             if (options.socket && options.socket > 0) args.push("--socket", options.socket.toString());
@@ -356,6 +386,8 @@ export const FlmService = {
             const command = Command.create("flm", args);
 
             command.on('close', (data: TerminatedPayload) => {
+                void invoke("stop_api_proxy");
+                void invoke("register_flm_process", { pid: 0 });
                 console.log(`command finished with code ${data.code} and signal ${data.signal}`);
                 serverProcess = null;
                 onLog(`[SYSTEM] Server stopped with code ${data.code}`);
@@ -375,6 +407,8 @@ export const FlmService = {
             });
 
             serverProcess = await command.spawn();
+            await invoke("register_flm_process", { pid: serverProcess.pid });
+            await invoke("start_api_proxy", { targetPort: options.port || 52625, model: modelName });
             onLog(`[SYSTEM] Server process started (PID: ${serverProcess.pid})`);
 
         } catch (error) {
@@ -387,6 +421,8 @@ export const FlmService = {
      * Stop the FLM server
      */
     async stopServer(onLog?: (log: string) => void): Promise<void> {
+        await invoke("stop_api_proxy");
+        await invoke("stop_owned_flm_process");
         if (serverProcess) {
             try {
                 if (onLog) onLog("[SYSTEM] Stopping server...");

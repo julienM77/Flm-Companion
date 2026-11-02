@@ -33,10 +33,16 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::update_tray_menu,
             commands::get_npu_info,
-            commands::get_system_stats
+            commands::get_system_stats,
+            commands::start_api_proxy,
+            commands::stop_api_proxy,
+            commands::get_api_metrics
+            ,commands::register_flm_process
+            ,commands::stop_owned_flm_process
         ])
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                commands::stop_owned_flm_process();
                 let _ = window.hide();
                 api.prevent_close();
             }

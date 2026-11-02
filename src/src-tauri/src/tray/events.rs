@@ -43,6 +43,7 @@ pub fn handle_menu_event(app: &AppHandle, event_id: &str) {
 }
 
 fn handle_quit(app: &AppHandle) {
+    crate::commands::stop_owned_flm_process();
     if let Some(window) = app.get_webview_window("main") {
         let _ = window.destroy();
     }

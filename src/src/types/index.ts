@@ -9,6 +9,13 @@ export type PerformanceMode = "powersaver" | "balanced" | "performance" | "turbo
 export interface ServerOptions {
     pmode?: PerformanceMode;
     ctxLen?: number;
+    backend?: string;
+    decision?: string;
+    prefillChunkLen?: number;
+    prefixCacheMb?: number;
+    prefixSlots?: number;
+    prefixMinGain?: number;
+    imgPreResize?: number;
     port?: number;
     host?: string;
     asr?: boolean;
@@ -32,6 +39,8 @@ export interface FlmModel {
     isEmbed?: boolean;
     isAudio?: boolean;
     contextLength?: number;
+    maxContextLength?: number;
+    maxPrefillLength?: number;
     quantization?: string;
     url?: string;
     parameterSize?: string;
@@ -89,6 +98,13 @@ export const DEFAULT_SERVER_OPTIONS: ServerOptions = {
     port: DEFAULT_SERVER_PORT,
     host: "127.0.0.1",
     ctxLen: 0,
+    backend: "",
+    decision: "",
+    prefillChunkLen: 0,
+    prefixCacheMb: 4096,
+    prefixSlots: 8,
+    prefixMinGain: 128,
+    imgPreResize: 2,
     asr: false,
     embed: false,
     socket: 10,

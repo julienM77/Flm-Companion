@@ -1,16 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
-import { Send, StopCircle, Play, Settings2 } from 'lucide-react';
+import { Send } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { FlmService } from '../../services/flm';
-import type { FlmModel, ServerOptions, PerformanceMode } from '../../types';
+import type { FlmModel, ServerStatus } from '../../types';
 import ReactMarkdown from 'react-markdown';
 import { cn } from '../../lib/utils';
 import { ScrollArea } from '../ui/scroll-area';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { Label } from '../ui/label';
+import { Card } from '../ui/card';
 import { Switch } from '../ui/switch';
 
 interface ChatMessage {
@@ -22,33 +21,36 @@ interface ChatViewProps {
     models: FlmModel[];
     selectedModel: string;
     onSelectModel: (model: string) => void;
-    options: ServerOptions;
-    setOptions: (options: ServerOptions) => void;
+    serverStatus: ServerStatus;
 }
 
-export const ChatView = ({ models, selectedModel, onSelectModel, options, setOptions }: ChatViewProps) => {
+const API_BASE_URL = 'http://127.0.0.1:52626/v1';
+const CAVEMAN_INSTRUCTION = 'Speak like caveman. Ultra-short. Omit filler words. Maximum information density with minimal tokens.';
+
+export const ChatView = ({ models, selectedModel, onSelectModel, serverStatus }: ChatViewProps) => {
     const { t } = useTranslation();
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [input, setInput] = useState('');
     const [isRunning, setIsRunning] = useState(false);
     const [isReady, setIsReady] = useState(false);
     const [isThinking, setIsThinking] = useState(false);
-    const [showOptions, setShowOptions] = useState(false);
+    const [cavemanMode, setCavemanMode] = useState(false);
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
-    // Refs to access state inside the event listener callback
-    const isReadyRef = useRef(isReady);
-    const isThinkingRef = useRef(isThinking);
-
     useEffect(() => {
-        isReadyRef.current = isReady;
-    }, [isReady]);
-
-    useEffect(() => {
-        isThinkingRef.current = isThinking;
-    }, [isThinking]);
+        if (serverStatus === 'running') {
+            setIsRunning(true);
+            setIsReady(true);
+        } else if (serverStatus === 'starting') {
+            setIsRunning(true);
+            setIsReady(false);
+        } else {
+            setIsRunning(false);
+            setIsReady(false);
+        }
+    }, [serverStatus]);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -57,78 +59,6 @@ export const ChatView = ({ models, selectedModel, onSelectModel, options, setOpt
     useEffect(() => {
         scrollToBottom();
     }, [messages, isThinking]);
-
-    const handleStart = async () => {
-        if (!selectedModel) return;
-
-        setMessages([{ role: 'system', content: t('chat.system_starting', { model: selectedModel }) }]);
-        setIsRunning(true);
-        setIsReady(false);
-
-        try {
-            await FlmService.startChat(selectedModel, options, (data) => {
-                // Handle output from FLM
-                if (data.type === 'stdout') {
-                    const text = data.content || '';
-
-                    // Check for ready state
-                    if (text.includes('>>>')) {
-                        setIsReady(true);
-                        setIsThinking(false);
-                        // Remove the prompt from display if it's just the prompt
-                        if (text.trim() === '>>>') return;
-                    }
-
-                    setMessages(prev => {
-                        const lastMsg = prev[prev.length - 1];
-                        const ready = isReadyRef.current;
-                        const thinking = isThinkingRef.current;
-
-                        // If last message is assistant, append to it
-                        if (lastMsg && lastMsg.role === 'assistant' && !ready) {
-                            // Filter out the prompt if it appears in the chunk
-                            const cleanContent = text.replace('>>>', '');
-                            return [
-                                ...prev.slice(0, -1),
-                                { ...lastMsg, content: lastMsg.content + cleanContent }
-                            ];
-                        }
-
-                        // If it's a new response starting
-                        if (thinking && (!lastMsg || lastMsg.role !== 'assistant')) {
-                            const cleanContent = text.replace('>>>', '');
-                            return [...prev, { role: 'assistant', content: cleanContent }];
-                        }
-
-                        // System messages or initial logs
-                        if (!ready && (!lastMsg || lastMsg.role === 'system')) {
-                            return [...prev, { role: 'system', content: text }];
-                        }
-
-                        return prev;
-                    });
-                } else if (data.type === 'stderr') {
-                    // Usually logs
-                    const text = data.content || '';
-                    setMessages(prev => [...prev, { role: 'system', content: `[LOG] ${text}` }]);
-                } else if (data.type === 'exit') {
-                    setIsRunning(false);
-                    setIsReady(false);
-                    setMessages(prev => [...prev, { role: 'system', content: t('chat.system_process_exited', { code: data.code }) }]);
-                }
-            });
-        } catch (e) {
-            console.error(e);
-            setIsRunning(false);
-            setMessages(prev => [...prev, { role: 'system', content: t('chat.system_error', { error: e }) }]);
-        }
-    };
-
-    const handleStop = async () => {
-        await FlmService.stopChat();
-        setIsRunning(false);
-        setIsReady(false);
-    };
 
     const handleSend = async () => {
         if (!input.trim() || !isReady) return;
@@ -142,7 +72,49 @@ export const ChatView = ({ models, selectedModel, onSelectModel, options, setOpt
         // Create a new empty assistant message to stream into
         setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
 
-        await FlmService.sendChatMessage(userMsg);
+        try {
+            if (serverStatus === 'running') {
+                const history = [
+                    ...(cavemanMode ? [{ role: 'system' as const, content: CAVEMAN_INSTRUCTION }] : []),
+                    ...messages.filter(message => message.role !== 'system'),
+                    { role: 'user' as const, content: userMsg },
+                ];
+                const response = await fetch(`${API_BASE_URL}/chat/completions`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ model: selectedModel, messages: history, stream: true }),
+                });
+                if (!response.ok || !response.body) throw new Error(`API request failed (${response.status})`);
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop() || '';
+                    for (const line of lines) {
+                        if (!line.startsWith('data:')) continue;
+                        const payload = line.slice(5).trim();
+                        if (payload === '[DONE]') continue;
+                        try {
+                            const content = JSON.parse(payload).choices?.[0]?.delta?.content;
+                            if (content) setMessages(prev => [...prev.slice(0, -1), { role: 'assistant', content: (prev[prev.length - 1]?.content || '') + content }]);
+                        } catch { }
+                    }
+                }
+                setIsReady(true);
+                setIsThinking(false);
+            } else {
+                await FlmService.sendChatMessage(userMsg);
+            }
+        } catch (e) {
+            setIsReady(true);
+            setIsThinking(false);
+            setMessages(prev => [...prev, { role: 'system', content: t('chat.system_error', { error: e }) }]);
+        }
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -174,88 +146,33 @@ export const ChatView = ({ models, selectedModel, onSelectModel, options, setOpt
                         </SelectContent>
                     </Select>
 
-                    <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => setShowOptions(!showOptions)}
-                        className={showOptions ? "bg-accent" : ""}
-                        title={t('chat.settings')}
-                    >
-                        <Settings2 className="w-4 h-4" />
-                    </Button>
+                    <label className="flex items-center gap-2 text-sm text-muted-foreground whitespace-nowrap">
+                        <Switch checked={cavemanMode} onCheckedChange={setCavemanMode} />
+                        {t('chat.caveman_mode')}
+                    </label>
                 </div>
 
                 <div className="flex items-center gap-2">
-                    {!isRunning ? (
-                        <Button onClick={handleStart} disabled={!selectedModel}>
-                            <Play className="w-4 h-4 mr-2" />
-                            {t('chat.start_chat')}
-                        </Button>
-                    ) : (
-                        <Button variant="destructive" onClick={handleStop}>
-                            <StopCircle className="w-4 h-4 mr-2" />
-                            {t('chat.stop')}
-                        </Button>
-                    )}
+                    <Button
+                        variant="outline"
+                        disabled
+                        className={cn(
+                            'gap-2',
+                            serverStatus === 'running' && 'border-green-500/40 bg-green-500/10 text-green-400 opacity-100',
+                            serverStatus === 'starting' && 'border-blue-500/40 bg-blue-500/10 text-blue-400 opacity-100',
+                            serverStatus === 'stopped' && 'border-red-500/40 bg-red-500/10 text-red-400 opacity-100',
+                        )}
+                    >
+                        <span className={cn(
+                            'h-2 w-2 rounded-full',
+                            serverStatus === 'running' && 'bg-green-400',
+                            serverStatus === 'starting' && 'bg-blue-400 animate-pulse',
+                            serverStatus === 'stopped' && 'bg-red-400',
+                        )} />
+                        {serverStatus === 'running' ? t('chat.server_ready') : serverStatus === 'starting' ? t('chat.server_starting') : t('chat.server_offline')}
+                    </Button>
                 </div>
             </div>
-
-            {/* Options Panel */}
-            {showOptions && (
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="text-sm font-medium">{t('chat.advanced_parameters')}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="grid grid-cols-2 gap-6">
-                        <div className="space-y-4">
-                            <div className="space-y-2">
-                                <Label>{t('chat.power_mode')}</Label>
-                                <Select
-                                    value={options.pmode}
-                                    onValueChange={(v: PerformanceMode) => setOptions({ ...options, pmode: v })}
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="powersaver">{t('chat.power_modes.powersaver')}</SelectItem>
-                                        <SelectItem value="balanced">{t('chat.power_modes.balanced')}</SelectItem>
-                                        <SelectItem value="performance">{t('chat.power_modes.performance')}</SelectItem>
-                                        <SelectItem value="turbo">{t('chat.power_modes.turbo')}</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="space-y-2">
-                                <Label>{t('chat.context_length')}</Label>
-                                <Input
-                                    type="number"
-                                    value={options.ctxLen}
-                                    onChange={e => setOptions({ ...options, ctxLen: parseInt(e.target.value) || 0 })}
-                                />
-                            </div>
-                        </div>
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between">
-                                <Label htmlFor="asr-mode">{t('chat.asr_mode')}</Label>
-                                <Switch
-                                    id="asr-mode"
-                                    checked={options.asr}
-                                    onCheckedChange={checked => setOptions({ ...options, asr: checked })}
-                                />
-                            </div>
-
-                            <div className="flex items-center justify-between">
-                                <Label htmlFor="embed-mode">{t('chat.embed_mode')}</Label>
-                                <Switch
-                                    id="embed-mode"
-                                    checked={options.embed}
-                                    onCheckedChange={checked => setOptions({ ...options, embed: checked })}
-                                />
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-            )}
 
             {/* Chat Area */}
             <Card className="flex-1 flex flex-col min-h-0 overflow-hidden">

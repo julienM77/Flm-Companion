@@ -6,6 +6,7 @@ pub struct SystemStats {
     pub memory_used_mb: f64,
     pub memory_total_mb: f64,
     pub memory_percentage: f64,
+    pub flm_process_mb: f64,
     pub cpu_usage: f64,
 }
 
@@ -14,6 +15,7 @@ pub async fn get_system_stats() -> Result<SystemStats, String> {
     tauri::async_runtime::spawn_blocking(|| {
         let mut sys = System::new();
         sys.refresh_memory();
+        sys.refresh_processes(sysinfo::ProcessesToUpdate::All, true);
         sys.refresh_cpu_usage();
 
         std::thread::sleep(std::time::Duration::from_millis(200));
@@ -28,11 +30,19 @@ pub async fn get_system_stats() -> Result<SystemStats, String> {
         } else {
             0.0
         };
+        let flm_process_mb = sys.processes().values()
+            .filter(|process| {
+                let name = process.name().to_string_lossy().to_ascii_lowercase();
+                name == "flm" || name == "flm.exe"
+            })
+            .map(|process| process.memory() as f64 / 1024.0 / 1024.0)
+            .sum::<f64>();
 
         SystemStats {
             memory_used_mb: (used_mb * 100.0).round() / 100.0,
             memory_total_mb: (total_mb * 100.0).round() / 100.0,
             memory_percentage: (percentage * 100.0).round() / 100.0,
+            flm_process_mb: (flm_process_mb * 100.0).round() / 100.0,
             cpu_usage: (sys.global_cpu_usage() as f64 * 100.0).round() / 100.0,
         }
     })

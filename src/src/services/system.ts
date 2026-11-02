@@ -53,17 +53,18 @@ export const SystemService = {
         return "Not Implemented";
     },
 
-    async getSystemStats(): Promise<{ memory: { used: number, total: number, percentage: number }, cpu: { usage: number }, npu: { usage: number, memory: number } }> {
-        let memory = { used: 0, total: 0, percentage: 0 };
+    async getSystemStats(): Promise<{ memory: { used: number, total: number, percentage: number, flmProcess: number }, cpu: { usage: number }, npu: { usage: number, memory: number } }> {
+        let memory = { used: 0, total: 0, percentage: 0, flmProcess: 0 };
         let cpu = { usage: 0 };
         let npu = { usage: 0, memory: 0 };
 
         try {
-            const stats = await invoke<{ memory_used_mb: number, memory_total_mb: number, memory_percentage: number, cpu_usage: number }>("get_system_stats");
+            const stats = await invoke<{ memory_used_mb: number, memory_total_mb: number, memory_percentage: number, flm_process_mb: number, cpu_usage: number }>("get_system_stats");
             memory = {
                 used: stats.memory_used_mb,
                 total: stats.memory_total_mb,
-                percentage: stats.memory_percentage
+                percentage: stats.memory_percentage,
+                flmProcess: stats.flm_process_mb
             };
             cpu = { usage: stats.cpu_usage };
         } catch (error) {

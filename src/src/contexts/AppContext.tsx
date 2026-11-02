@@ -76,7 +76,7 @@ interface AppProviderProps {
 }
 
 export function AppProvider({ children }: AppProviderProps) {
-    const [activeTab, setActiveTab] = useState("models");
+    const [activeTab, setActiveTab] = useState("server");
     const [initialServerOptions, setInitialServerOptions] = useState<ServerOptions>({});
     const [initialSelectedModel, setInitialSelectedModel] = useState<string>("");
     const [flmVersion, setFlmVersion] = useState<string>("");

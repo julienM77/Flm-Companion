@@ -13,7 +13,7 @@ export function InfoTooltip({ text }: InfoTooltipProps) {
             <TooltipTrigger asChild>
                 <Info size={14} className="text-muted-foreground cursor-help" />
             </TooltipTrigger>
-            <TooltipContent>
+            <TooltipContent side="right" align="start" collisionPadding={12}>
                 <p className="max-w-xs whitespace-pre-line">{text}</p>
             </TooltipContent>
         </Tooltip>

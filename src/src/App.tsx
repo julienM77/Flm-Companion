@@ -16,14 +16,13 @@ import { UpdateAvailableDialog } from "./components/dialogs/UpdateAvailableDialo
 
 // Wrappers
 function ChatViewWrapper() {
-  const { runnableModels, selectedModel, setSelectedModel, serverOptions, setServerOptions } = useAppContext();
+  const { runnableModels, selectedModel, setSelectedModel, serverStatus } = useAppContext();
   return (
     <ChatView
       models={runnableModels}
       selectedModel={selectedModel}
       onSelectModel={setSelectedModel}
-      options={serverOptions}
-      setOptions={setServerOptions}
+      serverStatus={serverStatus}
     />
   );
 }
@@ -101,6 +100,19 @@ function AppContent() {
   const [showUpdateDialog, setShowUpdateDialog] = useState(false);
 
   const renderContent = () => {
+    if (activeTab === "chat" || activeTab === "server") {
+      return (
+        <div className="h-full">
+          <div className={activeTab === "chat" ? "h-full" : "hidden"}>
+            <ChatViewWrapper />
+          </div>
+          <div className={activeTab === "server" ? "h-full" : "hidden"}>
+            <ServerViewWrapper />
+          </div>
+        </div>
+      );
+    }
+
     const Component = TAB_COMPONENTS[activeTab] || ChatViewWrapper;
     return <Component />;
   };

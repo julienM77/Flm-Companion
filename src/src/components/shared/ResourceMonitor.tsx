@@ -8,7 +8,7 @@ import { InfoTooltip } from "./InfoTooltip";
 import { SystemService } from "../../services/system";
 
 interface SystemStats {
-    memory: { used: number; total: number; percentage: number };
+    memory: { used: number; total: number; percentage: number; flmProcess: number };
     cpu: { usage: number };
     npu: { usage: number; memory: number };
 }
@@ -17,28 +17,28 @@ interface ResourceMonitorProps {
     refreshInterval?: number; // milliseconds, default 2000
     maxDataPoints?: number;   // number of historical points to keep
     showCpu?: boolean;        // Show CPU stats (future)
+    onStats?: (stats: SystemStats) => void;
 }
 
 export const ResourceMonitor = ({
     refreshInterval = 2000,
     maxDataPoints = 30,
-    showCpu = false
+    showCpu = false,
+    onStats,
 }: ResourceMonitorProps) => {
     const { t } = useTranslation();
     const [stats, setStats] = useState<SystemStats>({
-        memory: { used: 0, total: 0, percentage: 0 },
+        memory: { used: 0, total: 0, percentage: 0, flmProcess: 0 },
         cpu: { usage: 0 },
         npu: { usage: 0, memory: 0 }
     });
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
     const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
     const [isMonitoring, setIsMonitoring] = useState(true);
 
     // Store history using refs for performance
-    const ramHistoryRef = useRef<number[]>([]);
     const npuHistoryRef = useRef<number[]>([]);
     const intervalRef = useRef<number | null>(null);
-    const [ramHistory, setRamHistory] = useState<number[]>([]);
     const [npuHistory, setNpuHistory] = useState<number[]>([]);
 
     useEffect(() => {
@@ -47,12 +47,11 @@ export const ResourceMonitor = ({
                 const newStats = await SystemService.getSystemStats();
 
                 // Add new data points and keep only maxDataPoints
-                ramHistoryRef.current = [...ramHistoryRef.current, newStats.memory.percentage].slice(-maxDataPoints);
                 npuHistoryRef.current = [...npuHistoryRef.current, newStats.npu.usage].slice(-maxDataPoints);
 
                 setStats(newStats);
-                setRamHistory([...ramHistoryRef.current]);
                 setNpuHistory([...npuHistoryRef.current]);
+                onStats?.(newStats);
                 setLastUpdate(new Date());
                 setIsLoading(false);
             } catch (error) {
@@ -86,7 +85,7 @@ export const ResourceMonitor = ({
     }, [refreshInterval, maxDataPoints, isMonitoring]);
 
     return (
-        <Card className="bg-muted border-border flex flex-col overflow-hidden shadow-inner h-full">
+        <Card className="bg-muted border-border flex flex-col overflow-hidden shadow-inner">
             <CardHeader className="bg-card px-4 py-3 border-b border-border flex flex-row justify-between items-center space-y-0 shrink-0">
                 <CardTitle className="text-sm font-medium text-foreground flex items-center gap-2">
                     <Activity size={16} className="text-muted-foreground" />
@@ -95,7 +94,7 @@ export const ResourceMonitor = ({
                 {/* Empty div to match LogsViewer header height */}
                 <div className="h-7"></div>
             </CardHeader>
-            <CardContent className="flex-1 p-4 overflow-y-auto min-h-0 space-y-6 flex flex-col">
+            <CardContent className="p-4 space-y-6">
                 {isLoading ? (
                     <div className="flex items-center justify-center py-8">
                         <div className="text-sm text-muted-foreground">
@@ -104,32 +103,6 @@ export const ResourceMonitor = ({
                     </div>
                 ) : (
                     <>
-                        {/* RAM Usage */}
-                        <div>
-                            <div className="mb-2 flex items-start justify-between">
-                                <div className="flex flex-col gap-1">
-                                    <span className="text-sm font-medium">{t("performance.ram_usage")}</span>
-                                    <span className="text-xs text-muted-foreground">
-                                        {isMonitoring
-                                            ? `${(stats.memory.used / 1024).toFixed(1)} / ${(stats.memory.total / 1024).toFixed(1)} GB`
-                                            : "--.- / --.- GB"
-                                        }
-                                    </span>
-                                </div>
-                                <span className={`text-xs font-semibold ${isMonitoring ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground'}`}>
-                                    {isMonitoring ? `${stats.memory.percentage.toFixed(1)}%` : "--%"}
-                                </span>
-                            </div>
-                            <div className={isMonitoring ? '' : 'opacity-30'}>
-                                <UsageChart
-                                    history={isMonitoring ? ramHistory : []}
-                                    maxDataPoints={maxDataPoints}
-                                    color="#10b981"
-                                    height={80}
-                                />
-                            </div>
-                        </div>
-
                         {/* NPU Usage */}
                         <div>
                             <div className="mb-2 flex items-center justify-between">
@@ -163,10 +136,7 @@ export const ResourceMonitor = ({
                             </div>
                         )}
 
-                        {/* Spacer to push controls to bottom */}
-                        <div className="flex-1"></div>
-
-                        {/* Last update timestamp and monitoring control - at bottom */}
+                        {/* Last update timestamp and monitoring control */}
                         <div className="space-y-2 pt-4">
                             <div className="flex items-center justify-center gap-2">
                                 <Button

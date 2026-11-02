@@ -66,6 +66,12 @@ export function useServerManager({
         installedModelsRef.current = installedModels;
     }, [installedModels]);
 
+    useEffect(() => {
+        return () => {
+            void FlmService.stopServer();
+        };
+    }, []);
+
     // Update options when config is loaded
     useEffect(() => {
         if (isConfigLoaded) {
