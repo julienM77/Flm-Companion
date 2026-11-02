@@ -13,6 +13,20 @@
 
 </div>
 
+## Fork additions
+
+This fork keeps the upstream FLM workflow and adds a tighter serving experience:
+
+* Server-first layout with chat, launch parameters, presets, and collapsible navigation.
+* Active-model API proxy: `/v1/models` exposes only the model currently loaded by Companion.
+* Copy-ready Developer API details for Base URL, cURL, and client examples.
+* Live free RAM, FLM process RAM, NPU usage, launch-context, TTFT, and context-use indicators.
+* Context-aware RAM estimates using model footprint, launch context, and runtime reserve.
+* Persistent model/settings selection and safer FLM process cleanup on stop, close, and restart.
+* Optional Caveman mode for short, high-density model replies.
+
+Built artifacts are published on the [fork releases page](https://github.com/plushycat/Flm-Companion/releases).
+
 ## 📝 Description
 
 Flm Compagnon is a modern GUI designed to accompany and manage the **FastFlowLM (FLM)** project. It offers a smooth user experience to interact with your local AI models, monitor the server, and manage your configurations.
@@ -34,20 +48,6 @@ Flm Compagnon is a modern GUI designed to accompany and manage the **FastFlowLM 
 * **About**: View application version, hardware information, FLM changelog, and check for updates.
 * **Multilingual**: Interface management in **English, French, and Japanese**.
 * **Theme**: Management of light and dark themes.
-
-## Fork additions
-
-This fork keeps the upstream FLM workflow and adds a tighter serving experience:
-
-* Server-first layout with chat, launch parameters, presets, and collapsible navigation.
-* Active-model API proxy: `/v1/models` exposes only the model currently loaded by Companion.
-* Copy-ready Developer API details for Base URL, cURL, and client examples.
-* Live free RAM, FLM process RAM, NPU usage, launch-context, TTFT, and context-use indicators.
-* Context-aware RAM estimates using model footprint, launch context, and runtime reserve.
-* Persistent model/settings selection and safer FLM process cleanup on stop, close, and restart.
-* Optional Caveman mode for short, high-density model replies.
-
-Built artifacts are published on the [fork releases page](https://github.com/plushycat/Flm-Companion/releases).
 
 ## 📸 Videos
 
