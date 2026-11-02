@@ -17,6 +17,7 @@ interface ModelJsonEntry {
     url: string;
     modified_at: string;
     size: number;
+    footprint?: number;
     default_context_length: number;
     vlm?: boolean;
     details: {
@@ -117,12 +118,11 @@ export const FlmService = {
                             const fullName = `${family}:${tag}`;
 
                             const sizeBytes = details.size;
-                            let sizeStr = "";
-                            if (sizeBytes > 1024 * 1024 * 1024) {
-                                sizeStr = `${(sizeBytes / (1024 * 1024 * 1024)).toFixed(1)}GB`;
-                            } else {
-                                sizeStr = `${(sizeBytes / (1024 * 1024)).toFixed(0)}MB`;
-                            }
+                            const sizeStr = details.footprint != null
+                                ? `${details.footprint.toFixed(1)}GB`
+                                : sizeBytes > 1024 * 1024 * 1024
+                                    ? `${(sizeBytes / (1024 * 1024 * 1024)).toFixed(1)}GB`
+                                    : `${(sizeBytes / (1024 * 1024)).toFixed(0)}MB`;
 
                             metadata[fullName] = {
                                 name: fullName,
